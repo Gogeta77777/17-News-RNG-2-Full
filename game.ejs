@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game - 17 News RNG</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="game-page">
+    <div class="game-container">
+        <header class="game-header">
+            <h1>17 News RNG</h1>
+            <div class="user-info">
+                <span>Welcome, <strong><%= user.username %></strong></span>
+                <span class="coins">Coins: <span id="coin-count"><%= user.coins %></span></span>
+                <% if (user.isAdmin) { %>
+                    <a href="/admin" class="btn btn-admin">Admin Panel</a>
+                <% } %>
+                <a href="/logout" class="btn btn-logout">Logout</a>
+            </div>
+        </header>
+        
+        <div class="game-content">
+            <div class="sidebar">
+                <div class="game-section" id="spin-section">
+                    <h2>Spin for Items</h2>
+                    <p>Cost: 100 coins</p>
+                    <button id="spin-btn" class="btn btn-spin">Spin Now!</button>
+                    <div id="spin-result"></div>
+                </div>
+                
+                <div class="game-section" id="codes-section">
+                    <h2>Redeem Codes</h2>
+                    <input type="text" id="code-input" placeholder="Enter code">
+                    <button id="redeem-btn" class="btn btn-redeem">Redeem</button>
+                    <div id="code-result"></div>
+                </div>
+                
+                <div class="game-section" id="shop-section">
+                    <h2>Shop</h2>
+                    <p>Coming soon!</p>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="inventory">Inventory</button>
+                    <button class="tab-btn" data-tab="chat">Chat</button>
+                    <button class="tab-btn" data-tab="announcements">Announcements</button>
+                    <button class="tab-btn" data-tab="events">Events</button>
+                    <button class="tab-btn" data-tab="settings">Settings</button>
+                </div>
+                
+                <div class="tab-content">
+                    <div id="inventory-tab" class="tab-pane active">
+                        <h2>Your Inventory</h2>
+                        <div class="inventory-grid">
+                            <% user.inventory.forEach(item => { %>
+                                <div class="inventory-item rarity-<%= item.rarity %>">
+                                    <span class="item-name"><%= item.name %></span>
+                                    <span class="item-rarity"><%= item.rarity %></span>
+                                </div>
+                            <% }); %>
+                            
+                            <% if (user.inventory.length === 0) { %>
+                                <p class="empty-inventory">Your inventory is empty. Spin to get items!</p>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <div id="chat-tab" class="tab-pane">
+                        <h2>Global Chat</h2>
+                        <div id="chat-messages" class="chat-messages"></div>
+                        <div class="chat-input">
+                            <input type="text" id="chat-input" placeholder="Type your message...">
+                            <button id="send-btn">Send</button>
+                        </div>
+                    </div>
+                    
+                    <div id="announcements-tab" class="tab-pane">
+                        <h2>Announcements</h2>
+                        <div class="announcements-list">
+                            <% announcements.forEach(announcement => { %>
+                                <div class="announcement">
+                                    <h3><%= announcement.title %></h3>
+                                    <p><%= announcement.content %></p>
+                                    <small>By <%= announcement.author %> on <%= new Date(announcement.date).toLocaleDateString() %></small>
+                                </div>
+                            <% }); %>
+                            
+                            <% if (announcements.length === 0) { %>
+                                <p>No announcements yet.</p>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <div id="events-tab" class="tab-pane">
+                        <h2>Events</h2>
+                        <div class="events-list">
+                            <% events.forEach(event => { %>
+                                <div class="event <%= event.active ? 'active' : '' %>">
+                                    <h3><%= event.name %></h3>
+                                    <p><%= event.description %></p>
+                                    <small>
+                                        <%= new Date(event.startDate).toLocaleDateString() %> - 
+                                        <%= new Date(event.endDate).toLocaleDateString() %>
+                                        <%= event.active ? '(Active)' : '(Ended)' %>
+                                    </small>
+                                </div>
+                            <% }); %>
+                            
+                            <% if (events.length === 0) { %>
+                                <p>No events yet.</p>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <div id="settings-tab" class="tab-pane">
+                        <h2>Settings</h2>
+                        <div class="settings-option">
+                            <label for="sound-toggle">Sound Effects</label>
+                            <input type="checkbox" id="sound-toggle" checked>
+                        </div>
+                        <div class="settings-option">
+                            <label for="theme-toggle">Dark Theme</label>
+                            <input type="checkbox" id="theme-toggle" checked>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/chat.js"></script>
+    <script src="/js/game.js"></script>
+</body>
+</html>
