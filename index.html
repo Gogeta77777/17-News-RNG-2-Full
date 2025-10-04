@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17 News RNG</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            color: #ecf0f1;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Common Components */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: #3498db;
+        }
+
+        .btn-secondary {
+            background: #2c3e50;
+        }
+
+        .btn-admin {
+            background: #e74c3c;
+        }
+
+        .btn-logout {
+            background: #95a5a6;
+        }
+
+        .btn-spin {
+            background: #9b59b6;
+        }
+
+        .btn-redeem {
+            background: #27ae60;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Home Page */
+        #home-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .home-main {
+            text-align: center;
+        }
+
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 40px;
+        }
+
+        .welcome-card h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #3498db;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature h3 {
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+
+        /* Auth Pages */
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            margin: 0 auto;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-card h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #3498db;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .form-group textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .error-message {
+            background: #e74c3c;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .success-message {
+            background: #27ae60;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .auth-link a {
+            color: #3498db;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .auth-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Game Page */
+        #game-page {
+            min-height: 100vh;
+        }
+
+        .game-header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .user-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .coins {
+            background: #f39c12;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .game-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .game-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-section h2 {
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+
+        #code-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+        }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #ecf0f1;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #3498db;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Inventory */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .inventory-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .rarity-common { border-left-color: #9e9e9e; }
+        .rarity-uncommon { border-left-color: #4caf50; }
+        .rarity-rare { border-left-color: #2196f3; }
+        .rarity-epic { border-left-color: #9c27b0; }
+        .rarity-legendary { border-left-color: #ff9800; }
+        .rarity-mythic { border-left-color: #f44336; }
+        .rarity-divine { border-left-color: #e91e63; }
+
+        .item-name {
+            font-weight: bold;
+            display: block;
+        }
+
+        .item-rarity {
+            font-size: 0.8rem;
+            text-transform: capitalize;
+        }
+
+        .empty-inventory {
+            text-align: center;
+            padding: 40px;
+            color: #bdc3c7;
+        }
+
+        /* Chat */
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+
+        .chat-message .username {
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .chat-message .timestamp {
+            font-size: 0.8rem;
+            color: #bdc3c7;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+        }
+
+        /* Announcements & Events */
+        .announcements-list,
+        .events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .announcement,
+        .event {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .event.active {
+            border-left-color: #27ae60;
+        }
+
+        .announcement h3,
+        .event h3 {
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .announcement small,
+        .event small {
+            color: #bdc3c7;
+            font-size: 0.8rem;
+        }
+
+        /* Settings */
+        .settings-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-option:last-child {
+            border-bottom: none;
+        }
+
+        /* Admin Page */
+        .admin-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+
+        .admin-section h2 {
+            color: #3498db;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .codes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .code h3 {
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Home Page -->
+    <div id="home-page" class="container">
+        <main class="home-main">
+            <div class="welcome-card">
+                <h2>17 News RNG</h2>
+                <p>The ultimate RNG experience!</p>
+                <div class="button-group">
+                    <button id="login-btn" class="btn btn-primary">Login</button>
+                    <button id="register-btn" class="btn btn-secondary">Register</button>
+                </div>
+            </div>
+            
+            <div class="features">
+                <div class="feature">
+                    <h3>7 Rarity Tiers</h3>
+                    <p>From Common to Divine, collect them all!</p>
+                </div>
+                <div class="feature">
+                    <h3>Real-time Chat</h3>
+                    <p>Connect with other players worldwide</p>
+                </div>
+                <div class="feature">
+                    <h3>Admin Events</h3>
+                    <p>Special events and announcements</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Login Page -->
+    <div id="login-page" class="auth-container hidden">
+        <div class="auth-card">
+            <h1>Login to 17 News RNG</h1>
+            <div id="login-error" class="error-message hidden"></div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="login-username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full">Login</button>
+            </form>
+            
+            <p class="auth-link">Don't have an account? <a id="show-register">Register here</a></p>
+        </div>
+    </div>
+
+    <!-- Register Page -->
+    <div id="register-page" class="auth-container hidden">
+        <div class="auth-card">
+            <h1>Register for 17 News RNG</h1>
+            <div id="register-error" class="error-message hidden"></div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="register-username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full">Register</button>
+            </form>
+            
+            <p class="auth-link">Already have an account? <a id="show-login">Login here</a></p>
+        </div>
+    </div>
+
+    <!-- Game Page -->
+    <div id="game-page" class="hidden">
+        <div class="container">
+            <header class="game-header">
+                <h1>17 News RNG</h1>
+                <div class="user-info">
+                    <span>Welcome, <strong id="user-name"></strong></span>
+                    <span class="coins">Coins: <span id="coin-count">0</span></span>
+                    <button id="admin-btn" class="btn btn-admin hidden">Admin Panel</button>
+                    <button id="logout-btn" class="btn btn-logout">Logout</button>
+                </div>
+            </header>
+            
+            <div class="game-content">
+                <div class="sidebar">
+                    <div class="game-section" id="spin-section">
+                        <h2>Spin for Items</h2>
+                        <p>Cost: 100 coins</p>
+                        <button id="spin-btn" class="btn btn-spin">Spin Now!</button>
+                        <div id="spin-result"></div>
+                    </div>
+                    
+                    <div class="game-section" id="codes-section">
+                        <h2>Redeem Codes</h2>
+                        <input type="text" id="code-input" placeholder="Enter code">
+                        <button id="redeem-btn" class="btn btn-redeem">Redeem</button>
+                        <div id="code-result"></div>
+                    </div>
+                    
+                    <div class="game-section" id="shop-section">
+                        <h2>Shop</h2>
+                        <p>Coming soon!</p>
+                    </div>
+                </div>
+                
+                <div class="main-content">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="inventory">Inventory</button>
+                        <button class="tab-btn" data-tab="chat">Chat</button>
+                        <button class="tab-btn" data-tab="announcements">Announcements</button>
+                        <button class="tab-btn" data-tab="events">Events</button>
+                        <button class="tab-btn" data-tab="settings">Settings</button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <div id="inventory-tab" class="tab-pane active">
+                            <h2>Your Inventory</h2>
+                            <div id="inventory-grid" class="inventory-grid">
+                                <!-- Inventory items will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div id="chat-tab" class="tab-pane">
+                            <h2>Global Chat</h2>
+                            <div id="chat-messages" class="chat-messages"></div>
+                            <div class="chat-input">
+                                <input type="text" id="chat-input" placeholder="Type your message...">
+                                <button id="send-btn">Send</button>
+                            </div>
+                        </div>
+                        
+                        <div id="announcements-tab" class="tab-pane">
+                            <h2>Announcements</h2>
+                            <div id="announcements-list" class="announcements-list">
+                                <!-- Announcements will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div id="events-tab" class="tab-pane">
+                            <h2>Events</h2>
+                            <div id="events-list" class="events-list">
+                                <!-- Events will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div id="settings-tab" class="tab-pane">
+                            <h2>Settings</h2>
+                            <div class="settings-option">
+                                <label for="sound-toggle">Sound Effects</label>
+                                <input type="checkbox" id="sound-toggle" checked>
+                            </div>
+                            <div class="settings-option">
+                                <label for="theme-toggle">Dark Theme</label>
+                                <input type="checkbox" id="theme-toggle" checked>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="container hidden">
+        <header class="game-header">
+            <h1>Admin Panel - 17 News RNG</h1>
+            <div class="user-info">
+                <button id="back-to-game" class="btn btn-primary">Back to Game</button>
+                <button id="admin-logout" class="btn btn-logout">Logout</button>
+            </div>
+        </header>
+        
+        <div class="admin-content">
+            <div class="admin-section">
+                <h2>Create Announcement</h2>
+                <form id="announcement-form">
+                    <div class="form-group">
+                        <label for="announcement-title">Title</label>
+                        <input type="text" id="announcement-title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="announcement-content">Content</label>
+                        <textarea id="announcement-content" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Publish Announcement</button>
+                </form>
+            </div>
+            
+            <div class="admin-section">
+                <h2>Create Event</h2>
+                <form id="event-form">
+                    <div class="form-group">
+                        <label for="event-name">Event Name</label>
+                        <input type="text" id="event-name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="event-description">Description</label>
+                        <textarea id="event-description" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="event-start">Start Date</label>
+                        <input type="datetime-local" id="event-start" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="event-end">End Date</label>
+                        <input type="datetime-local" id="event-end" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Create Event</button>
+                </form>
+            </div>
+            
+            <div class="admin-section">
+                <h2>Existing Announcements</h2>
+                <div id="admin-announcements" class="announcements-list">
+                    <!-- Announcements will be populated here -->
+                </div>
+            </div>
+            
+            <div class="admin-section">
+                <h2>Existing Events</h2>
+                <div id="admin-events" class="events-list">
+                    <!-- Events will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Global variables
+        let currentUser = null;
+        let socket = null;
+
+        // Page elements
+        const pages = {
+            home: document.getElementById('home-page'),
+            login: document.getElementById('login-page'),
+            register: document.getElementById('register-page'),
+            game: document.getElementById('game-page'),
+            admin: document.getElementById('admin-panel')
+        };
+
+        // Navigation functions
+        function showPage(pageName) {
+            Object.values(pages).forEach(page => page.classList.add('hidden'));
+            pages[pageName].classList.remove('hidden');
+        }
+
+        // Check if user is already logged in
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/data');
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentUser = data.user;
+                    loadGameData(data);
+                    if (currentUser.isAdmin) {
+                        document.getElementById('admin-btn').classList.remove('hidden');
+                    }
+                    showPage('game');
+                } else {
+                    showPage('home');
+                }
+            } catch (error) {
+                showPage('home');
+            }
+        }
+
+        // Load game data
+        function loadGameData(data) {
+            document.getElementById('user-name').textContent = currentUser.username;
+            document.getElementById('coin-count').textContent = currentUser.coins;
+            
+            // Load inventory
+            const inventoryGrid = document.getElementById('inventory-grid');
+            inventoryGrid.innerHTML = '';
+            
+            if (currentUser.inventory.length === 0) {
+                inventoryGrid.innerHTML = '<p class="empty-inventory">Your inventory is empty. Spin to get items!</p>';
+            } else {
+                currentUser.inventory.forEach(item => {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = `inventory-item rarity-${item.rarity}`;
+                    itemElement.innerHTML = `
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-rarity">${item.rarity}</span>
+                    `;
+                    inventoryGrid.appendChild(itemElement);
+                });
+            }
+            
+            // Load announcements
+            const announcementsList = document.getElementById('announcements-list');
+            announcementsList.innerHTML = '';
+            
+            if (data.announcements.length === 0) {
+                announcementsList.innerHTML = '<p>No announcements yet.</p>';
+            } else {
+                data.announcements.forEach(announcement => {
+                    const announcementElement = document.createElement('div');
+                    announcementElement.className = 'announcement';
+                    announcementElement.innerHTML = `
+                        <h3>${announcement.title}</h3>
+                        <p>${announcement.content}</p>
+                        <small>By ${announcement.author} on ${new Date(announcement.date).toLocaleDateString()}</small>
+                    `;
+                    announcementsList.appendChild(announcementElement);
+                });
+            }
+            
+            // Load events
+            const eventsList = document.getElementById('events-list');
+            eventsList.innerHTML = '';
+            
+            if (data.events.length === 0) {
+                eventsList.innerHTML = '<p>No events yet.</p>';
+            } else {
+                data.events.forEach(event => {
+                    const eventElement = document.createElement('div');
+                    eventElement.className = `event ${event.active ? 'active' : ''}`;
+                    eventElement.innerHTML = `
+                        <h3>${event.name}</h3>
+                        <p>${event.description}</p>
+                        <small>
+                            ${new Date(event.startDate).toLocaleDateString()} - 
+                            ${new Date(event.endDate).toLocaleDateString()}
+                            ${event.active ? '(Active)' : '(Ended)'}
+                        </small>
+                    `;
+                    eventsList.appendChild(eventElement);
+                });
+            }
+            
+            // Load chat messages
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = '';
+            
+            if (data.chatMessages && data.chatMessages.length > 0) {
+                data.chatMessages.forEach(message => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'chat-message';
+                    messageElement.innerHTML = `
+                        <span class="username">${message.username}:</span>
+                        <span class="message">${message.message}</span>
+                        <br>
+                        <small class="timestamp">${new Date(message.timestamp).toLocaleTimeString()}</small>
+                    `;
+                    chatMessages.appendChild(messageElement);
+                });
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Initialize socket connection for chat
+            if (socket) {
+                socket.disconnect();
+            }
+            socket = io();
+            
+            // Chat functionality
+            socket.on('chat_message', (data) => {
+                const chatMessages = document.getElementById('chat-messages');
+                const messageElement = document.createElement('div');
+                messageElement.className = 'chat-message';
+                messageElement.innerHTML = `
+                    <span class="username">${data.username}:</span>
+                    <span class="message">${data.message}</span>
+                    <br>
+                    <small class="timestamp">${new Date(data.timestamp).toLocaleTimeString()}</small>
+                `;
+                
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+            
+            // Handle announcements from admin
+            socket.on('new_announcement', (data) => {
+                if (Notification.permission === 'granted') {
+                    new Notification('New Announcement', {
+                        body: `${data.title}: ${data.content}`
+                    });
+                }
+                
+                // Refresh announcements if on that tab
+                if (document.getElementById('announcements-tab').classList.contains('active')) {
+                    location.reload();
+                }
+            });
+            
+            // Handle new events from admin
+            socket.on('new_event', (data) => {
+                if (Notification.permission === 'granted') {
+                    new Notification('New Event', {
+                        body: `${data.name}: ${data.description}`
+                    });
+                }
+                
+                // If on events tab, refresh content
+                if (document.getElementById('events-tab').classList.contains('active')) {
+                    location.reload();
+                }
+            });
+            
+            // Request notification permission
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('login-btn').addEventListener('click', () => showPage('login'));
+        document.getElementById('register-btn').addEventListener('click', () => showPage('register'));
+        document.getElementById('show-register').addEventListener('click', () => showPage('register'));
+        document.getElementById('show-login').addEventListener('click', () => showPage('login'));
+        document.getElementById('logout-btn').addEventListener('click', logout);
+        document.getElementById('admin-logout').addEventListener('click', logout);
+        document.getElementById('admin-btn').addEventListener('click', () => showPage('admin'));
+        document.getElementById('back-to-game').addEventListener('click', () => showPage('game'));
+
+        // Login form
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentUser = data.user;
+                    loadGameData(data);
+                    if (currentUser.isAdmin) {
+                        document.getElementById('admin-btn').classList.remove('hidden');
+                    }
+                    showPage('game');
+                } else {
+                    errorDiv.textContent = data.error;
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Register form
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            const errorDiv = document.getElementById('register-error');
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentUser = data.user;
+                    loadGameData(data);
+                    showPage('game');
+                } else {
+                    errorDiv.textContent = data.error;
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Spin functionality
+        document.getElementById('spin-btn').addEventListener('click', async () => {
+            const spinBtn = document.getElementById('spin-btn');
+            const spinResult = document.getElementById('spin-result');
+            
+            spinBtn.disabled = true;
+            spinBtn.textContent = 'Spinning...';
+            
+            try {
+                const response = await fetch('/api/spin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update coin count
+                    document.getElementById('coin-count').textContent = result.coins;
+                    currentUser.coins = result.coins;
+                    
+                    // Display result with rarity color
+                    spinResult.innerHTML = `
+                        <div class="success-message" style="color: ${result.rarity.color}; margin-top: 10px;">
+                            <strong>Congratulations!</strong><br>
+                            You got: ${result.item}<br>
+                            Rarity: ${result.rarity.name}
+                        </div>
+                    `;
+                    
+                    // Refresh inventory
+                    setTimeout(() => {
+                        checkLoginStatus();
+                    }, 2000);
+                } else {
+                    spinResult.innerHTML = `<div class="error-message">${result.error}</div>`;
+                }
+            } catch (error) {
+                spinResult.innerHTML = `<div class="error-message">An error occurred. Please try again.</div>`;
+            } finally {
+                spinBtn.disabled = false;
+                spinBtn.textContent = 'Spin Now!';
+            }
+        });
+
+        // Code redemption
+        document.getElementById('redeem-btn').addEventListener('click', async () => {
+            const code = document.getElementById('code-input').value.trim();
+            const redeemBtn = document.getElementById('redeem-btn');
+            const codeResult = document.getElementById('code-result');
+            
+            if (!code) {
+                codeResult.innerHTML = `<div class="error-message">Please enter a code</div>`;
+                return;
+            }
+            
+            redeemBtn.disabled = true;
+            redeemBtn.textContent = 'Redeeming...';
+            
+            try {
+                const response = await fetch('/api/use-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    codeResult.innerHTML = `<div class="success-message">${result.message}</div>`;
+                    document.getElementById('code-input').value = '';
+                    
+                    // Update coin count if needed
+                    document.getElementById('coin-count').textContent = result.coins || 
+                        document.getElementById('coin-count').textContent;
+                    currentUser.coins = result.coins || currentUser.coins;
+                    
+                    // Refresh inventory if item was added
+                    if (result.message.includes('item')) {
+                        setTimeout(() => {
+                            checkLoginStatus();
+                        }, 1500);
+                    }
+                } else {
+                    codeResult.innerHTML = `<div class="error-message">${result.error}</div>`;
+                }
+            } catch (error) {
+                codeResult.innerHTML = `<div class="error-message">An error occurred. Please try again.</div>`;
+            } finally {
+                redeemBtn.disabled = false;
+                redeemBtn.textContent = 'Redeem';
+            }
+        });
+
+        // Allow pressing Enter in code input
+        document.getElementById('code-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('redeem-btn').click();
+            }
+        });
+
+        // Chat functionality
+        document.getElementById('send-btn').addEventListener('click', sendMessage);
+        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const chatInput = document.getElementById('chat-input');
+            const message = chatInput.value.trim();
+            
+            if (message && socket) {
+                socket.emit('chat_message', {
+                    username: currentUser.username,
+                    message: message
+                });
+                chatInput.value = '';
+            }
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons and panes
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding pane
+                btn.classList.add('active');
+                const tabId = btn.getAttribute('data-tab') + '-tab';
+                document.getElementById(tabId).classList.add('active');
+                
+                // Focus chat input when chat tab is active
+                if (btn.getAttribute('data-tab') === 'chat') {
+                    setTimeout(() => {
+                        document.getElementById('chat-input').focus();
+                    }, 100);
+                }
+            });
+        });
+
+        // Admin forms
+        document.getElementById('announcement-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('announcement-title').value;
+            const content = document.getElementById('announcement-content').value;
+            
+            try {
+                const response = await fetch('/api/admin/announcement', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title, content })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('announcement-form').reset();
+                    alert('Announcement published successfully!');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+            }
+        });
+
+        document.getElementById('event-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('event-name').value;
+            const description = document.getElementById('event-description').value;
+            const startDate = document.getElementById('event-start').value;
+            const endDate = document.getElementById('event-end').value;
+            
+            try {
+                const response = await fetch('/api/admin/event', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, description, startDate, endDate })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('event-form').reset();
+                    alert('Event created successfully!');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+            }
+        });
+
+        // Logout function
+        async function logout() {
+            try {
+                await fetch('/api/logout');
+                currentUser = null;
+                if (socket) {
+                    socket.disconnect();
+                    socket = null;
+                }
+                showPage('home');
+            } catch (error) {
+                console.error('Logout error:', error);
+                showPage('home');
+            }
+        }
+
+        // Initialize the app
+        checkLoginStatus();
+    </script>
+</body>
+</html>
