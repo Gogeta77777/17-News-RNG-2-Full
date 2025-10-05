@@ -12,72 +12,30 @@
             font-family: 'Orbitron', 'Share Tech Mono', monospace;
             background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
             min-height: 100vh;
-            <style>
-                /* Cybernetic Animated Background */
-                body {
-                    font-family: 'Orbitron', 'Share Tech Mono', monospace;
-                    background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
-                    min-height: 100vh;
-                    color: #e0e0e0;
-                    overflow-x: hidden;
-                }
-                body::before {
-                    content: "";
-                    position: fixed;
-                    top: 0; left: 0; right: 0; bottom: 0;
-                    z-index: -1;
-                    background: repeating-linear-gradient(120deg, #00fff7 0px, #00fff7 2px, transparent 2px, transparent 40px), repeating-linear-gradient(60deg, #3498db 0px, #3498db 2px, transparent 2px, transparent 40px);
-                    opacity: 0.08;
-                    animation: cyber-bg-move 20s linear infinite;
-                <style>
-                    /* Cybernetic Animated Background */
-                    body {
-                        font-family: 'Orbitron', 'Share Tech Mono', monospace;
-                        background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
-                        min-height: 100vh;
-                        color: #e0e0e0;
-                        overflow-x: hidden;
-                    }
-                    body::before {
-                        content: "";
-                        position: fixed;
-                        top: 0; left: 0; right: 0; bottom: 0;
-                        z-index: -1;
-                        background: repeating-linear-gradient(120deg, #00fff7 0px, #00fff7 2px, transparent 2px, transparent 40px), repeating-linear-gradient(60deg, #3498db 0px, #3498db 2px, transparent 2px, transparent 40px);
-                        opacity: 0.08;
-                        animation: cyber-bg-move 20s linear infinite;
-                    }
-                    @keyframes cyber-bg-move {
-                        0% { background-position: 0 0, 0 0; }
-                        100% { background-position: 200px 200px, -200px -200px; }
-                    }
-                    /* Layout for Game Page */
-                    #game-page .container {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr 1fr;
-                        gap: 2em;
-                        <style>
-                            /* Cybernetic Animated Background */
-                            body {
-                                font-family: 'Orbitron', 'Share Tech Mono', monospace;
-                                background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
-                                min-height: 100vh;
-                                color: #e0e0e0;
-                                overflow-x: hidden;
-                            }
-                            body::before {
-                                content: "";
-                                position: fixed;
-                                top: 0; left: 0; right: 0; bottom: 0;
-                                z-index: -1;
-                                background: repeating-linear-gradient(120deg, #00fff7 0px, #00fff7 2px, transparent 2px, transparent 40px), repeating-linear-gradient(60deg, #3498db 0px, #3498db 2px, transparent 2px, transparent 40px);
-                                opacity: 0.08;
-                                animation: cyber-bg-move 20s linear infinite;
-                            }
-                            @keyframes cyber-bg-move {
-                                0% { background-position: 0 0, 0 0; }
-                                100% { background-position: 200px 200px, -200px -200px; }
-                            }
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            background: repeating-linear-gradient(120deg, #00fff7 0px, #00fff7 2px, transparent 2px, transparent 40px), repeating-linear-gradient(60deg, #3498db 0px, #3498db 2px, transparent 2px, transparent 40px);
+            opacity: 0.08;
+            animation: cyber-bg-move 20s linear infinite;
+        }
+        @keyframes cyber-bg-move {
+            0% { background-position: 0 0, 0 0; }
+            100% { background-position: 200px 200px, -200px -200px; }
+        }
+        /* Layout for Game Page */
+        #game-page .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2em;
+        }
+        /* ...rest of your CSS styles... */
+    </style>
                             /* Card & Container Effects */
                             .container, .auth-card, .welcome-card, .game-section, .admin-section {
                                 background: rgba(20, 20, 40, 0.85);
