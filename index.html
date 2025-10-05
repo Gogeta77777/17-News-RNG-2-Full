@@ -7,6 +7,36 @@
     <!-- Cybernetic Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
+        /* Cybernetic Neon Button Styles */
+        button, .btn {
+            background: linear-gradient(90deg, #00fff7 0%, #3498db 100%);
+            color: #181c23;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 28px;
+            font-family: 'Orbitron', 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: 0 0 12px #00fff7a0, 0 0 4px #3498db80;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+            margin: 8px 0;
+        }
+        button:hover, .btn:hover {
+            background: linear-gradient(90deg, #3498db 0%, #00fff7 100%);
+            color: #fff;
+            box-shadow: 0 0 24px #00fff7, 0 0 8px #3498db;
+        }
+        button:disabled, .btn:disabled {
+            background: #444;
+            color: #888;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        /* Fix for main-content and game-content to not overflow */
+        .main-content, .game-content {
+            overflow: auto;
+        }
         /* Cybernetic Animated Background */
         body {
             font-family: 'Orbitron', 'Share Tech Mono', monospace;
@@ -634,8 +664,12 @@
 
         // Navigation functions
         function showPage(pageName) {
-            Object.values(pages).forEach(page => page.classList.add('hidden'));
+            Object.values(pages).forEach(page => {
+                page.classList.add('hidden');
+                page.classList.remove('active');
+            });
             pages[pageName].classList.remove('hidden');
+            pages[pageName].classList.add('active');
             pages[pageName].classList.add('fade-in');
             setTimeout(() => pages[pageName].classList.remove('fade-in'), 700);
         }
