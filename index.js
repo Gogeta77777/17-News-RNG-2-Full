@@ -54,7 +54,21 @@ function initializeData() {
 }
 
 function readData() {
-  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  try {
+    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  } catch (err) {
+    console.error('Failed to parse data file, backing up corrupt file and reinitializing:', err.message);
+    try {
+      const corruptPath = DATA_FILE + '.corrupt.' + Date.now();
+      fs.copyFileSync(DATA_FILE, corruptPath);
+      console.error('Backed up corrupt data to', corruptPath);
+    } catch (copyErr) {
+      console.error('Failed to backup corrupt data file:', copyErr.message);
+    }
+    // Recreate the data file with initial structure to recover the server
+    initializeData();
+    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  }
 }
 
 function writeData(data) {
