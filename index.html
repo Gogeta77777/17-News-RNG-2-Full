@@ -5,6 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>17 News RNG</title>
     <style>
+        /* Animations & Effects */
+        .fade-in {
+            animation: fadeIn 0.7s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #3498db;
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .popup {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #27ae60;
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 9999;
+            font-size: 1.2rem;
+            opacity: 0;
+            animation: popupShow 1.2s forwards;
+        }
+        @keyframes popupShow {
+            0% { opacity: 0; transform: translateX(-50%) scale(0.9); }
+            20% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(-50%) scale(1); }
+        }
         /* Reset and Base Styles */
         * {
             margin: 0;
@@ -731,6 +777,15 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        // Utility: Show popup message
+        function showPopup(message, color = '#27ae60') {
+            const popup = document.createElement('div');
+            popup.className = 'popup';
+            popup.style.background = color;
+            popup.textContent = message;
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 1200);
+        }
         // Global variables
         let currentUser = null;
         let socket = null;
@@ -748,6 +803,8 @@
         function showPage(pageName) {
             Object.values(pages).forEach(page => page.classList.add('hidden'));
             pages[pageName].classList.remove('hidden');
+            pages[pageName].classList.add('fade-in');
+            setTimeout(() => pages[pageName].classList.remove('fade-in'), 700);
         }
 
         // Check if user is already logged in
@@ -928,6 +985,11 @@
             const password = document.getElementById('login-password').value;
             const errorDiv = document.getElementById('login-error');
             
+            // Show spinner
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
+            btn.disabled = true;
+            errorDiv.classList.add('hidden');
             try {
                 const response = await fetch('/api/login', {
                     method: 'POST',
@@ -936,11 +998,12 @@
                     },
                     body: JSON.stringify({ username, password })
                 });
-                
                 const data = await response.json();
-                
+                btn.innerHTML = 'Login';
+                btn.disabled = false;
                 if (data.success) {
                     currentUser = data.user;
+                    showPopup('Login successful!');
                     loadGameData(data);
                     if (currentUser.isAdmin) {
                         document.getElementById('admin-btn').classList.remove('hidden');
@@ -949,10 +1012,14 @@
                 } else {
                     errorDiv.textContent = data.error;
                     errorDiv.classList.remove('hidden');
+                    showPopup(data.error, '#e74c3c');
                 }
             } catch (error) {
+                btn.innerHTML = 'Login';
+                btn.disabled = false;
                 errorDiv.textContent = 'An error occurred. Please try again.';
                 errorDiv.classList.remove('hidden');
+                showPopup('An error occurred.', '#e74c3c');
             }
         });
 
@@ -963,6 +1030,11 @@
             const password = document.getElementById('register-password').value;
             const errorDiv = document.getElementById('register-error');
             
+            // Show spinner
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = '<span class="loading-spinner"></span> Registering...';
+            btn.disabled = true;
+            errorDiv.classList.add('hidden');
             try {
                 const response = await fetch('/api/register', {
                     method: 'POST',
@@ -971,20 +1043,25 @@
                     },
                     body: JSON.stringify({ username, password })
                 });
-                
                 const data = await response.json();
-                
+                btn.innerHTML = 'Register';
+                btn.disabled = false;
                 if (data.success) {
                     currentUser = data.user;
+                    showPopup('Registration successful!');
                     loadGameData(data);
                     showPage('game');
                 } else {
                     errorDiv.textContent = data.error;
                     errorDiv.classList.remove('hidden');
+                    showPopup(data.error, '#e74c3c');
                 }
             } catch (error) {
+                btn.innerHTML = 'Register';
+                btn.disabled = false;
                 errorDiv.textContent = 'An error occurred. Please try again.';
                 errorDiv.classList.remove('hidden');
+                showPopup('An error occurred.', '#e74c3c');
             }
         });
 
@@ -1030,41 +1107,40 @@
             } catch (error) {
                 spinResult.innerHTML = `<div class="error-message">An error occurred. Please try again.</div>`;
             } finally {
-                spinBtn.disabled = false;
-                spinBtn.textContent = 'Spin Now!';
-            }
-        });
-
-        // Code redemption
-        document.getElementById('redeem-btn').addEventListener('click', async () => {
-            const code = document.getElementById('code-input').value.trim();
-            const redeemBtn = document.getElementById('redeem-btn');
-            const codeResult = document.getElementById('code-result');
-            
-            if (!code) {
-                codeResult.innerHTML = `<div class="error-message">Please enter a code</div>`;
-                return;
-            }
-            
-            redeemBtn.disabled = true;
-            redeemBtn.textContent = 'Redeeming...';
-            
-            try {
-                const response = await fetch('/api/use-code', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ code })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    codeResult.innerHTML = `<div class="success-message">${result.message}</div>`;
-                    document.getElementById('code-input').value = '';
-                    
-                    // Update coin count if needed
+                spinBtn.disabled = true;
+                spinBtn.innerHTML = '<span class="loading-spinner"></span> Spinning...';
+                try {
+                    const response = await fetch('/api/spin', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({})
+                    });
+                    const data = await response.json();
+                    spinBtn.disabled = false;
+                    spinBtn.innerHTML = 'Spin Now!';
+                    if (data.success) {
+                        showPopup(`You got a ${data.rarity.name}!`, '#9b59b6');
+                        spinResult.innerHTML = `<strong style="color:${data.rarity.color};font-size:1.3em;animation:fadeIn 1s;">${data.item}</strong> <span style="color:${data.rarity.color};font-weight:bold;">(${data.rarity.name})</span>`;
+                        document.getElementById('coin-count').textContent = data.coins;
+                        currentUser.coins = data.coins;
+                        currentUser.inventory.push({
+                            name: data.item,
+                            rarity: data.rarity.name.toLowerCase(),
+                            date: new Date().toISOString()
+                        });
+                        loadGameData({ user: currentUser });
+                    } else {
+                        spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
+                        showPopup(data.error, '#e74c3c');
+                    }
+                } catch (error) {
+                    spinBtn.disabled = false;
+                    spinBtn.innerHTML = 'Spin Now!';
+                    spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
+                    showPopup('An error occurred.', '#e74c3c');
+                }
                     document.getElementById('coin-count').textContent = result.coins || 
                         document.getElementById('coin-count').textContent;
                     currentUser.coins = result.coins || currentUser.coins;
