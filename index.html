@@ -745,19 +745,24 @@
             }
         }
 
-        // Load game data
+        // Load game data (tolerant to partial input)
         function loadGameData(data) {
-            document.getElementById('user-name').textContent = currentUser.username;
-            document.getElementById('coin-count').textContent = currentUser.coins;
-            
-            // Load inventory
+            // Prefer using currentUser (keeps session state) but allow fallback to data.user
+            const user = currentUser || (data && data.user) || { username: 'Guest', coins: 0, inventory: [] };
+            currentUser = user;
+
+            document.getElementById('user-name').textContent = user.username;
+            document.getElementById('coin-count').textContent = user.coins || 0;
+
+            // Load inventory safely
             const inventoryGrid = document.getElementById('inventory-grid');
             inventoryGrid.innerHTML = '';
-            
-            if (currentUser.inventory.length === 0) {
+
+            const inventory = user.inventory || [];
+            if (inventory.length === 0) {
                 inventoryGrid.innerHTML = '<p class="empty-inventory">Your inventory is empty. Spin to get items!</p>';
             } else {
-                currentUser.inventory.forEach(item => {
+                inventory.forEach(item => {
                     const itemElement = document.createElement('div');
                     itemElement.className = `inventory-item rarity-${item.rarity}`;
                     itemElement.innerHTML = `
@@ -767,15 +772,19 @@
                     inventoryGrid.appendChild(itemElement);
                 });
             }
-            
+
+            // Safe lists (announcements, events, chat)
+            const announcements = (data && data.announcements) || [];
+            const events = (data && data.events) || [];
+            const chatMsgs = (data && data.chatMessages) || [];
+
             // Load announcements
             const announcementsList = document.getElementById('announcements-list');
             announcementsList.innerHTML = '';
-            
-            if (data.announcements.length === 0) {
+            if (announcements.length === 0) {
                 announcementsList.innerHTML = '<p>No announcements yet.</p>';
             } else {
-                data.announcements.forEach(announcement => {
+                announcements.forEach(announcement => {
                     const announcementElement = document.createElement('div');
                     announcementElement.className = 'announcement';
                     announcementElement.innerHTML = `
@@ -786,15 +795,14 @@
                     announcementsList.appendChild(announcementElement);
                 });
             }
-            
+
             // Load events
             const eventsList = document.getElementById('events-list');
             eventsList.innerHTML = '';
-            
-            if (data.events.length === 0) {
+            if (events.length === 0) {
                 eventsList.innerHTML = '<p>No events yet.</p>';
             } else {
-                data.events.forEach(event => {
+                events.forEach(event => {
                     const eventElement = document.createElement('div');
                     eventElement.className = `event ${event.active ? 'active' : ''}`;
                     eventElement.innerHTML = `
@@ -809,13 +817,12 @@
                     eventsList.appendChild(eventElement);
                 });
             }
-            
+
             // Load chat messages
             const chatMessages = document.getElementById('chat-messages');
             chatMessages.innerHTML = '';
-            
-            if (data.chatMessages && data.chatMessages.length > 0) {
-                data.chatMessages.forEach(message => {
+            if (chatMsgs && chatMsgs.length > 0) {
+                chatMsgs.forEach(message => {
                     const messageElement = document.createElement('div');
                     messageElement.className = 'chat-message';
                     messageElement.innerHTML = `
@@ -828,13 +835,17 @@
                 });
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
-            
-            // Initialize socket connection for chat
-            if (socket) {
-                socket.disconnect();
+
+            // Initialize or reinitialize socket connection for chat
+            try {
+                if (socket) {
+                    socket.disconnect();
+                }
+            } catch (e) {
+                console.warn('Socket disconnect error', e);
             }
             socket = io();
-            
+
             // Chat functionality
             socket.on('chat_message', (data) => {
                 const chatMessages = document.getElementById('chat-messages');
@@ -846,11 +857,10 @@
                     <br>
                     <small class="timestamp">${new Date(data.timestamp).toLocaleTimeString()}</small>
                 `;
-                
                 chatMessages.appendChild(messageElement);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
-            
+
             // Handle announcements from admin
             socket.on('new_announcement', (data) => {
                 if (Notification.permission === 'granted') {
@@ -858,13 +868,11 @@
                         body: `${data.title}: ${data.content}`
                     });
                 }
-                
-                // Refresh announcements if on that tab
                 if (document.getElementById('announcements-tab').classList.contains('active')) {
-                    location.reload();
+                    checkLoginStatus();
                 }
             });
-            
+
             // Handle new events from admin
             socket.on('new_event', (data) => {
                 if (Notification.permission === 'granted') {
@@ -872,13 +880,11 @@
                         body: `${data.name}: ${data.description}`
                     });
                 }
-                
-                // If on events tab, refresh content
                 if (document.getElementById('events-tab').classList.contains('active')) {
-                    location.reload();
+                    checkLoginStatus();
                 }
             });
-            
+
             // Request notification permission
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
@@ -919,10 +925,10 @@
                 btn.innerHTML = 'Login';
                 btn.disabled = false;
                 if (data.success) {
-                    currentUser = data.user;
+                    // After login we request the full data set to ensure client-side state is complete
                     showPopup('Login successful!');
-                    loadGameData(data);
-                    if (currentUser.isAdmin) {
+                    await checkLoginStatus();
+                    if (currentUser && currentUser.isAdmin) {
                         document.getElementById('admin-btn').classList.remove('hidden');
                     }
                     showPage('game');
@@ -964,9 +970,8 @@
                 btn.innerHTML = 'Register';
                 btn.disabled = false;
                 if (data.success) {
-                    currentUser = data.user;
                     showPopup('Registration successful!');
-                    loadGameData(data);
+                    await checkLoginStatus();
                     showPage('game');
                 } else {
                     errorDiv.textContent = data.error;
