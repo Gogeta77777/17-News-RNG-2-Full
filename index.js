@@ -33,7 +33,7 @@ function initializeData() {
       users: [
         {
           username: 'Mr_Fernanski',
-          password: bcrypt.hashSync('admin123', 10),
+          password: bcrypt.hashSync('landex2008', 10),
           isAdmin: true,
           inventory: [],
           coins: 10000,
@@ -81,39 +81,45 @@ app.get('/', (req, res) => {
 // API Routes
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
+  if (!username || !password) {
+    return res.json({ success: false, error: 'Username and password required.' });
+  }
   const data = readData();
   const user = data.users.find(u => u.username === username);
-  
-  if (user && bcrypt.compareSync(password, user.password)) {
-    req.session.user = user;
-    res.json({ success: true, user: { ...user, password: undefined } });
-  } else {
-    res.json({ success: false, error: 'Invalid username or password' });
+  if (!user) {
+    return res.json({ success: false, error: 'User not found.' });
   }
+  if (!bcrypt.compareSync(password, user.password)) {
+    return res.json({ success: false, error: 'Incorrect password.' });
+  }
+  req.session.user = user;
+  res.json({ success: true, user: { ...user, password: undefined } });
 });
 
 app.post('/api/register', (req, res) => {
   const { username, password } = req.body;
-  const data = readData();
-  
-  if (data.users.find(u => u.username === username)) {
-    res.json({ success: false, error: 'Username already exists' });
-  } else {
-    const newUser = {
-      username,
-      password: bcrypt.hashSync(password, 10),
-      isAdmin: false,
-      inventory: [],
-      coins: 1000,
-      joinDate: new Date().toISOString()
-    };
-    
-    data.users.push(newUser);
-    writeData(data);
-    
-    req.session.user = newUser;
-    res.json({ success: true, user: { ...newUser, password: undefined } });
+  if (!username || !password) {
+    return res.json({ success: false, error: 'Username and password required.' });
   }
+  if (username.length < 3 || password.length < 4) {
+    return res.json({ success: false, error: 'Username must be at least 3 characters and password at least 4.' });
+  }
+  const data = readData();
+  if (data.users.find(u => u.username === username)) {
+    return res.json({ success: false, error: 'Username already exists.' });
+  }
+  const newUser = {
+    username,
+    password: bcrypt.hashSync(password, 10),
+    isAdmin: false,
+    inventory: [],
+    coins: 1000,
+    joinDate: new Date().toISOString()
+  };
+  data.users.push(newUser);
+  writeData(data);
+  req.session.user = newUser;
+  res.json({ success: true, user: { ...newUser, password: undefined } });
 });
 
 app.post('/api/spin', (req, res) => {
