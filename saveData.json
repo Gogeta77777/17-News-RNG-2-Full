@@ -4,16 +4,38 @@
       "username": "Mr_Fernanski",
       "password": "$2a$10$5hh1QLeLvfP6/qT.qxFxjernp8nEPvvo4wa6WXv0OuOenN4KehOYi",
       "isAdmin": true,
-      "inventory": [],
-      "coins": 10000,
+      "inventory": [
+        {
+          "name": "Arcane Orb (Rare)",
+          "rarity": "rare",
+          "date": "2025-10-05T09:30:28.316Z"
+        }
+      ],
+      "coins": 10500,
       "joinDate": "2025-10-05T00:00:00.000Z"
     },
     {
       "username": "testreg",
       "password": "$2a$10$zlvof3fWpA5BM3WrjvrLAuG.NvhMtcc87/KBPPqndLLyL6q3ukhz2",
       "isAdmin": false,
-      "inventory": [],
-      "coins": 1000,
+      "inventory": [
+        {
+          "name": "Common Item #1759656608207",
+          "rarity": "common",
+          "date": "2025-10-05T09:30:08.207Z"
+        },
+        {
+          "name": "Epic Item #1759656628129",
+          "rarity": "epic",
+          "date": "2025-10-05T09:30:28.129Z"
+        },
+        {
+          "name": "Ancient Crate (Rare)",
+          "rarity": "rare",
+          "date": "2025-10-05T09:30:28.316Z"
+        }
+      ],
+      "coins": 1500,
       "joinDate": "2025-10-05T09:01:21.952Z"
     }
   ],
@@ -36,7 +58,77 @@
       "usedBy": []
     }
   ],
-  "announcements": [],
-  "events": [],
+  "announcements": [
+    {
+      "id": 1759656244657,
+      "title": "Meteor Shower!",
+      "content": "All players received 500 coins!",
+      "date": "2025-10-05T09:24:04.656Z",
+      "author": "Server"
+    },
+    {
+      "id": 1759656628319,
+      "title": "Rare Storm!",
+      "content": "Rare items are falling from the sky — check your inventory!",
+      "date": "2025-10-05T09:30:28.316Z",
+      "author": "Server"
+    }
+  ],
+  "events": [
+    {
+      "id": 1001,
+      "name": "Meteor Shower",
+      "description": "A dazzling meteor shower rains coins down on everyone!",
+      "startDate": "2025-10-05T00:00:00.000Z",
+      "endDate": "2025-12-31T23:59:59.000Z",
+      "type": "meteor_shower",
+      "payload": {
+        "amount": 500
+      },
+      "active": false
+    },
+    {
+      "id": 1002,
+      "name": "Treasure Flood",
+      "description": "Crates and loot wash ashore - everyone gets a crate!",
+      "startDate": "2025-11-01T00:00:00.000Z",
+      "endDate": "2025-11-02T00:00:00.000Z",
+      "type": "treasure_flood",
+      "payload": {
+        "itemName": "Common Crate"
+      },
+      "active": false
+    },
+    {
+      "id": 1003,
+      "name": "Rare Storm",
+      "description": "A storm of rare items — luck is in the air!",
+      "startDate": "2025-12-01T00:00:00.000Z",
+      "endDate": "2025-12-01T06:00:00.000Z",
+      "type": "rare_storm",
+      "payload": {},
+      "active": false
+    },
+    {
+      "id": 1759656244655,
+      "name": "Meteor Shower",
+      "description": "A sudden shower of cosmic coins!",
+      "startDate": "2025-10-05T00:00:00.000Z",
+      "endDate": "2025-12-31T23:59:59.000Z",
+      "type": "meteor_shower",
+      "payload": {},
+      "active": true
+    },
+    {
+      "id": 1759656628315,
+      "name": "Rare Storm Now",
+      "description": "Admin-triggered rare storm",
+      "startDate": "2025-10-05T00:00:00.000Z",
+      "endDate": "2025-10-05T23:59:59.000Z",
+      "type": "rare_storm",
+      "payload": {},
+      "active": true
+    }
+  ],
   "chatMessages": []
 }
