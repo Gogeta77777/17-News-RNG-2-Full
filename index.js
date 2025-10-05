@@ -127,22 +127,17 @@ app.post('/api/spin', (req, res) => {
   if (!req.session.user) {
     return res.json({ success: false, error: 'Not logged in' });
   }
-  
+
   const data = readData();
   const userIndex = data.users.findIndex(u => u.username === req.session.user.username);
-  
-  if (data.users[userIndex].coins < 100) {
-    return res.json({ success: false, error: 'Not enough coins' });
-  }
-  
-  // Deduct coins
-  data.users[userIndex].coins -= 100;
-  
+
+  // Spin is now free, do not deduct coins
+
   // Determine rarity
   const random = Math.random() * 100;
   let cumulativeChance = 0;
   let selectedRarity;
-  
+
   for (const rarity of RARITIES) {
     cumulativeChance += rarity.chance;
     if (random <= cumulativeChance) {
@@ -150,7 +145,7 @@ app.post('/api/spin', (req, res) => {
       break;
     }
   }
-  
+
   // Add item to inventory
   const itemName = `${selectedRarity.name} Item #${Date.now()}`;
   data.users[userIndex].inventory.push({
@@ -158,17 +153,17 @@ app.post('/api/spin', (req, res) => {
     rarity: selectedRarity.name.toLowerCase(),
     date: new Date().toISOString()
   });
-  
+
   writeData(data);
-  
+
   // Update session
   req.session.user = data.users[userIndex];
-  
+
   res.json({ 
     success: true, 
     rarity: selectedRarity,
     item: itemName,
-    coins: data.users[userIndex].coins
+    coins: data.users[userIndex].coins // coins remain unchanged
   });
 });
 
