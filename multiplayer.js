@@ -5,10 +5,15 @@
 const socketIo = require('socket.io');
 
 function setupMultiplayer(server, readData, writeData) {
-  const io = socketIo(server);
+  const io = socketIo(server, {
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST']
+    }
+  });
 
   io.on('connection', (socket) => {
-    console.log('A user connected (multiplayer)');
+    console.log('A user connected (multiplayer)', socket.id);
 
     socket.on('chat_message', (data) => {
       const chatMessage = {
@@ -26,8 +31,8 @@ function setupMultiplayer(server, readData, writeData) {
       io.emit('chat_message', chatMessage);
     });
 
-    socket.on('disconnect', () => {
-      console.log('User disconnected (multiplayer)');
+    socket.on('disconnect', (reason) => {
+      console.log(`User disconnected (multiplayer): ${socket.id} Reason: ${reason}`);
     });
   });
 
