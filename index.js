@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
@@ -20,8 +21,8 @@ app.use(session({
   secret: '17-news-rng-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false }
-  // NOTE: For production, use a persistent session store (e.g., Redis) instead of MemoryStore
+  cookie: { secure: false },
+  store: new SQLiteStore({ db: 'sessions.sqlite', dir: './' })
 }));
 
 // Data management
