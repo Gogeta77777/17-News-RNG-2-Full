@@ -2,7 +2,7 @@
   "users": [
     {
       "username": "Mr_Fernanski",
-      "password": "$2a$10$Qw6Qw6Qw6Qw6Qw6Qw6Qw6OQw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6",
+      "password": "landex2008",
       "isAdmin": true,
       "inventory": [],
       "coins": 10000,
