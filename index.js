@@ -11,7 +11,9 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 // Middleware
-app.use(express.static('public'));
+// Serve static files from both root and public for Railway compatibility
+app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(session({
@@ -19,6 +21,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false }
+  // NOTE: For production, use a persistent session store (e.g., Redis) instead of MemoryStore
 }));
 
 // Data management
