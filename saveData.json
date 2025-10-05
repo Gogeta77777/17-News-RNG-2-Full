@@ -2,11 +2,19 @@
   "users": [
     {
       "username": "Mr_Fernanski",
-      "password": "$2a$10$Qw6Qw6Qw6Qw6Qw6Qw6Qw6OQw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6Qw6",
+      "password": "$2a$10$5hh1QLeLvfP6/qT.qxFxjernp8nEPvvo4wa6WXv0OuOenN4KehOYi",
       "isAdmin": true,
       "inventory": [],
       "coins": 10000,
       "joinDate": "2025-10-05T00:00:00.000Z"
+    },
+    {
+      "username": "testreg",
+      "password": "$2a$10$zlvof3fWpA5BM3WrjvrLAuG.NvhMtcc87/KBPPqndLLyL6q3ukhz2",
+      "isAdmin": false,
+      "inventory": [],
+      "coins": 1000,
+      "joinDate": "2025-10-05T09:01:21.952Z"
     }
   ],
   "codes": [
