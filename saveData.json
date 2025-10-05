@@ -1,14 +1,5 @@
 {
-  "users": [
-    {
-      "username": "Mr_Fernanski",
-      "password": "landex",
-      "isAdmin": true,
-      "inventory": [],
-      "coins": 10000,
-      "joinDate": "2023-01-01T00:00:00.000Z"
-    }
-  ],
+  "users": [],
   "codes": [
     {
       "code": "WELCOME17",
