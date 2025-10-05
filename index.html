@@ -1069,96 +1069,77 @@
         document.getElementById('spin-btn').addEventListener('click', async () => {
             const spinBtn = document.getElementById('spin-btn');
             const spinResult = document.getElementById('spin-result');
-            
             spinBtn.disabled = true;
-            spinBtn.textContent = 'Spinning...';
-            
+            spinBtn.innerHTML = '<span class="loading-spinner"></span> Spinning...';
             try {
                 const response = await fetch('/api/spin', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({})
                 });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    // Update coin count
-                    document.getElementById('coin-count').textContent = result.coins;
-                    currentUser.coins = result.coins;
-                    
-                    // Display result with rarity color
-                    spinResult.innerHTML = `
-                        <div class="success-message" style="color: ${result.rarity.color}; margin-top: 10px;">
-                            <strong>Congratulations!</strong><br>
-                            You got: ${result.item}<br>
-                            Rarity: ${result.rarity.name}
-                        </div>
-                    `;
-                    
-                    // Refresh inventory
-                    setTimeout(() => {
-                        checkLoginStatus();
-                    }, 2000);
-                } else {
-                    spinResult.innerHTML = `<div class="error-message">${result.error}</div>`;
-                }
-            } catch (error) {
-                spinResult.innerHTML = `<div class="error-message">An error occurred. Please try again.</div>`;
-            } finally {
-                spinBtn.disabled = true;
-                spinBtn.innerHTML = '<span class="loading-spinner"></span> Spinning...';
-                try {
-                    const response = await fetch('/api/spin', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({})
+                const data = await response.json();
+                spinBtn.disabled = false;
+                spinBtn.innerHTML = 'Spin Now!';
+                if (data.success) {
+                    showPopup(`You got a ${data.rarity.name}!`, '#9b59b6');
+                    spinResult.innerHTML = `<strong style="color:${data.rarity.color};font-size:1.3em;animation:fadeIn 1s;">${data.item}</strong> <span style="color:${data.rarity.color};font-weight:bold;">(${data.rarity.name})</span>`;
+                    document.getElementById('coin-count').textContent = data.coins;
+                    currentUser.coins = data.coins;
+                    currentUser.inventory.push({
+                        name: data.item,
+                        rarity: data.rarity.name.toLowerCase(),
+                        date: new Date().toISOString()
                     });
-                    const data = await response.json();
-                    spinBtn.disabled = false;
-                    spinBtn.innerHTML = 'Spin Now!';
-                    if (data.success) {
-                        showPopup(`You got a ${data.rarity.name}!`, '#9b59b6');
-                        spinResult.innerHTML = `<strong style="color:${data.rarity.color};font-size:1.3em;animation:fadeIn 1s;">${data.item}</strong> <span style="color:${data.rarity.color};font-weight:bold;">(${data.rarity.name})</span>`;
-                        document.getElementById('coin-count').textContent = data.coins;
-                        currentUser.coins = data.coins;
-                        currentUser.inventory.push({
-                            name: data.item,
-                            rarity: data.rarity.name.toLowerCase(),
-                            date: new Date().toISOString()
-                        });
-                        loadGameData({ user: currentUser });
-                    } else {
-                        spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
-                        showPopup(data.error, '#e74c3c');
-                    }
-                } catch (error) {
-                    spinBtn.disabled = false;
-                    spinBtn.innerHTML = 'Spin Now!';
-                    spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
-                    showPopup('An error occurred.', '#e74c3c');
-                }
-                    document.getElementById('coin-count').textContent = result.coins || 
-                        document.getElementById('coin-count').textContent;
-                    currentUser.coins = result.coins || currentUser.coins;
-                    
-                    // Refresh inventory if item was added
-                    if (result.message.includes('item')) {
-                        setTimeout(() => {
-                            checkLoginStatus();
-                        }, 1500);
-                    }
+                    loadGameData({ user: currentUser });
                 } else {
-                    codeResult.innerHTML = `<div class="error-message">${result.error}</div>`;
+                    spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
+                    showPopup(data.error, '#e74c3c');
                 }
             } catch (error) {
-                codeResult.innerHTML = `<div class="error-message">An error occurred. Please try again.</div>`;
-            } finally {
+                spinBtn.disabled = false;
+                spinBtn.innerHTML = 'Spin Now!';
+                spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
+                showPopup('An error occurred.', '#e74c3c');
+            }
+        });
+        // Redeem code functionality
+        document.getElementById('redeem-btn').addEventListener('click', async () => {
+            const redeemBtn = document.getElementById('redeem-btn');
+            const codeInput = document.getElementById('code-input');
+            const codeResult = document.getElementById('code-result');
+            const code = codeInput.value.trim();
+            if (!code) {
+                codeResult.innerHTML = '<span style="color:#e74c3c">Please enter a code.</span>';
+                return;
+            }
+            redeemBtn.disabled = true;
+            redeemBtn.innerHTML = '<span class="loading-spinner"></span> Redeeming...';
+            try {
+                const response = await fetch('/api/use-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json();
                 redeemBtn.disabled = false;
-                redeemBtn.textContent = 'Redeem';
+                redeemBtn.innerHTML = 'Redeem';
+                if (data.success) {
+                    showPopup(data.message, '#27ae60');
+                    codeResult.innerHTML = `<span style="color:#27ae60">${data.message}</span>`;
+                    checkLoginStatus();
+                } else {
+                    codeResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (error) {
+                redeemBtn.disabled = false;
+                redeemBtn.innerHTML = 'Redeem';
+                codeResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
+                showPopup('An error occurred.', '#e74c3c');
             }
         });
 
