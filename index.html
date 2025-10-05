@@ -489,76 +489,67 @@
             </header>
             
             <div class="game-content">
-                <div class="sidebar">
-                    <div class="game-section" id="spin-section">
-                        <h2>Spin for Items</h2>
-                        <p>Cost: 100 coins</p>
-                        <button id="spin-btn" class="btn btn-spin">Spin Now!</button>
-                        <div id="spin-result"></div>
+                <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div id="spin-section" style="width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 2em;">
+                        <h2 style="margin-bottom: 0.5em;">Spin for Items</h2>
+                        <button id="spin-btn" class="btn btn-spin" style="font-size: 1.5em; padding: 1em 2em; margin-bottom: 1em;">Spin Now!</button>
+                        <div id="spin-result" style="font-size: 2em; font-weight: bold; margin-bottom: 1em; text-align: center;"></div>
                     </div>
-                    
-                    <div class="game-section" id="codes-section">
+                    <div id="codes-section" style="width: 100%; max-width: 400px; margin-bottom: 2em;">
                         <h2>Redeem Codes</h2>
-                        <input type="text" id="code-input" placeholder="Enter code">
+                        <input type="text" id="code-input" placeholder="Enter code" style="width: 70%;">
                         <button id="redeem-btn" class="btn btn-redeem">Redeem</button>
                         <div id="code-result"></div>
                     </div>
-                    
-                    <div class="game-section" id="shop-section">
+                    <div id="shop-section" style="width: 100%; max-width: 400px; margin-bottom: 2em;">
                         <h2>Shop</h2>
                         <p>Coming soon!</p>
                     </div>
-                </div>
-                
-                <div class="main-content">
-                    <div class="tabs">
-                        <button class="tab-btn active" data-tab="inventory">Inventory</button>
-                        <button class="tab-btn" data-tab="chat">Chat</button>
-                        <button class="tab-btn" data-tab="announcements">Announcements</button>
-                        <button class="tab-btn" data-tab="events">Events</button>
-                        <button class="tab-btn" data-tab="settings">Settings</button>
-                    </div>
-                    
-                    <div class="tab-content">
-                        <div id="inventory-tab" class="tab-pane active">
-                            <h2>Your Inventory</h2>
-                            <div id="inventory-grid" class="inventory-grid">
-                                <!-- Inventory items will be populated here -->
-                            </div>
+                    <div class="main-content" style="width: 100%; max-width: 900px;">
+                        <div class="tabs">
+                            <button class="tab-btn active" data-tab="inventory">Inventory</button>
+                            <button class="tab-btn" data-tab="chat">Chat</button>
+                            <button class="tab-btn" data-tab="announcements">Announcements</button>
+                            <button class="tab-btn" data-tab="events">Events</button>
+                            <button class="tab-btn" data-tab="settings">Settings</button>
                         </div>
-                        
-                        <div id="chat-tab" class="tab-pane">
-                            <h2>Global Chat</h2>
-                            <div id="chat-messages" class="chat-messages"></div>
-                            <div class="chat-input">
-                                <input type="text" id="chat-input" placeholder="Type your message...">
-                                <button id="send-btn">Send</button>
+                        <div class="tab-content">
+                            <div id="inventory-tab" class="tab-pane active">
+                                <h2>Your Inventory</h2>
+                                <div id="inventory-grid" class="inventory-grid">
+                                    <!-- Inventory items will be populated here -->
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div id="announcements-tab" class="tab-pane">
-                            <h2>Announcements</h2>
-                            <div id="announcements-list" class="announcements-list">
-                                <!-- Announcements will be populated here -->
+                            <div id="chat-tab" class="tab-pane">
+                                <h2>Global Chat</h2>
+                                <div id="chat-messages" class="chat-messages"></div>
+                                <div class="chat-input">
+                                    <input type="text" id="chat-input" placeholder="Type your message...">
+                                    <button id="send-btn">Send</button>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div id="events-tab" class="tab-pane">
-                            <h2>Events</h2>
-                            <div id="events-list" class="events-list">
-                                <!-- Events will be populated here -->
+                            <div id="announcements-tab" class="tab-pane">
+                                <h2>Announcements</h2>
+                                <div id="announcements-list" class="announcements-list">
+                                    <!-- Announcements will be populated here -->
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div id="settings-tab" class="tab-pane">
-                            <h2>Settings</h2>
-                            <div class="settings-option">
-                                <label for="sound-toggle">Sound Effects</label>
-                                <input type="checkbox" id="sound-toggle" checked>
+                            <div id="events-tab" class="tab-pane">
+                                <h2>Events</h2>
+                                <div id="events-list" class="events-list">
+                                    <!-- Events will be populated here -->
+                                </div>
                             </div>
-                            <div class="settings-option">
-                                <label for="theme-toggle">Dark Theme</label>
-                                <input type="checkbox" id="theme-toggle" checked>
+                            <div id="settings-tab" class="tab-pane">
+                                <h2>Settings</h2>
+                                <div class="settings-option">
+                                    <label for="sound-toggle">Sound Effects</label>
+                                    <input type="checkbox" id="sound-toggle" checked>
+                                </div>
+                                <div class="settings-option">
+                                    <label for="theme-toggle">Dark Theme</label>
+                                    <input type="checkbox" id="theme-toggle" checked>
+                                </div>
                             </div>
                         </div>
                     </div>
