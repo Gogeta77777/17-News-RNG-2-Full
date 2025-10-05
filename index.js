@@ -88,6 +88,48 @@ const RARITIES = [
   { name: 'Divine', color: '#e91e63', chance: 1 }
 ];
 
+// Small item name generator (no serial numbers)
+const ADJECTIVES = ['Ancient','Glowing','Shiny','Rusty','Cyber','Arcane','Lucky','Nebula','Solar','Luminous','Phantom','Mystic'];
+const NOUNS = ['Relic','Core','Shard','Crate','Module','Chip','Talisman','Beacon','Crystal','Orb','Console','Fragment'];
+function generateItemName(rarityName) {
+  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+  return `${adj} ${noun} (${rarityName})`;
+}
+
+// Apply event rewards to all users depending on event type
+function applyEventRewards(event) {
+  const data = readData();
+  const now = new Date();
+  // apply only if event is active or has applyNow flag
+  try {
+    if (event.type === 'meteor_shower') {
+      // give coins to all users
+      const amount = (event.payload && event.payload.amount) || 500;
+      data.users.forEach(u => { u.coins = (u.coins || 0) + amount; });
+      // Add an announcement entry
+      data.announcements.push({ id: Date.now()+1, title: `Meteor Shower!`, content: `All players received ${amount} coins!`, date: now.toISOString(), author: 'Server' });
+    } else if (event.type === 'treasure_flood') {
+      // give each user a crate (item)
+      const itemName = (event.payload && event.payload.itemName) || 'Common Crate';
+      data.users.forEach(u => { u.inventory = u.inventory || []; u.inventory.push({ name: itemName, rarity: 'common', date: now.toISOString() }); });
+      data.announcements.push({ id: Date.now()+2, title: `Treasure Flood!`, content: `A flood of crates washed over the servers — everyone got a ${itemName}!`, date: now.toISOString(), author: 'Server' });
+    } else if (event.type === 'rare_storm') {
+      // give each user a rare item
+      data.users.forEach(u => { u.inventory = u.inventory || []; u.inventory.push({ name: generateItemName('Rare'), rarity: 'rare', date: now.toISOString() }); });
+      data.announcements.push({ id: Date.now()+3, title: `Rare Storm!`, content: `Rare items are falling from the sky — check your inventory!`, date: now.toISOString(), author: 'Server' });
+    }
+    writeData(data);
+    // Broadcast via socket if available
+    if (io) {
+      io.emit('new_event', { name: event.name, description: event.description, type: event.type });
+      io.emit('refresh_data');
+    }
+  } catch (err) {
+    console.error('Error applying event rewards:', err);
+  }
+}
+
 // Serve main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -257,28 +299,32 @@ app.post('/api/admin/event', (req, res) => {
   if (!req.session.user || !req.session.user.isAdmin) {
     return res.json({ success: false, error: 'Unauthorized' });
   }
-  
-  const { name, description, startDate, endDate } = req.body;
+  const { name, description, startDate, endDate, type, payload, applyNow } = req.body;
   const data = readData();
-  
-  data.events.push({
+
+  const newEvent = {
     id: Date.now(),
     name,
     description,
     startDate,
     endDate,
+    type: type || 'custom',
+    payload: payload || {},
     active: new Date() >= new Date(startDate) && new Date() <= new Date(endDate)
-  });
-  
+  };
+
+  data.events.push(newEvent);
   writeData(data);
-  
+
   // Broadcast to all connected clients
-  io.emit('new_event', {
-    name,
-    description
-  });
-  
-  res.json({ success: true });
+  io.emit('new_event', { name, description, type: newEvent.type });
+
+  // If admin requested immediate application or event is already active, apply rewards
+  if (applyNow || newEvent.active) {
+    applyEventRewards(newEvent);
+  }
+
+  res.json({ success: true, event: newEvent });
 });
 
 app.get('/api/data', (req, res) => {
