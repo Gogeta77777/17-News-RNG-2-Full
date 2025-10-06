@@ -26,9 +26,48 @@ app.use(session({
 }));
 
 // Data management
-const DATA_FILE = './saveData.json';
+const DATA_DIR = process.env.DATA_DIR || './data';
+const DATA_FILE = path.join(DATA_DIR, 'saveData.json');
+const BACKUP_DIR = path.join(DATA_DIR, 'backups');
+
+// Ensure data directories exist
+function ensureDirectories() {
+  [DATA_DIR, BACKUP_DIR].forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      console.log(`Created directory: ${dir}`);
+    }
+  });
+}
+
+// Create backup of data file
+function createBackup() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const backupFile = path.join(BACKUP_DIR, `saveData.backup.${Date.now()}.json`);
+      fs.copyFileSync(DATA_FILE, backupFile);
+      console.log(`Created backup: ${backupFile}`);
+      
+      // Keep only last 5 backups
+      const backups = fs.readdirSync(BACKUP_DIR)
+        .filter(f => f.startsWith('saveData.backup'))
+        .sort()
+        .reverse();
+      
+      if (backups.length > 5) {
+        backups.slice(5).forEach(backup => {
+          fs.unlinkSync(path.join(BACKUP_DIR, backup));
+          console.log(`Removed old backup: ${backup}`);
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Backup creation failed:', err);
+  }
+}
 
 function initializeData() {
+  ensureDirectories();
   if (!fs.existsSync(DATA_FILE)) {
     const initialData = {
       users: [
@@ -71,9 +110,42 @@ function readData() {
   }
 }
 
-function writeData(data) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+function validateData(data) {
+  const requiredFields = ['users', 'codes', 'announcements', 'events', 'chatMessages'];
+  return requiredFields.every(field => Array.isArray(data[field]));
 }
+
+function writeData(data) {
+  try {
+    // Validate data before writing
+    if (!validateData(data)) {
+      throw new Error('Invalid data structure');
+    }
+
+    // Create backup before writing
+    createBackup();
+
+    // Write to temporary file first
+    const tempFile = `${DATA_FILE}.tmp`;
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2));
+
+    // Rename temp file to actual file (atomic operation)
+    fs.renameSync(tempFile, DATA_FILE);
+    
+    console.log(`Data saved successfully at ${new Date().toISOString()}`);
+  } catch (err) {
+    console.error('Failed to write data:', err);
+    throw err; // Re-throw to handle in route handlers
+  }
+}
+
+// Set up periodic backup
+const BACKUP_INTERVAL = 30 * 60 * 1000; // 30 minutes
+setInterval(() => {
+  console.log('Creating periodic backup...');
+  const data = readData();
+  createBackup();
+}, BACKUP_INTERVAL);
 
 initializeData();
 
@@ -130,13 +202,92 @@ function applyEventRewards(event) {
   }
 }
 
+// Authentication middleware
+const requireAuth = (req, res, next) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+};
+
 // Serve main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // API Routes
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
+  const loginAttempt = async (userInput, passInput) => {
+    try {
+      // Input validation
+      if (!userInput || !passInput || 
+          typeof userInput !== 'string' || 
+          typeof passInput !== 'string') {
+        return res.status(400).json({ error: 'Invalid credentials format' });
+      }
+
+      // Rate limiting (simple)
+      const now = Date.now();
+      const attempts = req.session.loginAttempts || [];
+      req.session.loginAttempts = attempts.filter(time => now - time < 15 * 60 * 1000);
+      
+      if (req.session.loginAttempts.length >= 5) {
+        return res.status(429).json({ error: 'Too many login attempts. Please try again later.' });
+      }
+
+      const data = readData();
+      const user = data.users.find(u => u.username === userInput);
+
+      if (!user) {
+        req.session.loginAttempts.push(now);
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      const match = await bcrypt.compare(passInput, user.password);
+
+      if (!match) {
+        req.session.loginAttempts.push(now);
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Login successful
+      req.session.user = {
+        username: user.username,
+        isAdmin: user.isAdmin
+      };
+      req.session.loginAttempts = [];
+
+      return res.json({
+        username: user.username,
+        isAdmin: user.isAdmin,
+        inventory: user.inventory,
+        coins: user.coins
+      });
+    } catch (err) {
+      console.error('Login error:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+
+  await loginAttempt(req.body.username, req.body.password);
+  try {
+    const { username, password } = req.body;
+    
+    // Input validation
+    if (!username || !password || 
+        typeof username !== 'string' || 
+        typeof password !== 'string') {
+      return res.status(400).json({ error: 'Invalid credentials format' });
+    }
+
+    // Rate limiting (simple)
+    const now = Date.now();
+    const attempts = req.session.loginAttempts || [];
+    req.session.loginAttempts = attempts.filter(time => now - time < 15 * 60 * 1000); // Keep attempts within last 15 min
+    
+    if (req.session.loginAttempts.length >= 5) {
+      return res.status(429).json({ error: 'Too many login attempts. Please try again later.' });
+    }
   const { username, password } = req.body;
   if (!username || !password) {
     return res.json({ success: false, error: 'Username and password required.' });
@@ -153,7 +304,21 @@ app.post('/api/login', (req, res) => {
   res.json({ success: true, user: { ...user, password: undefined } });
 });
 
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Input validation
+    if (!username || !password || 
+        typeof username !== 'string' || 
+        typeof password !== 'string' || 
+        username.length < 3 || username.length > 20 || 
+        password.length < 6 || password.length > 50 || 
+        !/^[a-zA-Z0-9_]+$/.test(username)) {
+      return res.status(400).json({ 
+        error: 'Invalid credentials. Username must be 3-20 characters (alphanumeric and underscore only). Password must be 6-50 characters.' 
+      });
+    }
   const { username, password } = req.body;
   if (!username || !password) {
     return res.json({ success: false, error: 'Username and password required.' });
