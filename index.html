@@ -339,6 +339,13 @@
             border-radius: 5px;
         }
 
+        .chat-message.system {
+            background: linear-gradient(90deg,#2c3e50,#34495e);
+            color: #fff;
+            border-left: 4px solid #f1c40f;
+            font-weight: 700;
+        }
+
         .chat-message .username {
             font-weight: bold;
             color: #3498db;
@@ -464,6 +471,7 @@
     </style>
 </head>
 <body>
+    <div id="global-banner" class="global-banner" style="background:linear-gradient(90deg,#f1c40f,#f39c12);display:none;padding:12px 18px;border-radius:8px;color:#08121a;font-weight:800;position:fixed;left:50%;transform:translateX(-50%);top:12px;z-index:9998;box-shadow:0 8px 30px rgba(0,0,0,0.45);"></div>
     <!-- Home Page -->
     <div id="home-page" class="container">
         <main class="home-main">
@@ -678,17 +686,14 @@
             </div>
             
             <div class="admin-section">
-                <h2>Existing Announcements</h2>
-                <div id="admin-announcements" class="announcements-list">
-                    <!-- Announcements will be populated here -->
+                <h2>Active Announcements & Events</h2>
+                <p>Use the controls below to broadcast global messages and trigger events. Announcements will also appear in chat as system messages.</p>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+                    <button id="broadcast-last-announcement" class="btn">Broadcast Latest Announcement</button>
+                    <button id="list-active-events" class="btn">List Active Events</button>
+                    <button id="apply-all-active-events" class="btn">Apply All Active Events</button>
                 </div>
-            </div>
-            
-            <div class="admin-section">
-                <h2>Existing Events</h2>
-                <div id="admin-events" class="events-list">
-                    <!-- Events will be populated here -->
-                </div>
+                <div id="admin-events" style="margin-top:16px;" class="events-list"></div>
             </div>
         </div>
     </div>
@@ -866,28 +871,55 @@
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
 
-            // Handle announcements from admin
+            // Handle announcements from admin (show banner + chat system message)
             socket.on('new_announcement', (data) => {
+                const banner = document.getElementById('global-banner');
+                banner.textContent = `${data.title}: ${data.content}`;
+                banner.style.display = 'block';
+                setTimeout(() => { banner.style.display = 'none'; }, 6000);
+
+                // Push a system chat message
+                const chatMessages = document.getElementById('chat-messages');
+                const messageElement = document.createElement('div');
+                messageElement.className = 'chat-message system';
+                messageElement.innerHTML = `<div>${data.title} — ${data.content}</div><small>${data.author || 'Admin'}</small>`;
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
                 if (Notification.permission === 'granted') {
-                    new Notification('New Announcement', {
-                        body: `${data.title}: ${data.content}`
-                    });
+                    new Notification('Announcement', { body: `${data.title}: ${data.content}` });
                 }
-                if (document.getElementById('announcements-tab').classList.contains('active')) {
-                    checkLoginStatus();
-                }
+                // Refresh announcement list
+                checkLoginStatus();
             });
 
-            // Handle new events from admin
+            // Handle new events from admin (special effects + chat system message)
             socket.on('new_event', (data) => {
+                // Visual flash for exciting events
+                const flash = document.createElement('div');
+                flash.style.position = 'fixed';
+                flash.style.left = 0;
+                flash.style.top = 0;
+                flash.style.width = '100%';
+                flash.style.height = '100%';
+                flash.style.zIndex = 9997;
+                flash.style.pointerEvents = 'none';
+                flash.style.background = 'radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 40%)';
+                document.body.appendChild(flash);
+                setTimeout(() => flash.remove(), 600);
+
+                const chatMessages = document.getElementById('chat-messages');
+                const messageElement = document.createElement('div');
+                messageElement.className = 'chat-message system';
+                messageElement.innerHTML = `<div style="color:#f39c12;">Event: ${data.name} — ${data.description}</div><small>Event activated</small>`;
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
                 if (Notification.permission === 'granted') {
-                    new Notification('New Event', {
-                        body: `${data.name}: ${data.description}`
-                    });
+                    new Notification('Event', { body: `${data.name}: ${data.description}` });
                 }
-                if (document.getElementById('events-tab').classList.contains('active')) {
-                    checkLoginStatus();
-                }
+                // Refresh events/announcements
+                checkLoginStatus();
             });
 
             // Request notification permission
@@ -1138,9 +1170,9 @@
                 
                 if (data.success) {
                     document.getElementById('announcement-form').reset();
-                    alert('Announcement published successfully!');
+                    showPopup('Announcement published and broadcasted!', '#f1c40f');
                 } else {
-                    alert('Error: ' + data.error);
+                    showPopup('Error: ' + data.error, '#e74c3c');
                 }
             } catch (error) {
                 alert('An error occurred. Please try again.');
@@ -1167,13 +1199,34 @@
                 
                 if (data.success) {
                     document.getElementById('event-form').reset();
-                    alert('Event created successfully!');
+                    showPopup('Event created and applied!', '#27ae60');
                 } else {
-                    alert('Error: ' + data.error);
+                    showPopup('Error: ' + data.error, '#e74c3c');
                 }
             } catch (error) {
                 alert('An error occurred. Please try again.');
             }
+        });
+
+        // Admin quick controls
+        const broadcastBtn = document.getElementById('broadcast-last-announcement');
+        if (broadcastBtn) broadcastBtn.addEventListener('click', async () => {
+            try {
+                const res = await fetch('/api/admin/rebroadcast-last-announcement', { method: 'POST' });
+                const d = await res.json();
+                if (d.success) showPopup('Broadcasted last announcement!', '#f1c40f');
+                else showPopup('No announcements to broadcast', '#e74c3c');
+            } catch (e) { showPopup('Error broadcasting', '#e74c3c'); }
+        });
+
+        const applyEventsBtn = document.getElementById('apply-all-active-events');
+        if (applyEventsBtn) applyEventsBtn.addEventListener('click', async () => {
+            try {
+                const res = await fetch('/api/admin/apply-active-events', { method: 'POST' });
+                const d = await res.json();
+                if (d.success) showPopup('Applied active events', '#27ae60');
+                else showPopup('No active events', '#e74c3c');
+            } catch (e) { showPopup('Error applying events', '#e74c3c'); }
         });
 
         // Logout function
