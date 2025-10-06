@@ -217,131 +217,78 @@ app.get('/', (req, res) => {
 
 // API Routes
 app.post('/api/login', async (req, res) => {
-  const loginAttempt = async (userInput, passInput) => {
-    try {
-      // Input validation
-      if (!userInput || !passInput || 
-          typeof userInput !== 'string' || 
-          typeof passInput !== 'string') {
-        return res.status(400).json({ error: 'Invalid credentials format' });
-      }
-
-      // Rate limiting (simple)
-      const now = Date.now();
-      const attempts = req.session.loginAttempts || [];
-      req.session.loginAttempts = attempts.filter(time => now - time < 15 * 60 * 1000);
-      
-      if (req.session.loginAttempts.length >= 5) {
-        return res.status(429).json({ error: 'Too many login attempts. Please try again later.' });
-      }
-
-      const data = readData();
-      const user = data.users.find(u => u.username === userInput);
-
-      if (!user) {
-        req.session.loginAttempts.push(now);
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-
-      const match = await bcrypt.compare(passInput, user.password);
-
-      if (!match) {
-        req.session.loginAttempts.push(now);
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-
-      // Login successful
-      req.session.user = {
-        username: user.username,
-        isAdmin: user.isAdmin
-      };
-      req.session.loginAttempts = [];
-
-      return res.json({
-        username: user.username,
-        isAdmin: user.isAdmin,
-        inventory: user.inventory,
-        coins: user.coins
-      });
-    } catch (err) {
-      console.error('Login error:', err);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-  };
-
-  await loginAttempt(req.body.username, req.body.password);
   try {
-    const { username, password } = req.body;
-    
-    // Input validation
-    if (!username || !password || 
-        typeof username !== 'string' || 
-        typeof password !== 'string') {
-      return res.status(400).json({ error: 'Invalid credentials format' });
+    const { username: loginUsername, password: loginPassword } = req.body || {};
+    if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
+      return res.json({ success: false, error: 'Username and password required.' });
     }
 
-    // Rate limiting (simple)
+    // Basic rate limiting per-session
     const now = Date.now();
     const attempts = req.session.loginAttempts || [];
-    req.session.loginAttempts = attempts.filter(time => now - time < 15 * 60 * 1000); // Keep attempts within last 15 min
-    
-    if (req.session.loginAttempts.length >= 5) {
-      return res.status(429).json({ error: 'Too many login attempts. Please try again later.' });
+    req.session.loginAttempts = attempts.filter(t => now - t < 15 * 60 * 1000);
+    if (req.session.loginAttempts.length >= 8) {
+      return res.json({ success: false, error: 'Too many attempts. Try again later.' });
     }
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.json({ success: false, error: 'Username and password required.' });
+
+    const data = readData();
+    const user = data.users.find(u => u.username === loginUsername);
+    if (!user) {
+      req.session.loginAttempts.push(now);
+      return res.json({ success: false, error: 'User not found.' });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      req.session.loginAttempts.push(now);
+      return res.json({ success: false, error: 'Incorrect password.' });
+    }
+
+    // Successful login - store minimal session info
+    req.session.user = { username: user.username, isAdmin: !!user.isAdmin };
+    req.session.loginAttempts = [];
+
+    return res.json({ success: true, user: { username: user.username, isAdmin: !!user.isAdmin, coins: user.coins, inventory: user.inventory } });
+  } catch (err) {
+    console.error('Login error:', err);
+    return res.json({ success: false, error: 'Internal server error' });
   }
-  const data = readData();
-  const user = data.users.find(u => u.username === username);
-  if (!user) {
-    return res.json({ success: false, error: 'User not found.' });
-  }
-  if (!bcrypt.compareSync(password, user.password)) {
-    return res.json({ success: false, error: 'Incorrect password.' });
-  }
-  req.session.user = user;
-  res.json({ success: true, user: { ...user, password: undefined } });
 });
 
 app.post('/api/register', async (req, res) => {
   try {
-    const { username, password } = req.body;
-
-    // Input validation
-    if (!username || !password || 
-        typeof username !== 'string' || 
-        typeof password !== 'string' || 
-        username.length < 3 || username.length > 20 || 
-        password.length < 6 || password.length > 50 || 
-        !/^[a-zA-Z0-9_]+$/.test(username)) {
-      return res.status(400).json({ 
-        error: 'Invalid credentials. Username must be 3-20 characters (alphanumeric and underscore only). Password must be 6-50 characters.' 
-      });
+    const { username, password } = req.body || {};
+    if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
+      return res.json({ success: false, error: 'Username and password required.' });
     }
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.json({ success: false, error: 'Username and password required.' });
+
+    if (username.length < 3 || username.length > 20 || password.length < 6 || password.length > 50 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+      return res.json({ success: false, error: 'Invalid credentials. Username must be 3-20 chars (alphanumeric/_), password 6-50 chars.' });
+    }
+
+    const data = readData();
+    if (data.users.find(u => u.username === username)) {
+      return res.json({ success: false, error: 'Username already exists.' });
+    }
+
+    const newUser = {
+      username,
+      password: bcrypt.hashSync(password, 10),
+      isAdmin: false,
+      inventory: [],
+      coins: 1000,
+      joinDate: new Date().toISOString()
+    };
+
+    data.users.push(newUser);
+    writeData(data);
+
+    req.session.user = { username: newUser.username, isAdmin: false };
+    return res.json({ success: true, user: { username: newUser.username, isAdmin: false, coins: newUser.coins, inventory: newUser.inventory } });
+  } catch (err) {
+    console.error('Registration error:', err);
+    return res.json({ success: false, error: 'Internal server error' });
   }
-  if (username.length < 3 || password.length < 4) {
-    return res.json({ success: false, error: 'Username must be at least 3 characters and password at least 4.' });
-  }
-  const data = readData();
-  if (data.users.find(u => u.username === username)) {
-    return res.json({ success: false, error: 'Username already exists.' });
-  }
-  const newUser = {
-    username,
-    password: bcrypt.hashSync(password, 10),
-    isAdmin: false,
-    inventory: [],
-    coins: 1000,
-    joinDate: new Date().toISOString()
-  };
-  data.users.push(newUser);
-  writeData(data);
-  req.session.user = newUser;
-  res.json({ success: true, user: { ...newUser, password: undefined } });
 });
 
 app.post('/api/spin', (req, res) => {
@@ -460,6 +407,16 @@ app.post('/api/admin/announcement', (req, res) => {
   res.json({ success: true });
 });
 
+// Re-broadcast last announcement (admin helper)
+app.post('/api/admin/rebroadcast-last-announcement', (req, res) => {
+  if (!req.session.user || !req.session.user.isAdmin) return res.json({ success: false, error: 'Unauthorized' });
+  const data = readData();
+  const last = data.announcements && data.announcements[data.announcements.length - 1];
+  if (!last) return res.json({ success: false, error: 'No announcement found' });
+  io.emit('new_announcement', last);
+  return res.json({ success: true });
+});
+
 app.post('/api/admin/event', (req, res) => {
   if (!req.session.user || !req.session.user.isAdmin) {
     return res.json({ success: false, error: 'Unauthorized' });
@@ -490,6 +447,16 @@ app.post('/api/admin/event', (req, res) => {
   }
 
   res.json({ success: true, event: newEvent });
+});
+
+// Admin helper: apply all active events now
+app.post('/api/admin/apply-active-events', (req, res) => {
+  if (!req.session.user || !req.session.user.isAdmin) return res.json({ success: false, error: 'Unauthorized' });
+  const data = readData();
+  const active = (data.events || []).filter(e => e.active);
+  if (!active.length) return res.json({ success: false, error: 'No active events' });
+  active.forEach(ev => applyEventRewards(ev));
+  return res.json({ success: true, applied: active.length });
 });
 
 app.get('/api/data', (req, res) => {
