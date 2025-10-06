@@ -31,6 +31,16 @@ function setupMultiplayer(server, readData, writeData) {
       io.emit('chat_message', chatMessage);
     });
 
+    // Handle real-time events
+    socket.on('game_event', (eventData) => {
+      io.emit('game_event', eventData);
+    });
+
+    // Handle announcements
+    socket.on('announcement', (announcement) => {
+      io.emit('announcement', announcement);
+    });
+
     socket.on('disconnect', (reason) => {
       console.log(`User disconnected (multiplayer): ${socket.id} Reason: ${reason}`);
     });
