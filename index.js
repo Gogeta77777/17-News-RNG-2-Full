@@ -218,7 +218,7 @@ app.get('/', (req, res) => {
 // API Routes
 app.post('/api/login', async (req, res) => {
   try {
-    const { username: loginUsername, password: loginPassword } = req.body || {};
+    const { username, password } = req.body || {};
     if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
       return res.json({ success: false, error: 'Username and password required.' });
     }
@@ -232,7 +232,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     const data = readData();
-    const user = data.users.find(u => u.username === loginUsername);
+    const user = data.users.find(u => u.username === username);
     if (!user) {
       req.session.loginAttempts.push(now);
       return res.json({ success: false, error: 'User not found.' });
