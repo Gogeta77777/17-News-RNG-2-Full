@@ -111,8 +111,30 @@ function readData() {
 }
 
 function validateData(data) {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+
   const requiredFields = ['users', 'codes', 'announcements', 'events', 'chatMessages'];
-  return requiredFields.every(field => Array.isArray(data[field]));
+  
+  // Check all required fields exist and are arrays
+  if (!requiredFields.every(field => Array.isArray(data[field]))) {
+    return false;
+  }
+
+  // Validate user objects
+  if (!data.users.every(user => 
+    user && 
+    typeof user.username === 'string' && 
+    typeof user.password === 'string' &&
+    typeof user.isAdmin === 'boolean' &&
+    Array.isArray(user.inventory) &&
+    typeof user.coins === 'number'
+  )) {
+    return false;
+  }
+
+  return true;
 }
 
 function writeData(data) {
@@ -125,9 +147,25 @@ function writeData(data) {
     // Create backup before writing
     createBackup();
 
+    // Sanitize data before writing
+    const sanitizedData = {
+      users: data.users.map(user => ({
+        username: String(user.username),
+        password: String(user.password),
+        isAdmin: Boolean(user.isAdmin),
+        inventory: Array.isArray(user.inventory) ? user.inventory : [],
+        coins: Number(user.coins) || 0,
+        joinDate: user.joinDate || new Date().toISOString()
+      })),
+      codes: data.codes || [],
+      announcements: data.announcements || [],
+      events: data.events || [],
+      chatMessages: data.chatMessages || []
+    };
+
     // Write to temporary file first
     const tempFile = `${DATA_FILE}.tmp`;
-    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2));
+    fs.writeFileSync(tempFile, JSON.stringify(sanitizedData, null, 2));
 
     // Rename temp file to actual file (atomic operation)
     fs.renameSync(tempFile, DATA_FILE);
@@ -170,34 +208,103 @@ function generateItemName(rarityName) {
 }
 
 // Apply event rewards to all users depending on event type
-function applyEventRewards(event) {
-  const data = readData();
-  const now = new Date();
-  // apply only if event is active or has applyNow flag
+async function applyEventRewards(event) {
+  if (!event || !event.type) {
+    console.error('Invalid event object');
+    return;
+  }
+
   try {
-    if (event.type === 'meteor_shower') {
-      // give coins to all users
-      const amount = (event.payload && event.payload.amount) || 500;
-      data.users.forEach(u => { u.coins = (u.coins || 0) + amount; });
-      // Add an announcement entry
-      data.announcements.push({ id: Date.now()+1, title: `Meteor Shower!`, content: `All players received ${amount} coins!`, date: now.toISOString(), author: 'Server' });
-    } else if (event.type === 'treasure_flood') {
-      // give each user a crate (item)
-      const itemName = (event.payload && event.payload.itemName) || 'Common Crate';
-      data.users.forEach(u => { u.inventory = u.inventory || []; u.inventory.push({ name: itemName, rarity: 'common', date: now.toISOString() }); });
-      data.announcements.push({ id: Date.now()+2, title: `Treasure Flood!`, content: `A flood of crates washed over the servers — everyone got a ${itemName}!`, date: now.toISOString(), author: 'Server' });
-    } else if (event.type === 'rare_storm') {
-      // give each user a rare item
-      data.users.forEach(u => { u.inventory = u.inventory || []; u.inventory.push({ name: generateItemName('Rare'), rarity: 'rare', date: now.toISOString() }); });
-      data.announcements.push({ id: Date.now()+3, title: `Rare Storm!`, content: `Rare items are falling from the sky — check your inventory!`, date: now.toISOString(), author: 'Server' });
+    const data = readData();
+    const now = new Date();
+
+    // Ensure users array exists
+    if (!Array.isArray(data.users)) {
+      throw new Error('Invalid users data');
     }
-    writeData(data);
+
+    let announcement = null;
+
+    switch (event.type) {
+      case 'meteor_shower': {
+        const amount = (event.payload?.amount) || 500;
+        data.users.forEach(u => {
+          u.coins = Math.max(0, (u.coins || 0) + amount); // Prevent negative coins
+        });
+        announcement = {
+          id: Date.now(),
+          title: '🌠 Meteor Shower!',
+          content: `All players received ${amount.toLocaleString()} coins!`,
+          date: now.toISOString(),
+          author: 'Server'
+        };
+        break;
+      }
+      
+      case 'treasure_flood': {
+        const itemName = (event.payload?.itemName) || 'Common Crate';
+        data.users.forEach(u => {
+          u.inventory = Array.isArray(u.inventory) ? u.inventory : [];
+          u.inventory.push({
+            name: itemName,
+            rarity: 'common',
+            date: now.toISOString()
+          });
+        });
+        announcement = {
+          id: Date.now(),
+          title: '📦 Treasure Flood!',
+          content: `A flood of crates washed over the servers — everyone got a ${itemName}!`,
+          date: now.toISOString(),
+          author: 'Server'
+        };
+        break;
+      }
+      
+      case 'rare_storm': {
+        data.users.forEach(u => {
+          u.inventory = Array.isArray(u.inventory) ? u.inventory : [];
+          u.inventory.push({
+            name: generateItemName('Rare'),
+            rarity: 'rare',
+            date: now.toISOString()
+          });
+        });
+        announcement = {
+          id: Date.now(),
+          title: '⚡ Rare Storm!',
+          content: 'Rare items are falling from the sky — check your inventory!',
+          date: now.toISOString(),
+          author: 'Server'
+        };
+        break;
+      }
+    }
+
+    if (announcement) {
+      data.announcements = Array.isArray(data.announcements) ? data.announcements : [];
+      data.announcements.push(announcement);
+    }
+
+    await writeData(data);
+
     // Broadcast via socket if available
     if (io) {
-      io.emit('new_event', { name: event.name, description: event.description, type: event.type });
+      io.emit('new_event', {
+        name: event.name,
+        description: event.description,
+        type: event.type,
+        date: now.toISOString()
+      });
+      if (announcement) {
+        io.emit('new_announcement', announcement);
+      }
       io.emit('refresh_data');
     }
   } catch (err) {
+    console.error('Error applying event rewards:', err);
+    throw err; // Re-throw to handle in route handlers
+  }
     console.error('Error applying event rewards:', err);
   }
 }
@@ -291,48 +398,64 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-app.post('/api/spin', (req, res) => {
-  if (!req.session.user) {
-    return res.json({ success: false, error: 'Not logged in' });
-  }
-
-  const data = readData();
-  const userIndex = data.users.findIndex(u => u.username === req.session.user.username);
-
-  // Spin is now free, do not deduct coins
-
-  // Determine rarity
-  const random = Math.random() * 100;
-  let cumulativeChance = 0;
-  let selectedRarity;
-
-  for (const rarity of RARITIES) {
-    cumulativeChance += rarity.chance;
-    if (random <= cumulativeChance) {
-      selectedRarity = rarity;
-      break;
+app.post('/api/spin', async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.json({ success: false, error: 'Not logged in' });
     }
+
+    const data = readData();
+    const userIndex = data.users.findIndex(u => u.username === req.session.user.username);
+    
+    if (userIndex === -1) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    // Spin is now free, do not deduct coins
+
+    // Determine rarity
+    const random = Math.random() * 100;
+    let cumulativeChance = 0;
+    let selectedRarity;
+
+    for (const rarity of RARITIES) {
+      cumulativeChance += rarity.chance;
+      if (random <= cumulativeChance) {
+        selectedRarity = rarity;
+        break;
+      }
+    }
+
+    if (!selectedRarity) {
+      selectedRarity = RARITIES[RARITIES.length - 1]; // Fallback to last rarity
+    }
+
+    // Add item to inventory
+    const itemName = generateItemName(selectedRarity.name);
+    data.users[userIndex].inventory.push({
+      name: itemName,
+      rarity: selectedRarity.name.toLowerCase(),
+      date: new Date().toISOString()
+    });
+
+    writeData(data);
+
+    // Update session with only necessary data
+    req.session.user = {
+      username: data.users[userIndex].username,
+      isAdmin: data.users[userIndex].isAdmin
+    };
+
+    res.json({ 
+      success: true, 
+      rarity: selectedRarity,
+      item: itemName,
+      coins: data.users[userIndex].coins
+    });
+  } catch (err) {
+    console.error('Spin error:', err);
+    res.json({ success: false, error: 'Internal server error' });
   }
-
-  // Add item to inventory
-  const itemName = `${selectedRarity.name} Item #${Date.now()}`;
-  data.users[userIndex].inventory.push({
-    name: itemName,
-    rarity: selectedRarity.name.toLowerCase(),
-    date: new Date().toISOString()
-  });
-
-  writeData(data);
-
-  // Update session
-  req.session.user = data.users[userIndex];
-
-  res.json({ 
-    success: true, 
-    rarity: selectedRarity,
-    item: itemName,
-    coins: data.users[userIndex].coins // coins remain unchanged
-  });
 });
 
 app.post('/api/use-code', (req, res) => {
@@ -379,32 +502,43 @@ app.post('/api/use-code', (req, res) => {
   });
 });
 
-app.post('/api/admin/announcement', (req, res) => {
-  if (!req.session.user || !req.session.user.isAdmin) {
-    return res.json({ success: false, error: 'Unauthorized' });
+app.post('/api/admin/announcement', async (req, res) => {
+  try {
+    if (!req.session.user || !req.session.user.isAdmin) {
+      return res.json({ success: false, error: 'Unauthorized' });
+    }
+    
+    const { title, content } = req.body;
+    if (!title || !content) {
+      return res.json({ success: false, error: 'Title and content are required' });
+    }
+    
+    const data = readData();
+    
+    const announcement = {
+      id: Date.now(),
+      title,
+      content,
+      date: new Date().toISOString(),
+      author: req.session.user.username
+    };
+    
+    data.announcements.push(announcement);
+    writeData(data);
+    
+    // Broadcast to all connected clients
+    io.emit('new_announcement', {
+      title,
+      content,
+      author: req.session.user.username,
+      date: announcement.date
+    });
+    
+    res.json({ success: true, announcement });
+  } catch (err) {
+    console.error('Admin announcement error:', err);
+    res.json({ success: false, error: 'Internal server error' });
   }
-  
-  const { title, content } = req.body;
-  const data = readData();
-  
-  data.announcements.push({
-    id: Date.now(),
-    title,
-    content,
-    date: new Date().toISOString(),
-    author: req.session.user.username
-  });
-  
-  writeData(data);
-  
-  // Broadcast to all connected clients
-  io.emit('new_announcement', {
-    title,
-    content,
-    author: req.session.user.username
-  });
-  
-  res.json({ success: true });
 });
 
 // Re-broadcast last announcement (admin helper)
@@ -417,36 +551,64 @@ app.post('/api/admin/rebroadcast-last-announcement', (req, res) => {
   return res.json({ success: true });
 });
 
-app.post('/api/admin/event', (req, res) => {
-  if (!req.session.user || !req.session.user.isAdmin) {
-    return res.json({ success: false, error: 'Unauthorized' });
+app.post('/api/admin/event', async (req, res) => {
+  try {
+    if (!req.session.user || !req.session.user.isAdmin) {
+      return res.json({ success: false, error: 'Unauthorized' });
+    }
+
+    const { name, description, startDate, endDate, type, payload, applyNow } = req.body;
+    
+    if (!name || !description || !startDate || !endDate) {
+      return res.json({ success: false, error: 'Missing required fields' });
+    }
+
+    // Validate dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.json({ success: false, error: 'Invalid date format' });
+    }
+    if (end < start) {
+      return res.json({ success: false, error: 'End date must be after start date' });
+    }
+
+    const data = readData();
+
+    const newEvent = {
+      id: Date.now(),
+      name,
+      description,
+      startDate,
+      endDate,
+      type: type || 'custom',
+      payload: payload || {},
+      active: new Date() >= start && new Date() <= end
+    };
+
+    data.events.push(newEvent);
+    writeData(data);
+
+    // Broadcast to all connected clients
+    io.emit('new_event', {
+      name,
+      description,
+      type: newEvent.type,
+      startDate,
+      endDate,
+      active: newEvent.active
+    });
+
+    // If admin requested immediate application or event is already active, apply rewards
+    if (applyNow || newEvent.active) {
+      await applyEventRewards(newEvent);
+    }
+
+    res.json({ success: true, event: newEvent });
+  } catch (err) {
+    console.error('Admin event error:', err);
+    res.json({ success: false, error: 'Internal server error' });
   }
-  const { name, description, startDate, endDate, type, payload, applyNow } = req.body;
-  const data = readData();
-
-  const newEvent = {
-    id: Date.now(),
-    name,
-    description,
-    startDate,
-    endDate,
-    type: type || 'custom',
-    payload: payload || {},
-    active: new Date() >= new Date(startDate) && new Date() <= new Date(endDate)
-  };
-
-  data.events.push(newEvent);
-  writeData(data);
-
-  // Broadcast to all connected clients
-  io.emit('new_event', { name, description, type: newEvent.type });
-
-  // If admin requested immediate application or event is already active, apply rewards
-  if (applyNow || newEvent.active) {
-    applyEventRewards(newEvent);
-  }
-
-  res.json({ success: true, event: newEvent });
 });
 
 // Admin helper: apply all active events now
