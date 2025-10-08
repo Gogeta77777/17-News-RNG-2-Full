@@ -1,6 +1,15 @@
+/*
+  Clean, minimal server for 17-News-RNG
+  - Serves index.html and static files
+  - Manages sessions (connect-sqlite3)
+  - Reads/writes data/saveData.json with backup
+  - API: /api/login, /api/register, /api/spin, /api/use-code, /api/admin/*, /api/data, /api/logout
+  - Socket.IO broadcasts for chat, announcements, events
+*/
+
 const express = require('express');
 const http = require('http');
-const socketIo = require('socket.io');
+const { Server } = require('socket.io');
 const session = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
 const bcrypt = require('bcryptjs');
@@ -9,76 +18,51 @@ const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = new Server(server);
 
 // Middleware
-// Serve static files from both root and public for Railway compatibility
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(session({
-  secret: '17-news-rng-secret-key-change-in-production',
+  secret: process.env.SESSION_SECRET || 'dev-secret-17news',
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false },
   store: new SQLiteStore({ db: 'sessions.sqlite', dir: './' })
 }));
 
-// Data management
-const DATA_DIR = process.env.DATA_DIR || './data';
+// Data file locations
+const DATA_DIR = './data';
 const DATA_FILE = path.join(DATA_DIR, 'saveData.json');
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 
-// Ensure data directories exist
-function ensureDirectories() {
-  [DATA_DIR, BACKUP_DIR].forEach(dir => {
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-      console.log(`Created directory: ${dir}`);
-    }
-  });
+// Ensure directories exist
+function ensureDirs() {
+  [DATA_DIR, BACKUP_DIR].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
 }
 
-// Create backup of data file
+// Simple backup rotation
 function createBackup() {
   try {
-    if (fs.existsSync(DATA_FILE)) {
-      const backupFile = path.join(BACKUP_DIR, `saveData.backup.${Date.now()}.json`);
-      fs.copyFileSync(DATA_FILE, backupFile);
-      console.log(`Created backup: ${backupFile}`);
-      
-      // Keep only last 5 backups
-      const backups = fs.readdirSync(BACKUP_DIR)
-        .filter(f => f.startsWith('saveData.backup'))
-        .sort()
-        .reverse();
-      
-      if (backups.length > 5) {
-        backups.slice(5).forEach(backup => {
-          fs.unlinkSync(path.join(BACKUP_DIR, backup));
-          console.log(`Removed old backup: ${backup}`);
-        });
-      }
-    }
-  } catch (err) {
-    console.error('Backup creation failed:', err);
+    if (!fs.existsSync(DATA_FILE)) return;
+    const name = `saveData.backup.${Date.now()}.json`;
+    fs.copyFileSync(DATA_FILE, path.join(BACKUP_DIR, name));
+    const files = fs.readdirSync(BACKUP_DIR).filter(f => f.startsWith('saveData.backup')).sort().reverse();
+    if (files.length > 5) files.slice(5).forEach(f => fs.unlinkSync(path.join(BACKUP_DIR, f)));
+  } catch (e) {
+    console.error('Backup error', e.message);
   }
 }
 
+// Initialize data if missing
 function initializeData() {
-  ensureDirectories();
+  ensureDirs();
   if (!fs.existsSync(DATA_FILE)) {
-    const initialData = {
+    const initial = {
       users: [
-        {
-          username: 'Mr_Fernanski',
-          password: bcrypt.hashSync('landex2008', 10),
-          isAdmin: true,
-          inventory: [],
-          coins: 10000,
-          joinDate: new Date().toISOString()
-        }
+        { username: 'Mr_Fernanski', password: bcrypt.hashSync('landex2008', 10), isAdmin: true, inventory: [], coins: 10000, joinDate: new Date().toISOString() }
       ],
       codes: [
         { code: 'WELCOME17', reward: { type: 'coins', amount: 500 }, usedBy: [] },
@@ -88,589 +72,209 @@ function initializeData() {
       events: [],
       chatMessages: []
     };
-    fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2));
+    fs.writeFileSync(DATA_FILE, JSON.stringify(initial, null, 2));
   }
 }
 
 function readData() {
   try {
     return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-  } catch (err) {
-    console.error('Failed to parse data file, backing up corrupt file and reinitializing:', err.message);
-    try {
-      const corruptPath = DATA_FILE + '.corrupt.' + Date.now();
-      fs.copyFileSync(DATA_FILE, corruptPath);
-      console.error('Backed up corrupt data to', corruptPath);
-    } catch (copyErr) {
-      console.error('Failed to backup corrupt data file:', copyErr.message);
-    }
-    // Recreate the data file with initial structure to recover the server
+  } catch (e) {
+    console.error('readData error:', e.message);
+    // Try to recover by backing up and reinitializing
+    try { if (fs.existsSync(DATA_FILE)) fs.copyFileSync(DATA_FILE, DATA_FILE + '.corrupt.' + Date.now()); } catch (e2) {}
     initializeData();
     return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
   }
 }
 
-function validateData(data) {
-  if (!data || typeof data !== 'object') {
-    return false;
-  }
-
-  const requiredFields = ['users', 'codes', 'announcements', 'events', 'chatMessages'];
-  
-  // Check all required fields exist and are arrays
-  if (!requiredFields.every(field => Array.isArray(data[field]))) {
-    return false;
-  }
-
-  // Validate user objects
-  if (!data.users.every(user => 
-    user && 
-    typeof user.username === 'string' && 
-    typeof user.password === 'string' &&
-    typeof user.isAdmin === 'boolean' &&
-    Array.isArray(user.inventory) &&
-    typeof user.coins === 'number'
-  )) {
-    return false;
-  }
-
-  return true;
+function validateDataShape(data) {
+  return data && Array.isArray(data.users) && Array.isArray(data.codes) && Array.isArray(data.announcements) && Array.isArray(data.events) && Array.isArray(data.chatMessages);
 }
 
 function writeData(data) {
-  try {
-    // Validate data before writing
-    if (!validateData(data)) {
-      throw new Error('Invalid data structure');
-    }
-
-    // Create backup before writing
-    createBackup();
-
-    // Sanitize data before writing
-    const sanitizedData = {
-      users: data.users.map(user => ({
-        username: String(user.username),
-        password: String(user.password),
-        isAdmin: Boolean(user.isAdmin),
-        inventory: Array.isArray(user.inventory) ? user.inventory : [],
-        coins: Number(user.coins) || 0,
-        joinDate: user.joinDate || new Date().toISOString()
-      })),
-      codes: data.codes || [],
-      announcements: data.announcements || [],
-      events: data.events || [],
-      chatMessages: data.chatMessages || []
-    };
-
-    // Write to temporary file first
-    const tempFile = `${DATA_FILE}.tmp`;
-    fs.writeFileSync(tempFile, JSON.stringify(sanitizedData, null, 2));
-
-    // Rename temp file to actual file (atomic operation)
-    fs.renameSync(tempFile, DATA_FILE);
-    
-    console.log(`Data saved successfully at ${new Date().toISOString()}`);
-  } catch (err) {
-    console.error('Failed to write data:', err);
-    throw err; // Re-throw to handle in route handlers
-  }
+  if (!validateDataShape(data)) throw new Error('Invalid data shape');
+  createBackup();
+  const tmp = DATA_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+  fs.renameSync(tmp, DATA_FILE);
 }
 
-// Set up periodic backup
-const BACKUP_INTERVAL = 30 * 60 * 1000; // 30 minutes
-setInterval(() => {
-  console.log('Creating periodic backup...');
-  const data = readData();
-  createBackup();
-}, BACKUP_INTERVAL);
-
-initializeData();
-
-// Rarity system
+// Simple rarity table
 const RARITIES = [
-  { name: 'Common', color: '#9e9e9e', chance: 40 },
-  { name: 'Uncommon', color: '#4caf50', chance: 25 },
-  { name: 'Rare', color: '#2196f3', chance: 15 },
-  { name: 'Epic', color: '#9c27b0', chance: 10 },
-  { name: 'Legendary', color: '#ff9800', chance: 6 },
-  { name: 'Mythic', color: '#f44336', chance: 3 },
-  { name: 'Divine', color: '#e91e63', chance: 1 }
+  { name: 'Common', chance: 40 },
+  { name: 'Uncommon', chance: 25 },
+  { name: 'Rare', chance: 15 },
+  { name: 'Epic', chance: 10 },
+  { name: 'Legendary', chance: 6 },
+  { name: 'Mythic', chance: 3 },
+  { name: 'Divine', chance: 1 }
 ];
 
-// Small item name generator (no serial numbers)
-const ADJECTIVES = ['Ancient','Glowing','Shiny','Rusty','Cyber','Arcane','Lucky','Nebula','Solar','Luminous','Phantom','Mystic'];
-const NOUNS = ['Relic','Core','Shard','Crate','Module','Chip','Talisman','Beacon','Crystal','Orb','Console','Fragment'];
-function generateItemName(rarityName) {
-  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-  return `${adj} ${noun} (${rarityName})`;
+function generateItemName(rarity) {
+  const ADJ = ['Ancient','Glowing','Shiny','Rusty','Cyber','Arcane','Lucky'];
+  const NOUN = ['Relic','Core','Shard','Crate','Module','Chip','Talisman'];
+  const a = ADJ[Math.floor(Math.random()*ADJ.length)];
+  const n = NOUN[Math.floor(Math.random()*NOUN.length)];
+  return `${a} ${n} (${rarity})`;
 }
 
-// Apply event rewards to all users depending on event type
-async function applyEventRewards(event) {
-  if (!event || !event.type) {
-    console.error('Invalid event object');
-    return;
-  }
-
-  try {
-    const data = readData();
-    const now = new Date();
-
-    // Ensure users array exists
-    if (!Array.isArray(data.users)) {
-      throw new Error('Invalid users data');
-    }
-
-    let announcement = null;
-
-    switch (event.type) {
-      case 'meteor_shower': {
-        const amount = (event.payload?.amount) || 500;
-        data.users.forEach(u => {
-          u.coins = Math.max(0, (u.coins || 0) + amount); // Prevent negative coins
-        });
-        announcement = {
-          id: Date.now(),
-          title: '🌠 Meteor Shower!',
-          content: `All players received ${amount.toLocaleString()} coins!`,
-          date: now.toISOString(),
-          author: 'Server'
-        };
-        break;
-      }
-      
-      case 'treasure_flood': {
-        const itemName = (event.payload?.itemName) || 'Common Crate';
-        data.users.forEach(u => {
-          u.inventory = Array.isArray(u.inventory) ? u.inventory : [];
-          u.inventory.push({
-            name: itemName,
-            rarity: 'common',
-            date: now.toISOString()
-          });
-        });
-        announcement = {
-          id: Date.now(),
-          title: '📦 Treasure Flood!',
-          content: `A flood of crates washed over the servers — everyone got a ${itemName}!`,
-          date: now.toISOString(),
-          author: 'Server'
-        };
-        break;
-      }
-      
-      case 'rare_storm': {
-        data.users.forEach(u => {
-          u.inventory = Array.isArray(u.inventory) ? u.inventory : [];
-          u.inventory.push({
-            name: generateItemName('Rare'),
-            rarity: 'rare',
-            date: now.toISOString()
-          });
-        });
-        announcement = {
-          id: Date.now(),
-          title: '⚡ Rare Storm!',
-          content: 'Rare items are falling from the sky — check your inventory!',
-          date: now.toISOString(),
-          author: 'Server'
-        };
-        break;
-      }
-    }
-
-    if (announcement) {
-      data.announcements = Array.isArray(data.announcements) ? data.announcements : [];
-      data.announcements.push(announcement);
-    }
-
-    await writeData(data);
-
-    // Broadcast via socket if available
-    if (io) {
-      io.emit('new_event', {
-        name: event.name,
-        description: event.description,
-        type: event.type,
-        date: now.toISOString()
-      });
-      if (announcement) {
-        io.emit('new_announcement', announcement);
-      }
-      io.emit('refresh_data');
-    }
-  } catch (err) {
-    console.error('Error applying event rewards:', err);
-    throw err; // Re-throw to handle in route handlers
-  }
-    console.error('Error applying event rewards:', err);
-  }
-}
-
-// Authentication middleware
-const requireAuth = (req, res, next) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+// Auth helper
+function requireAdmin(req, res, next) {
+  if (!req.session?.user || !req.session.user.isAdmin) return res.status(403).json({ success: false, error: 'Unauthorized' });
   next();
-};
+}
 
-// Serve main page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+// Routes
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// API Routes
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body || {};
-    if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
-      return res.json({ success: false, error: 'Username and password required.' });
-    }
-
-    // Basic rate limiting per-session
-    const now = Date.now();
-    const attempts = req.session.loginAttempts || [];
-    req.session.loginAttempts = attempts.filter(t => now - t < 15 * 60 * 1000);
-    if (req.session.loginAttempts.length >= 8) {
-      return res.json({ success: false, error: 'Too many attempts. Try again later.' });
-    }
-
+    if (!username || !password) return res.json({ success: false, error: 'Username and password required.' });
     const data = readData();
     const user = data.users.find(u => u.username === username);
-    if (!user) {
-      req.session.loginAttempts.push(now);
-      return res.json({ success: false, error: 'User not found.' });
-    }
-
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      req.session.loginAttempts.push(now);
-      return res.json({ success: false, error: 'Incorrect password.' });
-    }
-
-    // Successful login - store minimal session info
+    if (!user) return res.json({ success: false, error: 'User not found.' });
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) return res.json({ success: false, error: 'Incorrect password.' });
     req.session.user = { username: user.username, isAdmin: !!user.isAdmin };
-    req.session.loginAttempts = [];
-
     return res.json({ success: true, user: { username: user.username, isAdmin: !!user.isAdmin, coins: user.coins, inventory: user.inventory } });
-  } catch (err) {
-    console.error('Login error:', err);
-    return res.json({ success: false, error: 'Internal server error' });
+  } catch (e) {
+    console.error('login error', e.message);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
 app.post('/api/register', async (req, res) => {
   try {
     const { username, password } = req.body || {};
-    if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
-      return res.json({ success: false, error: 'Username and password required.' });
-    }
-
-    if (username.length < 3 || username.length > 20 || password.length < 6 || password.length > 50 || !/^[a-zA-Z0-9_]+$/.test(username)) {
-      return res.json({ success: false, error: 'Invalid credentials. Username must be 3-20 chars (alphanumeric/_), password 6-50 chars.' });
-    }
+    if (!username || !password) return res.json({ success: false, error: 'Username and password required.' });
+    if (typeof username !== 'string' || typeof password !== 'string') return res.json({ success: false, error: 'Invalid types' });
+    if (username.length < 3 || username.length > 20) return res.json({ success: false, error: 'Username length 3-20' });
+    if (password.length < 6 || password.length > 50) return res.json({ success: false, error: 'Password length 6-50' });
 
     const data = readData();
-    if (data.users.find(u => u.username === username)) {
-      return res.json({ success: false, error: 'Username already exists.' });
-    }
-
-    const newUser = {
-      username,
-      password: bcrypt.hashSync(password, 10),
-      isAdmin: false,
-      inventory: [],
-      coins: 1000,
-      joinDate: new Date().toISOString()
-    };
-
+    if (data.users.find(u => u.username === username)) return res.json({ success: false, error: 'Username already exists.' });
+    const newUser = { username, password: bcrypt.hashSync(password, 10), isAdmin: false, inventory: [], coins: 1000, joinDate: new Date().toISOString() };
     data.users.push(newUser);
     writeData(data);
-
     req.session.user = { username: newUser.username, isAdmin: false };
     return res.json({ success: true, user: { username: newUser.username, isAdmin: false, coins: newUser.coins, inventory: newUser.inventory } });
-  } catch (err) {
-    console.error('Registration error:', err);
-    return res.json({ success: false, error: 'Internal server error' });
+  } catch (e) {
+    console.error('register error', e.message);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
-app.post('/api/spin', async (req, res) => {
+app.post('/api/spin', (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.json({ success: false, error: 'Not logged in' });
-    }
-
+    if (!req.session.user) return res.json({ success: false, error: 'Not logged in' });
     const data = readData();
-    const userIndex = data.users.findIndex(u => u.username === req.session.user.username);
-    
-    if (userIndex === -1) {
-      return res.json({ success: false, error: 'User not found' });
-    }
-
-    // Spin is now free, do not deduct coins
-
-    // Determine rarity
-    const random = Math.random() * 100;
-    let cumulativeChance = 0;
-    let selectedRarity;
-
-    for (const rarity of RARITIES) {
-      cumulativeChance += rarity.chance;
-      if (random <= cumulativeChance) {
-        selectedRarity = rarity;
-        break;
-      }
-    }
-
-    if (!selectedRarity) {
-      selectedRarity = RARITIES[RARITIES.length - 1]; // Fallback to last rarity
-    }
-
-    // Add item to inventory
-    const itemName = generateItemName(selectedRarity.name);
-    data.users[userIndex].inventory.push({
-      name: itemName,
-      rarity: selectedRarity.name.toLowerCase(),
-      date: new Date().toISOString()
-    });
-
+    const user = data.users.find(u => u.username === req.session.user.username);
+    if (!user) return res.json({ success: false, error: 'User not found' });
+    const r = Math.random()*100; let cum = 0; let picked = RARITIES[RARITIES.length-1];
+    for (const rr of RARITIES) { cum += rr.chance; if (r <= cum) { picked = rr; break; } }
+    const item = { name: generateItemName(picked.name), rarity: picked.name.toLowerCase(), date: new Date().toISOString() };
+    user.inventory.push(item);
     writeData(data);
-
-    // Update session with only necessary data
-    req.session.user = {
-      username: data.users[userIndex].username,
-      isAdmin: data.users[userIndex].isAdmin
-    };
-
-    res.json({ 
-      success: true, 
-      rarity: selectedRarity,
-      item: itemName,
-      coins: data.users[userIndex].coins
-    });
-  } catch (err) {
-    console.error('Spin error:', err);
-    res.json({ success: false, error: 'Internal server error' });
+    io.emit('refresh_data');
+    return res.json({ success: true, rarity: picked, item: item.name, coins: user.coins });
+  } catch (e) {
+    console.error('/api/spin', e.message);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
 app.post('/api/use-code', (req, res) => {
-  if (!req.session.user) {
-    return res.json({ success: false, error: 'Not logged in' });
-  }
-  
-  const { code } = req.body;
-  const data = readData();
-  const userIndex = data.users.findIndex(u => u.username === req.session.user.username);
-  
-  const codeData = data.codes.find(c => c.code === code);
-  
-  if (!codeData) {
-    return res.json({ success: false, error: 'Invalid code' });
-  }
-  
-  if (codeData.usedBy.includes(req.session.user.username)) {
-    return res.json({ success: false, error: 'Code already used' });
-  }
-  
-  // Apply reward
-  if (codeData.reward.type === 'coins') {
-    data.users[userIndex].coins += codeData.reward.amount;
-  } else if (codeData.reward.type === 'item') {
-    data.users[userIndex].inventory.push({
-      name: codeData.reward.item,
-      rarity: codeData.reward.rarity,
-      date: new Date().toISOString()
-    });
-  }
-  
-  codeData.usedBy.push(req.session.user.username);
-  writeData(data);
-  
-  // Update session
-  req.session.user = data.users[userIndex];
-  
-  res.json({ 
-    success: true, 
-    message: `Code redeemed! Received: ${codeData.reward.type === 'coins' 
-      ? codeData.reward.amount + ' coins' 
-      : codeData.reward.item}` 
-  });
-});
-
-app.post('/api/admin/announcement', async (req, res) => {
   try {
-    if (!req.session.user || !req.session.user.isAdmin) {
-      return res.json({ success: false, error: 'Unauthorized' });
-    }
-    
-    const { title, content } = req.body;
-    if (!title || !content) {
-      return res.json({ success: false, error: 'Title and content are required' });
-    }
-    
+    if (!req.session.user) return res.json({ success: false, error: 'Not logged in' });
+    const { code } = req.body || {};
+    if (!code) return res.json({ success: false, error: 'Code required' });
     const data = readData();
-    
-    const announcement = {
-      id: Date.now(),
-      title,
-      content,
-      date: new Date().toISOString(),
-      author: req.session.user.username
-    };
-    
-    data.announcements.push(announcement);
+    const user = data.users.find(u => u.username === req.session.user.username);
+    if (!user) return res.json({ success: false, error: 'User not found' });
+    const cd = data.codes.find(c => c.code === code);
+    if (!cd) return res.json({ success: false, error: 'Invalid code' });
+    if (!Array.isArray(cd.usedBy)) cd.usedBy = [];
+    if (cd.usedBy.includes(user.username)) return res.json({ success: false, error: 'Code already used' });
+    if (cd.reward.type === 'coins') user.coins = (user.coins||0) + (cd.reward.amount||0);
+    else if (cd.reward.type === 'item') user.inventory.push({ name: cd.reward.item, rarity: cd.reward.rarity || 'common', date: new Date().toISOString() });
+    cd.usedBy.push(user.username);
     writeData(data);
-    
-    // Broadcast to all connected clients
-    io.emit('new_announcement', {
-      title,
-      content,
-      author: req.session.user.username,
-      date: announcement.date
-    });
-    
-    res.json({ success: true, announcement });
-  } catch (err) {
-    console.error('Admin announcement error:', err);
-    res.json({ success: false, error: 'Internal server error' });
+    io.emit('refresh_data');
+    return res.json({ success: true, message: 'Code redeemed' });
+  } catch (e) {
+    console.error('/api/use-code', e.message);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
-// Re-broadcast last announcement (admin helper)
-app.post('/api/admin/rebroadcast-last-announcement', (req, res) => {
-  if (!req.session.user || !req.session.user.isAdmin) return res.json({ success: false, error: 'Unauthorized' });
-  const data = readData();
-  const last = data.announcements && data.announcements[data.announcements.length - 1];
-  if (!last) return res.json({ success: false, error: 'No announcement found' });
-  io.emit('new_announcement', last);
-  return res.json({ success: true });
-});
-
-app.post('/api/admin/event', async (req, res) => {
+app.post('/api/admin/announcement', requireAdmin, (req, res) => {
   try {
-    if (!req.session.user || !req.session.user.isAdmin) {
-      return res.json({ success: false, error: 'Unauthorized' });
-    }
-
-    const { name, description, startDate, endDate, type, payload, applyNow } = req.body;
-    
-    if (!name || !description || !startDate || !endDate) {
-      return res.json({ success: false, error: 'Missing required fields' });
-    }
-
-    // Validate dates
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return res.json({ success: false, error: 'Invalid date format' });
-    }
-    if (end < start) {
-      return res.json({ success: false, error: 'End date must be after start date' });
-    }
-
+    const { title, content } = req.body || {};
+    if (!title || !content) return res.json({ success: false, error: 'Missing fields' });
     const data = readData();
-
-    const newEvent = {
-      id: Date.now(),
-      name,
-      description,
-      startDate,
-      endDate,
-      type: type || 'custom',
-      payload: payload || {},
-      active: new Date() >= start && new Date() <= end
-    };
-
-    data.events.push(newEvent);
+    const ann = { id: Date.now(), title, content, date: new Date().toISOString(), author: req.session.user.username };
+    data.announcements.push(ann);
     writeData(data);
-
-    // Broadcast to all connected clients
-    io.emit('new_event', {
-      name,
-      description,
-      type: newEvent.type,
-      startDate,
-      endDate,
-      active: newEvent.active
-    });
-
-    // If admin requested immediate application or event is already active, apply rewards
-    if (applyNow || newEvent.active) {
-      await applyEventRewards(newEvent);
-    }
-
-    res.json({ success: true, event: newEvent });
-  } catch (err) {
-    console.error('Admin event error:', err);
-    res.json({ success: false, error: 'Internal server error' });
+    io.emit('new_announcement', ann);
+    return res.json({ success: true, announcement: ann });
+  } catch (e) {
+    console.error('admin announcement', e.message);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
-// Admin helper: apply all active events now
-app.post('/api/admin/apply-active-events', (req, res) => {
-  if (!req.session.user || !req.session.user.isAdmin) return res.json({ success: false, error: 'Unauthorized' });
-  const data = readData();
-  const active = (data.events || []).filter(e => e.active);
-  if (!active.length) return res.json({ success: false, error: 'No active events' });
-  active.forEach(ev => applyEventRewards(ev));
-  return res.json({ success: true, applied: active.length });
+app.post('/api/admin/event', requireAdmin, (req, res) => {
+  try {
+    const { name, description, startDate, endDate, type, payload, applyNow } = req.body || {};
+    if (!name || !startDate || !endDate) return res.json({ success: false, error: 'Missing fields' });
+    const data = readData();
+    const ev = { id: Date.now(), name, description: description||'', startDate, endDate, type: type||'custom', payload: payload||{}, active: false };
+    data.events.push(ev);
+    writeData(data);
+    io.emit('new_event', ev);
+    if (applyNow) {
+      // simple immediate apply: give item/coins depending on type
+      if (ev.type === 'meteor_shower') data.users.forEach(u => u.coins = (u.coins||0) + (ev.payload?.amount||500));
+      else if (ev.type === 'treasure_flood') data.users.forEach(u => u.inventory.push({ name: ev.payload?.itemName||'Common Crate', rarity: 'common', date: new Date().toISOString() }));
+      writeData(data);
+      io.emit('refresh_data');
+    }
+    return res.json({ success: true, event: ev });
+  } catch (e) {
+    console.error('admin event', e.message);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
 });
 
 app.get('/api/data', (req, res) => {
-  if (!req.session.user) {
-    return res.json({ success: false, error: 'Not logged in' });
+  try {
+    if (!req.session.user) return res.json({ success: false, error: 'Not logged in' });
+    const data = readData();
+    return res.json({ success: true, user: req.session.user, announcements: data.announcements, events: data.events, chatMessages: data.chatMessages.slice(-50) });
+  } catch (e) {
+    console.error('/api/data', e.message);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
-  
-  const data = readData();
-  res.json({
-    success: true,
-    user: req.session.user,
-    announcements: data.announcements,
-    events: data.events,
-    chatMessages: data.chatMessages.slice(-50) // Last 50 messages
+});
+
+app.get('/api/logout', (req, res) => { req.session.destroy(() => {}); res.json({ success: true }); });
+
+// Socket.IO chat
+io.on('connection', socket => {
+  socket.on('chat_message', msg => {
+    try {
+      const data = readData();
+      data.chatMessages.push({ username: msg.username, message: msg.message, timestamp: new Date().toISOString() });
+      if (data.chatMessages.length > 100) data.chatMessages = data.chatMessages.slice(-100);
+      writeData(data);
+      io.emit('chat_message', { username: msg.username, message: msg.message, timestamp: new Date().toISOString() });
+    } catch (e) { console.error('socket chat', e.message); }
   });
 });
 
-app.get('/api/logout', (req, res) => {
-  req.session.destroy();
-  res.json({ success: true });
-});
-
-// Socket.IO for real-time chat
-io.on('connection', (socket) => {
-  console.log('A user connected');
-  
-  socket.on('chat_message', (data) => {
-    const chatMessage = {
-      username: data.username,
-      message: data.message,
-      timestamp: new Date().toISOString()
-    };
-    
-    // Save to data
-    const dataStore = readData();
-    dataStore.chatMessages.push(chatMessage);
-    // Keep only last 100 messages
-    if (dataStore.chatMessages.length > 100) {
-      dataStore.chatMessages = dataStore.chatMessages.slice(-100);
-    }
-    writeData(dataStore);
-    
-    // Broadcast message to all clients
-    io.emit('chat_message', chatMessage);
-  });
-  
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-  });
-});
-
+// Start
+initializeData();
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`17 News RNG server running on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`17 News RNG server running on port ${PORT}`));
