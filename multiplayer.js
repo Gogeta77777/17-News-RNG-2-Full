@@ -1,6 +1,6 @@
 
 // multiplayer.js
-// Handles multiplayer logic using Socket.IO for 17 News RNG
+// Handles multiplayer logic using Socket.IO for 17 News RNG 2
 
 const socketIo = require('socket.io');
 
