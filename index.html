@@ -808,6 +808,23 @@
                                 <div id="inventory-grid" class="inventory-grid">
                                     <!-- Inventory items will be populated here -->
                                 </div>
+
+                                <!-- Put Redeem Codes and Shop into the inventory area -->
+                                <div style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                                    <div style="flex:1; min-width:260px;">
+                                        <h3>Redeem Codes</h3>
+                                        <div style="display:flex; gap:8px; align-items:center;">
+                                            <input id="code-input-tab" type="text" placeholder="Enter code" style="flex:1; padding:8px; border-radius:6px;">
+                                            <button id="redeem-btn-tab" class="btn">Redeem</button>
+                                        </div>
+                                        <div id="code-result-tab" style="margin-top:8px;"></div>
+                                    </div>
+
+                                    <div style="width:360px; min-width:260px;">
+                                        <h3>Shop</h3>
+                                        <div id="shop-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                                    </div>
+                                </div>
                             </div>
                             <div id="chat-tab" class="tab-pane">
                                 <h2>Global Chat</h2>
@@ -833,12 +850,13 @@
                                 <h2>Settings</h2>
                                 <div class="settings-option">
                                     <label for="sound-toggle">Sound Effects</label>
-                                    <input type="checkbox" id="sound-toggle" checked>
+                                    <input type="checkbox" id="sound-toggle">
                                 </div>
                                 <div class="settings-option">
                                     <label for="theme-toggle">Dark Theme</label>
-                                    <input type="checkbox" id="theme-toggle" checked>
+                                    <input type="checkbox" id="theme-toggle">
                                 </div>
+                                <div style="margin-top:12px; color:#bdc3c7; font-size:0.9rem;">Settings are saved locally.</div>
                             </div>
                         </div>
                     </div>
@@ -1445,6 +1463,141 @@
                 else showPopup('No active events', '#e74c3c');
             } catch (e) { showPopup('Error applying events', '#e74c3c'); }
         });
+
+        // Admin list active events into admin-events container
+        const listActiveBtn = document.getElementById('list-active-events');
+        if (listActiveBtn) listActiveBtn.addEventListener('click', async () => {
+            try {
+                const res = await fetch('/api/data');
+                const d = await res.json();
+                const container = document.getElementById('admin-events');
+                container.innerHTML = '';
+                (d.events || []).forEach(ev => {
+                    if (ev.active || (new Date(ev.startDate) <= new Date() && new Date(ev.endDate) >= new Date())) {
+                        const el = document.createElement('div');
+                        el.className = 'event active';
+                        el.innerHTML = `<h3>${ev.name}</h3><p>${ev.description}</p><small>${new Date(ev.startDate).toLocaleString()} - ${new Date(ev.endDate).toLocaleString()}</small>`;
+                        container.appendChild(el);
+                    }
+                });
+                if (!container.children.length) container.innerHTML = '<p>No active events</p>';
+            } catch (e) { showPopup('Error listing events', '#e74c3c'); }
+        });
+
+        // Settings persistence
+        const soundToggle = document.getElementById('sound-toggle');
+        const themeToggle = document.getElementById('theme-toggle');
+        try {
+            const saved = JSON.parse(localStorage.getItem('settings') || '{}');
+            if (saved.sound !== undefined) soundToggle.checked = !!saved.sound;
+            if (saved.theme !== undefined) themeToggle.checked = !!saved.theme;
+            applyTheme(themeToggle.checked);
+        } catch (e) { /* ignore */ }
+
+        soundToggle.addEventListener('change', () => saveSettings());
+        themeToggle.addEventListener('change', () => { applyTheme(themeToggle.checked); saveSettings(); });
+
+        function saveSettings() {
+            const s = { sound: soundToggle.checked, theme: themeToggle.checked };
+            localStorage.setItem('settings', JSON.stringify(s));
+        }
+
+        function applyTheme(dark) {
+            if (dark) document.body.classList.add('dark-theme');
+            else document.body.classList.remove('dark-theme');
+        }
+
+        // Populate a basic shop list client-side
+        const SHOP_ITEMS = [
+            { id: 'crate_common', name: 'Common Crate', price: 200, rarity: 'common' },
+            { id: 'crate_rare', name: 'Rare Crate', price: 1200, rarity: 'rare' },
+            { id: 'spin_token', name: 'Spin Token', price: 500, rarity: 'uncommon' }
+        ];
+        const shopList = document.getElementById('shop-list');
+        SHOP_ITEMS.forEach(it => {
+            const row = document.createElement('div');
+            row.className = 'code';
+            row.style.display = 'flex';
+            row.style.justifyContent = 'space-between';
+            row.innerHTML = `<div><strong>${it.name}</strong><div style="font-size:0.9rem;color:#bdc3c7">${it.price} coins</div></div><div><button class="btn buy-btn" data-id="${it.id}" data-price="${it.price}" data-name="${it.name}" data-rarity="${it.rarity}">Buy</button></div>`;
+            shopList.appendChild(row);
+        });
+
+        // Buy handler
+        shopList.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.buy-btn');
+            if (!btn) return;
+            const price = Number(btn.dataset.price);
+            const itemName = btn.dataset.name;
+            const rarity = btn.dataset.rarity;
+            btn.disabled = true;
+            btn.textContent = 'Buying...';
+            try {
+                const res = await fetch('/api/shop/buy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ itemName, price, rarity }) });
+                const d = await res.json();
+                if (d.success) { showPopup('Purchase complete', '#27ae60'); document.getElementById('coin-count').textContent = d.coins; await checkLoginStatus(); }
+                else showPopup(d.error || 'Purchase failed', '#e74c3c');
+            } catch (err) { showPopup('Purchase error', '#e74c3c'); }
+            btn.disabled = false;
+            btn.textContent = 'Buy';
+        });
+
+        // Redeem in-tab handling
+        document.getElementById('redeem-btn-tab').addEventListener('click', async () => {
+            const code = document.getElementById('code-input-tab').value.trim();
+            const out = document.getElementById('code-result-tab');
+            if (!code) { out.innerHTML = '<span style="color:#e74c3c">Enter a code.</span>'; return; }
+            try {
+                const res = await fetch('/api/use-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+                const d = await res.json();
+                if (d.success) { out.innerHTML = '<span style="color:#27ae60">Redeemed!</span>'; await checkLoginStatus(); }
+                else out.innerHTML = `<span style="color:#e74c3c">${d.error}</span>`;
+            } catch (e) { out.innerHTML = '<span style="color:#e74c3c">Error</span>'; }
+        });
+
+        // Handle spin cutscene (Explosive)
+        async function runExplosiveCutscene(itemName) {
+            // simple animated overlay
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.left = 0; overlay.style.top = 0; overlay.style.width = '100%'; overlay.style.height = '100%';
+            overlay.style.background = 'radial-gradient(circle at center, rgba(255,200,0,0.12), rgba(255,0,0,0.06))';
+            overlay.style.zIndex = 9999; overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center';
+            overlay.innerHTML = `<div style="text-align:center;color:#fff"><div style="font-size:3rem;animation:spin 2s linear infinite">✨</div><h2 style=\"margin-top:12px\">${itemName}</h2></div>`;
+            document.body.appendChild(overlay);
+            await new Promise(r => setTimeout(r, 1800));
+            overlay.remove();
+        }
+
+        // Modify spin handler to show cutscene when flagged
+        const originalSpinBtn = document.getElementById('spin-btn');
+        originalSpinBtn.addEventListener('click', async () => {
+            const spinBtn = originalSpinBtn;
+            const spinResult = document.getElementById('spin-result');
+            spinBtn.disabled = true;
+            spinBtn.innerHTML = '<span class="loading-spinner"></span> Spinning...';
+            try {
+                const response = await fetch('/api/spin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+                const data = await response.json();
+                spinBtn.disabled = false; spinBtn.innerHTML = 'Spin Now!';
+                if (data.success) {
+                    showPopup(`You got a ${data.rarity.name}!`, '#9b59b6');
+                    spinResult.innerHTML = `<strong style="color:#9b59b6;font-size:1.3em;animation:fadeIn 1s;">${data.item}</strong> <span style="font-weight:bold;">(${data.rarity.name})</span>`;
+                    document.getElementById('coin-count').textContent = data.coins;
+                    currentUser.coins = data.coins;
+                    currentUser.inventory.push({ name: data.item, rarity: data.rarity.name.toLowerCase(), date: new Date().toISOString() });
+                    loadGameData({ user: currentUser });
+                    if (data.cutscene) await runExplosiveCutscene(data.item);
+                } else {
+                    spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (error) {
+                spinBtn.disabled = false; spinBtn.innerHTML = 'Spin Now!';
+                spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
+                showPopup('An error occurred.', '#e74c3c');
+            }
+        }, { once: false });
 
         // Logout function
         async function logout() {
