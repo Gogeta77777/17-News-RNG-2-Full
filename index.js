@@ -70,6 +70,9 @@ function initializeData() {
       ],
       announcements: [],
       events: [],
+      aaEvents: [
+        { id: 'disco', name: 'Disco', active: false }
+      ],
       chatMessages: []
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(initial, null, 2));
@@ -102,15 +105,15 @@ function writeData(data) {
 
 // Simple rarity table
 const RARITIES = [
-  { name: 'Common', chance: 39 },
-  { name: 'Uncommon', chance: 25 },
-  { name: 'Rare', chance: 15 },
-  { name: 'Epic', chance: 10 },
-  { name: 'Legendary', chance: 6 },
-  { name: 'Mythic', chance: 3 },
-  { name: 'Divine', chance: 0.5 },
+  { name: 'Common', chance: 39, color: '#9e9e9e', coin: 10 },
+  { name: 'Uncommon', chance: 25, color: '#4caf50', coin: 20 },
+  { name: 'Rare', chance: 15, color: '#2196f3', coin: 50 },
+  { name: 'Epic', chance: 10, color: '#9c27b0', coin: 120 },
+  { name: 'Legendary', chance: 6, color: '#ff9800', coin: 300 },
+  { name: 'Mythic', chance: 3, color: '#f44336', coin: 800 },
+  { name: 'Divine', chance: 0.5, color: '#e91e63', coin: 2000 },
   // Explosive is a special rare cutscene-triggering rarity
-  { name: 'Explosive', chance: 1.5 }
+  { name: 'Explosive', chance: 1.5, color: '#ffd700', coin: 0 }
 ];
 
 function generateItemName(rarity) {
@@ -186,17 +189,20 @@ app.post('/api/spin', (req, res) => {
 
     const item = { name: generateItemName(picked.name), rarity: picked.name.toLowerCase(), date: new Date().toISOString() };
     user.inventory.push(item);
+    // Award coin rewards for the spin (if defined)
+    const discoActive = ((data.aaEvents || []).find(a => a.id === 'disco') || {}).active;
+    const baseCoin = picked.coin || 0;
+    const award = Math.round(baseCoin * (discoActive ? 2 : 1));
+    user.coins = (user.coins || 0) + award;
     writeData(data);
     io.emit('refresh_data');
 
     // If Explosive, include cutscene flag for client-side animation
     const extra = {};
-    if (picked.name === 'Explosive') {
-      extra.cutscene = true;
-      extra.cutsceneType = 'explosive';
-    }
+    if (picked.name === 'Explosive') { extra.cutscene = true; extra.cutsceneType = 'explosive'; }
 
-    return res.json({ success: true, rarity: picked, item: item.name, coins: user.coins, ...extra });
+    // include computed color and coin awarded
+    return res.json({ success: true, rarity: picked, item: item.name, coins: user.coins, awarded: award, ...extra });
   } catch (e) {
     console.error('/api/spin', e.message);
     return res.status(500).json({ success: false, error: 'Internal server error' });
@@ -290,8 +296,10 @@ app.post('/api/admin/event', requireAdmin, (req, res) => {
 app.get('/api/data', (req, res) => {
   try {
     if (!req.session.user) return res.json({ success: false, error: 'Not logged in' });
-    const data = readData();
-    return res.json({ success: true, user: req.session.user, announcements: data.announcements, events: data.events, chatMessages: data.chatMessages.slice(-50) });
+  const data = readData();
+  const fullUser = data.users.find(u => u.username === req.session.user.username);
+  const safeUser = fullUser ? { username: fullUser.username, isAdmin: fullUser.isAdmin, coins: fullUser.coins || 0, inventory: fullUser.inventory || [] } : req.session.user;
+  return res.json({ success: true, user: safeUser, announcements: data.announcements, events: data.events, chatMessages: data.chatMessages.slice(-50), aaEvents: data.aaEvents || [] });
   } catch (e) {
     console.error('/api/data', e.message);
     return res.status(500).json({ success: false, error: 'Internal server error' });
@@ -336,6 +344,23 @@ app.post('/api/admin/apply-active-events', requireAdmin, (req, res) => {
     console.error('apply-active-events', e.message);
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
+});
+
+// Admin: toggle AA Event (Disco)
+app.post('/api/admin/aa-event', requireAdmin, (req, res) => {
+  try {
+    const { id, action } = req.body || {};
+    const data = readData();
+    const ev = (data.aaEvents || []).find(a => a.id === id);
+    if (!ev) return res.json({ success: false, error: 'AA Event not found' });
+    if (action === 'start') ev.active = true;
+    else if (action === 'stop') ev.active = false;
+    else return res.json({ success: false, error: 'Invalid action' });
+    writeData(data);
+    // Broadcast disco start/stop
+    io.emit('aa_event', { id: ev.id, name: ev.name, active: ev.active });
+    return res.json({ success: true, event: ev });
+  } catch (e) { console.error('aa-event', e.message); return res.status(500).json({ success: false, error: 'Internal server error' }); }
 });
 
 // Socket.IO chat
