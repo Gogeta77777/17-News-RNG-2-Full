@@ -293,9 +293,14 @@
         }
 
         .game-content {
-            display: grid;
-            grid-template-columns: 300px 1fr;
+            /* Use a centered column layout so inventory, shop, announcements, etc. sit
+               centered below the header. This keeps the header at the top and places
+               page content in the middle horizontally. */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 20px;
+            width: 100%;
         }
 
         .sidebar {
@@ -688,7 +693,7 @@
     <div id="home-page" class="container">
         <main class="home-main">
             <div class="welcome-card">
-                <h2>17 News RNG</h2>
+                <h2>17 News RNG 2</h2>
                 <p>The ultimate RNG experience!</p>
                 <div class="button-group">
                     <button id="login-btn" class="btn btn-primary">Login</button>
@@ -716,7 +721,7 @@
     <!-- Login Page -->
     <div id="login-page" class="auth-container hidden">
         <div class="auth-card">
-            <h1>Login to 17 News RNG</h1>
+            <h1>Login to 17 News RNG 2</h1>
             <div id="login-error" class="error-message hidden"></div>
             <form id="login-form">
                 <div class="form-group">
@@ -739,7 +744,7 @@
     <!-- Register Page -->
     <div id="register-page" class="auth-container hidden">
         <div class="auth-card">
-            <h1>Register for 17 News RNG</h1>
+            <h1>Register for 17 News RNG 2</h1>
             <div id="register-error" class="error-message hidden"></div>
             <form id="register-form">
                 <div class="form-group">
@@ -763,7 +768,7 @@
     <div id="game-page" class="hidden">
         <div class="container">
             <header class="game-header">
-                <h1>17 News RNG</h1>
+                <h1>17 News RNG 2</h1>
                 <div class="user-info">
                     <span>Welcome, <strong id="user-name"></strong></span>
                     <span class="coins">Coins: <span id="coin-count">0</span></span>
@@ -773,7 +778,7 @@
             </header>
             
             <div class="game-content">
-                <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                     <div id="spin-section" style="width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 2em;">
                         <h2 style="margin-bottom: 0.5em;">Spin for Items</h2>
                         <button id="spin-btn" class="btn btn-spin" style="font-size: 1.5em; padding: 1em 2em; margin-bottom: 1em;">Spin Now!</button>
@@ -789,7 +794,7 @@
                         <h2>Shop</h2>
                         <p>Coming soon!</p>
                     </div>
-                    <div class="main-content" style="width: 100%; max-width: 900px;">
+                    <div class="main-content" style="width: 100%; max-width: 900px; margin: 0 auto;">
                         <div class="tabs">
                             <button class="tab-btn active" data-tab="inventory">Inventory</button>
                             <button class="tab-btn" data-tab="chat">Chat</button>
@@ -845,7 +850,7 @@
     <!-- Admin Panel -->
     <div id="admin-panel" class="container hidden">
         <header class="game-header">
-            <h1>Admin Panel - 17 News RNG</h1>
+            <h1>Admin Panel - 17 News RNG 2</h1>
             <div class="user-info">
                 <button id="back-to-game" class="btn btn-primary">Back to Game</button>
                 <button id="admin-logout" class="btn btn-logout">Logout</button>
