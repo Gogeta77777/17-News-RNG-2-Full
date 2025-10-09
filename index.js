@@ -102,13 +102,15 @@ function writeData(data) {
 
 // Simple rarity table
 const RARITIES = [
-  { name: 'Common', chance: 40 },
+  { name: 'Common', chance: 39 },
   { name: 'Uncommon', chance: 25 },
   { name: 'Rare', chance: 15 },
   { name: 'Epic', chance: 10 },
   { name: 'Legendary', chance: 6 },
   { name: 'Mythic', chance: 3 },
-  { name: 'Divine', chance: 1 }
+  { name: 'Divine', chance: 0.5 },
+  // Explosive is a special rare cutscene-triggering rarity
+  { name: 'Explosive', chance: 1.5 }
 ];
 
 function generateItemName(rarity) {
@@ -172,13 +174,29 @@ app.post('/api/spin', (req, res) => {
     const data = readData();
     const user = data.users.find(u => u.username === req.session.user.username);
     if (!user) return res.json({ success: false, error: 'User not found' });
-    const r = Math.random()*100; let cum = 0; let picked = RARITIES[RARITIES.length-1];
-    for (const rr of RARITIES) { cum += rr.chance; if (r <= cum) { picked = rr; break; } }
+    // Weighted rarity pick (supports floating chances)
+    const total = RARITIES.reduce((s, x) => s + (x.chance || 0), 0);
+    const roll = Math.random() * total;
+    let cursor = 0;
+    let picked = RARITIES[RARITIES.length - 1];
+    for (const rr of RARITIES) {
+      cursor += rr.chance;
+      if (roll <= cursor) { picked = rr; break; }
+    }
+
     const item = { name: generateItemName(picked.name), rarity: picked.name.toLowerCase(), date: new Date().toISOString() };
     user.inventory.push(item);
     writeData(data);
     io.emit('refresh_data');
-    return res.json({ success: true, rarity: picked, item: item.name, coins: user.coins });
+
+    // If Explosive, include cutscene flag for client-side animation
+    const extra = {};
+    if (picked.name === 'Explosive') {
+      extra.cutscene = true;
+      extra.cutsceneType = 'explosive';
+    }
+
+    return res.json({ success: true, rarity: picked, item: item.name, coins: user.coins, ...extra });
   } catch (e) {
     console.error('/api/spin', e.message);
     return res.status(500).json({ success: false, error: 'Internal server error' });
@@ -205,6 +223,27 @@ app.post('/api/use-code', (req, res) => {
     return res.json({ success: true, message: 'Code redeemed' });
   } catch (e) {
     console.error('/api/use-code', e.message);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// Simple shop buy endpoint
+app.post('/api/shop/buy', (req, res) => {
+  try {
+    if (!req.session.user) return res.json({ success: false, error: 'Not logged in' });
+    const { itemId, price, itemName, rarity } = req.body || {};
+    if (!itemName || typeof price !== 'number') return res.json({ success: false, error: 'Invalid purchase' });
+    const data = readData();
+    const user = data.users.find(u => u.username === req.session.user.username);
+    if (!user) return res.json({ success: false, error: 'User not found' });
+    if ((user.coins || 0) < price) return res.json({ success: false, error: 'Not enough coins' });
+    user.coins = (user.coins || 0) - price;
+    user.inventory.push({ name: itemName, rarity: rarity || 'common', date: new Date().toISOString() });
+    writeData(data);
+    io.emit('refresh_data');
+    return res.json({ success: true, message: 'Purchase complete', coins: user.coins });
+  } catch (e) {
+    console.error('/api/shop/buy', e.message);
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -260,6 +299,44 @@ app.get('/api/data', (req, res) => {
 });
 
 app.get('/api/logout', (req, res) => { req.session.destroy(() => {}); res.json({ success: true }); });
+
+// Admin helper: rebroadcast last announcement
+app.post('/api/admin/rebroadcast-last-announcement', requireAdmin, (req, res) => {
+  try {
+    const data = readData();
+    const last = (data.announcements || []).slice(-1)[0];
+    if (!last) return res.json({ success: false, error: 'No announcements' });
+    io.emit('new_announcement', last);
+    io.emit('chat_message', { username: 'Server', message: `${last.title} — ${last.content}`, timestamp: new Date().toISOString() });
+    return res.json({ success: true });
+  } catch (e) {
+    console.error('rebroadcast', e.message);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// Admin helper: apply all active events now
+app.post('/api/admin/apply-active-events', requireAdmin, (req, res) => {
+  try {
+    const data = readData();
+    const active = (data.events || []).filter(ev => ev.active || (new Date(ev.startDate) <= new Date() && new Date(ev.endDate) >= new Date()));
+    if (!active.length) return res.json({ success: false, error: 'No active events' });
+    active.forEach(ev => {
+      // simple apply logic
+      if (ev.type === 'meteor_shower') data.users.forEach(u => u.coins = (u.coins||0) + (ev.payload?.amount || 500));
+      else if (ev.type === 'treasure_flood') data.users.forEach(u => u.inventory.push({ name: ev.payload?.itemName || 'Common Crate', rarity: 'common', date: new Date().toISOString() }));
+      else if (ev.type === 'rare_storm') data.users.forEach(u => u.inventory.push({ name: generateItemName('Rare'), rarity: 'rare', date: new Date().toISOString() }));
+      // mark applied (non-destructive)
+    });
+    writeData(data);
+    io.emit('refresh_data');
+    io.emit('new_event', { name: 'Admin applied events', description: `${active.length} events applied`, date: new Date().toISOString() });
+    return res.json({ success: true, applied: active.length });
+  } catch (e) {
+    console.error('apply-active-events', e.message);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
 
 // Socket.IO chat
 io.on('connection', socket => {
