@@ -59,6 +59,17 @@ function createBackup() {
 // Initialize data if missing
 function initializeData() {
   ensureDirs();
+  // If the app previously stored a top-level saveData.json (older versions), migrate it
+  const legacyRoot = path.join(__dirname, 'saveData.json');
+  if (!fs.existsSync(DATA_FILE) && fs.existsSync(legacyRoot)) {
+    try {
+      fs.copyFileSync(legacyRoot, DATA_FILE);
+      console.log('Migrated legacy saveData.json into data/saveData.json');
+    } catch (e) {
+      console.error('Migration error:', e.message);
+    }
+  }
+
   if (!fs.existsSync(DATA_FILE)) {
     const initial = {
       users: [
