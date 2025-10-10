@@ -161,6 +161,8 @@
             color: #00fff7;
             letter-spacing: 1px;
             text-shadow: 0 0 8px rgba(0,255,247,0.25);
+            /* Auth inputs styling */
+            .auth-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); color: #e6f7ff; box-sizing: border-box; }
         }
 
         .form-group {
@@ -730,12 +732,12 @@
             <form id="login-form">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="login-username" required>
+                    <input type="text" id="login-username" class="auth-input" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="login-password" required>
+                    <input type="password" id="login-password" class="auth-input" required>
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-full">Login</button>
@@ -753,12 +755,12 @@
             <form id="register-form">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="register-username" required>
+                    <input type="text" id="register-username" class="auth-input" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="register-password" required>
+                    <input type="password" id="register-password" class="auth-input" required>
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-full">Register</button>
@@ -788,16 +790,7 @@
                         <button id="spin-btn" class="btn btn-spin" style="font-size: 1.5em; padding: 1em 2em; margin-bottom: 1em;">Spin Now!</button>
                         <div id="spin-result" style="font-size: 2em; font-weight: bold; margin-bottom: 1em; text-align: center;"></div>
                     </div>
-                    <div id="codes-section" style="width: 100%; max-width: 400px; margin-bottom: 2em;">
-                        <h2>Redeem Codes</h2>
-                        <input type="text" id="code-input" placeholder="Enter code" style="width: 70%;">
-                        <button id="redeem-btn" class="btn btn-redeem">Redeem</button>
-                        <div id="code-result"></div>
-                    </div>
-                    <div id="shop-section" style="width: 100%; max-width: 400px; margin-bottom: 2em;">
-                        <h2>Shop</h2>
-                        <p>Coming soon!</p>
-                    </div>
+                    <!-- Removed separate code/shop blocks; moved into inventory tab for consistent layout -->
                     <div class="main-content" style="width: 100%; max-width: 900px; margin: 0 auto;">
                         <div style="display:flex; align-items:center; gap:12px; justify-content:space-between;">
                             <div class="tabs">
@@ -1285,51 +1278,7 @@
         });
 
         // Spin functionality is wired below (to support cutscenes and extra logic)
-        // Redeem code functionality
-        document.getElementById('redeem-btn').addEventListener('click', async () => {
-            const redeemBtn = document.getElementById('redeem-btn');
-            const codeInput = document.getElementById('code-input');
-            const codeResult = document.getElementById('code-result');
-            const code = codeInput.value.trim();
-            if (!code) {
-                codeResult.innerHTML = '<span style="color:#e74c3c">Please enter a code.</span>';
-                return;
-            }
-            redeemBtn.disabled = true;
-            redeemBtn.innerHTML = '<span class="loading-spinner"></span> Redeeming...';
-            try {
-                const response = await fetch('/api/use-code', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ code })
-                });
-                const data = await response.json();
-                redeemBtn.disabled = false;
-                redeemBtn.innerHTML = 'Redeem';
-                if (data.success) {
-                    showPopup(data.message, '#27ae60');
-                    codeResult.innerHTML = `<span style="color:#27ae60">${data.message}</span>`;
-                    checkLoginStatus();
-                } else {
-                    codeResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
-                    showPopup(data.error, '#e74c3c');
-                }
-            } catch (error) {
-                redeemBtn.disabled = false;
-                redeemBtn.innerHTML = 'Redeem';
-                codeResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
-                showPopup('An error occurred.', '#e74c3c');
-            }
-        });
-
-        // Allow pressing Enter in code input
-        document.getElementById('code-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('redeem-btn').click();
-            }
-        });
+        // Note: redeem/shop handlers are in-tab (inventory area). Top-level code inputs were removed to avoid duplicates.
 
         // Chat functionality
         document.getElementById('send-btn').addEventListener('click', sendMessage);
@@ -1595,17 +1544,59 @@
             } catch (e) { out.innerHTML = '<span style="color:#e74c3c">Error</span>'; }
         });
 
-        // Handle spin cutscene (Explosive)
+        // Handle spin cutscene (Explosive) — full 4-point star custom animation
         async function runExplosiveCutscene(itemName) {
-            // simple animated overlay
             const overlay = document.createElement('div');
-            overlay.style.position = 'fixed';
-            overlay.style.left = 0; overlay.style.top = 0; overlay.style.width = '100%'; overlay.style.height = '100%';
-            overlay.style.background = 'radial-gradient(circle at center, rgba(255,200,0,0.12), rgba(255,0,0,0.06))';
-            overlay.style.zIndex = 9999; overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center';
-            overlay.innerHTML = `<div style="text-align:center;color:#fff"><div style="font-size:3rem;animation:spin 2s linear infinite">✨</div><h2 style=\"margin-top:12px\">${itemName}</h2></div>`;
+            overlay.style.position = 'fixed'; overlay.style.left = 0; overlay.style.top = 0; overlay.style.width = '100%'; overlay.style.height = '100%';
+            overlay.style.background = '#000'; overlay.style.zIndex = 9999; overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center';
+
+            // star element (4-point star using CSS)
+            const star = document.createElement('div');
+            star.style.width = '160px'; star.style.height = '160px'; star.style.position = 'relative'; star.style.transform = 'rotate(0deg)';
+            star.style.transition = 'transform 0.2s linear';
+
+            const createPoint = (rotateDeg, color) => {
+                const p = document.createElement('div');
+                p.style.position = 'absolute'; p.style.left = '50%'; p.style.top = '50%';
+                p.style.width = '0'; p.style.height = '0';
+                p.style.borderLeft = '40px solid transparent'; p.style.borderRight = '40px solid transparent';
+                p.style.borderBottom = `80px solid ${color}`;
+                p.style.transform = `translate(-50%,-100%) rotate(${rotateDeg}deg)`;
+                return p;
+            };
+
+            // Pick a vibrant color from rarity or fallback
+            const color = (window.lastSpinRarityColor) ? window.lastSpinRarityColor : '#ffd700';
+            star.appendChild(createPoint(0, color));
+            star.appendChild(createPoint(90, color));
+            star.appendChild(createPoint(180, color));
+            star.appendChild(createPoint(270, color));
+
+            const info = document.createElement('div');
+            info.style.position = 'absolute'; info.style.bottom = '-80px'; info.style.width = '100%'; info.style.textAlign = 'center';
+            info.style.color = '#fff'; info.style.fontSize = '1.4rem'; info.style.opacity = '0'; info.style.transition = 'opacity 0.4s';
+            info.textContent = itemName;
+
+            overlay.appendChild(star);
+            overlay.appendChild(info);
             document.body.appendChild(overlay);
-            await new Promise(r => setTimeout(r, 1800));
+
+            // spin loop: increase speed over ~4.5s then flash to white
+            let speed = 2000; // ms per rotation
+            const endAt = Date.now() + 5000;
+            while (Date.now() < endAt) {
+                star.style.transition = `transform ${speed}ms linear`;
+                star.style.transform = `rotate(${Math.random()*360 + 360}deg)`;
+                await new Promise(r => setTimeout(r, 250));
+                speed = Math.max(120, speed - 120);
+            }
+
+            // reveal
+            info.style.opacity = '1';
+            // flash to white
+            overlay.style.transition = 'background 0.25s ease';
+            overlay.style.background = '#fff';
+            await new Promise(r => setTimeout(r, 450));
             overlay.remove();
         }
 
@@ -1623,6 +1614,8 @@
                 if (data.success) {
                     // Use server-provided rarity color when possible
                     const rarityColor = (data.rarity && data.rarity.color) ? data.rarity.color : '#9b59b6';
+                    // expose for cutscene to pick up
+                    window.lastSpinRarityColor = rarityColor;
                     showPopup(`You got a ${data.rarity.name}!`, rarityColor);
                     // Show the item, rarity and awarded coins (if any)
                     const awardedHtml = (typeof data.awarded === 'number' && data.awarded > 0) ? `<div style="font-size:0.9rem;color:${rarityColor}">+${data.awarded} coins</div>` : '';
