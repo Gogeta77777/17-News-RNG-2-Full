@@ -517,6 +517,196 @@
         }
     @keyframes popupIn { from { opacity:0; transform: translate(-50%, 10px); } to { opacity:1; transform: translate(-50%,0); } }
 
+        .global-banner {
+            background: linear-gradient(90deg,#f1c40f,#f39c12);
+            display: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            color: #08121a;
+            font-weight: 800;
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 12px;
+            z-index: 9998;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .game-flow-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .spin-area {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .spin-title { margin-bottom: 12px; }
+
+        .btn-spin {
+            font-size: 1.5rem;
+            padding: 1em 2.6em;
+            margin-bottom: 16px;
+        }
+
+        .spin-result {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            min-height: 48px;
+        }
+
+        .game-dashboard {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .dashboard-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .inventory-tools {
+            margin-top: 18px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .redeem-panel {
+            flex: 1;
+            min-width: 260px;
+        }
+
+        .redeem-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .redeem-input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+        }
+
+        .code-feedback {
+            margin-top: 8px;
+            min-height: 24px;
+            font-weight: 600;
+        }
+
+        .shop-panel {
+            width: 360px;
+            min-width: 260px;
+        }
+
+        .shop-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .shop-item {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 14px 18px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(0, 255, 247, 0.08);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.32);
+            transition: transform 0.18s ease, border 0.18s ease;
+        }
+
+        .shop-item:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 255, 247, 0.22);
+        }
+
+        .shop-item-info strong { display: block; margin-bottom: 4px; }
+
+        .shop-item-price {
+            font-size: 0.9rem;
+            color: #bdc3c7;
+        }
+
+        .admin-controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .admin-events-container { margin-top: 16px; }
+
+        .text-error { color: #e74c3c; }
+        .text-success { color: #27ae60; }
+        .event-highlight { color: #f39c12; }
+
+        .chat-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .event-flash {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9997;
+            pointer-events: none;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 40%);
+            animation: eventFlash 0.6s ease forwards;
+        }
+
+        @keyframes eventFlash {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .disco-overlay {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9996;
+            pointer-events: none;
+            background: radial-gradient(circle at 20% 20%, rgba(255,0,150,0.08), transparent 10%), radial-gradient(circle at 80% 80%, rgba(0,200,255,0.06), transparent 12%);
+            animation: discoPulse 1s linear infinite;
+        }
+
+        .shop-item-actions { display: flex; gap: 8px; }
+
         /* Modern Cyberpunk Scrollbar */
         ::-webkit-scrollbar {
             width: 12px;
