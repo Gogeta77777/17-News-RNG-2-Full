@@ -1540,10 +1540,7 @@
         function startDisco() {
             if (discoEl) return;
             discoEl = document.createElement('div');
-            discoEl.style.position = 'fixed'; discoEl.style.left = 0; discoEl.style.top = 0; discoEl.style.width = '100%'; discoEl.style.height = '100%';
-            discoEl.style.zIndex = 9996; discoEl.style.pointerEvents = 'none';
-            discoEl.style.background = 'radial-gradient(circle at 20% 20%, rgba(255,0,150,0.08), transparent 10%), radial-gradient(circle at 80% 80%, rgba(0,200,255,0.06), transparent 12%)';
-            discoEl.style.animation = 'discoPulse 1s linear infinite';
+            discoEl.className = 'disco-overlay';
             document.body.appendChild(discoEl);
         }
         function stopDisco() { if (discoEl) { discoEl.remove(); discoEl = null; } }
