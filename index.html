@@ -1015,15 +1015,14 @@
             </header>
             
             <div class="game-content">
-                    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <div id="spin-section" style="width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 2em;">
-                        <h2 style="margin-bottom: 0.5em;">Spin for Items</h2>
-                        <button id="spin-btn" class="btn btn-spin" style="font-size: 1.5em; padding: 1em 2em; margin-bottom: 1em;">Spin Now!</button>
-                        <div id="spin-result" style="font-size: 2em; font-weight: bold; margin-bottom: 1em; text-align: center;"></div>
-                    </div>
-                    <!-- Removed separate code/shop blocks; moved into inventory tab for consistent layout -->
-                    <div class="main-content" style="width: 100%; max-width: 900px; margin: 0 auto;">
-                        <div style="display:flex; align-items:center; gap:12px; justify-content:space-between;">
+                <div class="game-flow-wrapper">
+                    <section id="spin-section" class="spin-area">
+                        <h2 class="spin-title">Spin for Items</h2>
+                        <button id="spin-btn" class="btn btn-spin">Spin Now!</button>
+                        <div id="spin-result" class="spin-result"></div>
+                    </section>
+                    <div class="main-content game-dashboard">
+                        <div class="dashboard-bar">
                             <div class="tabs">
                                 <button class="tab-btn active" data-tab="inventory">Inventory</button>
                                 <button class="tab-btn" data-tab="chat">Chat</button>
@@ -1031,7 +1030,7 @@
                                 <button class="tab-btn" data-tab="events">Events</button>
                                 <button class="tab-btn" data-tab="settings">Settings</button>
                             </div>
-                            <div style="display:flex; gap:8px;">
+                            <div class="quick-actions">
                                 <button id="open-codes" class="btn">Codes</button>
                                 <button id="open-shop" class="btn">Shop</button>
                             </div>
@@ -1043,20 +1042,19 @@
                                     <!-- Inventory items will be populated here -->
                                 </div>
 
-                                <!-- Put Redeem Codes and Shop into the inventory area -->
-                                <div style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-                                    <div style="flex:1; min-width:260px;">
+                                <div class="inventory-tools">
+                                    <div class="redeem-panel">
                                         <h3>Redeem Codes</h3>
-                                        <div style="display:flex; gap:8px; align-items:center;">
-                                            <input id="code-input-tab" type="text" placeholder="Enter code" style="flex:1; padding:8px; border-radius:6px;">
+                                        <div class="redeem-controls">
+                                            <input id="code-input-tab" type="text" class="redeem-input" placeholder="Enter code">
                                             <button id="redeem-btn-tab" class="btn">Redeem</button>
                                         </div>
-                                        <div id="code-result-tab" style="margin-top:8px;"></div>
+                                        <div id="code-result-tab" class="code-feedback"></div>
                                     </div>
 
-                                    <div style="width:360px; min-width:260px;">
+                                    <div class="shop-panel">
                                         <h3>Shop</h3>
-                                        <div id="shop-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                                        <div id="shop-list" class="shop-list"></div>
                                     </div>
                                 </div>
                             </div>
@@ -1090,7 +1088,7 @@
                                     <label for="theme-toggle">Dark Theme</label>
                                     <input type="checkbox" id="theme-toggle">
                                 </div>
-                                <div style="margin-top:12px; color:#bdc3c7; font-size:0.9rem;">Settings are saved locally.</div>
+                                <div class="settings-note">Settings are saved locally.</div>
                             </div>
                         </div>
                     </div>
