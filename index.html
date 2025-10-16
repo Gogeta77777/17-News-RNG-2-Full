@@ -1855,12 +1855,12 @@
                     loadGameData({ user: currentUser });
                     if (data.cutscene) await runExplosiveCutscene(data.item);
                 } else {
-                    spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
+                    spinResult.innerHTML = `<span class="text-error">${data.error}</span>`;
                     showPopup(data.error, '#e74c3c');
                 }
             } catch (error) {
                 spinBtn.disabled = false; spinBtn.innerHTML = 'Spin Now!';
-                spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
+                spinResult.innerHTML = '<span class="text-error">An error occurred.</span>';
                 showPopup('An error occurred.', '#e74c3c');
             }
         }, { once: false });
