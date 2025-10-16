@@ -1736,10 +1736,8 @@
         const shopList = document.getElementById('shop-list');
         SHOP_ITEMS.forEach(it => {
             const row = document.createElement('div');
-            row.className = 'code';
-            row.style.display = 'flex';
-            row.style.justifyContent = 'space-between';
-            row.innerHTML = `<div><strong>${it.name}</strong><div style="font-size:0.9rem;color:#bdc3c7">${it.price} coins</div></div><div><button class="btn buy-btn" data-id="${it.id}" data-price="${it.price}" data-name="${it.name}" data-rarity="${it.rarity}">Buy</button></div>`;
+            row.className = 'shop-item';
+            row.innerHTML = `<div class="shop-item-info"><strong>${it.name}</strong><span class="shop-item-price">${it.price} coins</span></div><div class="shop-item-actions"><button class="btn buy-btn" data-id="${it.id}" data-price="${it.price}" data-name="${it.name}" data-rarity="${it.rarity}">Buy</button></div>`;
             shopList.appendChild(row);
         });
 
