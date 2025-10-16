@@ -1405,7 +1405,7 @@
                 const chatMessages = document.getElementById('chat-messages');
                 const messageElement = document.createElement('div');
                 messageElement.className = 'chat-message system';
-                messageElement.innerHTML = `<div style="color:#f39c12;">Event: ${data.name} — ${data.description}</div><small>Event activated</small>`;
+                messageElement.innerHTML = `<div class="event-highlight">Event: ${data.name} — ${data.description}</div><small>Event activated</small>`;
                 chatMessages.appendChild(messageElement);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
