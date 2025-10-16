@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -151,8 +151,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 70vh;
-            padding: 20px;
+            min-height: 100vh;
+            padding: 40px 20px;
         }
 
         .auth-card h1 {
@@ -161,8 +161,16 @@
             color: #00fff7;
             letter-spacing: 1px;
             text-shadow: 0 0 8px rgba(0,255,247,0.25);
-            /* Auth inputs styling */
-            .auth-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); color: #e6f7ff; box-sizing: border-box; }
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.02);
+            color: #e6f7ff;
+            box-sizing: border-box;
         }
 
         .form-group {
@@ -417,12 +425,60 @@
 
         /* Home / Welcome card */
         .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 24px; }
-        .home-main { display:flex; align-items:center; justify-content:center; gap:40px; flex-wrap:wrap; min-height:70vh; }
-    .welcome-card { background: rgba(255,255,255,0.04); padding: 36px; border-radius: 14px; text-align:center; width: 420px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); transform: translateY(0); transition: transform 0.18s ease, box-shadow 0.18s ease; }
-    .welcome-card:hover { transform: translateY(-6px); box-shadow: 0 18px 42px rgba(0,0,0,0.5); }
-        .welcome-card h2 { font-size: 2rem; margin-bottom: 6px; color: #00fff7; }
-        .welcome-card p { color: #bcd; margin-bottom: 18px; }
-        .button-group { display:flex; gap:14px; justify-content:center; }
+        .home-main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 48px;
+            min-height: calc(100vh - 120px);
+            padding: 80px 20px;
+            text-align: center;
+        }
+        .welcome-card {
+            background: rgba(255,255,255,0.04);
+            padding: 48px 40px;
+            border-radius: 18px;
+            width: min(520px, 100%);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+            transform: translateY(0);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-align: center;
+        }
+        .welcome-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 28px 70px rgba(0,0,0,0.55);
+        }
+        .welcome-title {
+            font-size: 2.6rem;
+            margin-bottom: 12px;
+            color: #00fff7;
+            letter-spacing: 2px;
+        }
+        .welcome-tagline {
+            font-size: 1.6rem;
+            color: #e6f7ff;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+        .welcome-description {
+            color: #bcd;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .entry-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 32px;
+        }
+        .entry-button {
+            min-width: 200px;
+            padding: 18px 44px;
+            font-size: 1.1rem;
+        }
         .btn-full { width: 100%; }
 
         /* Loading spinner */
@@ -461,6 +517,209 @@
             font-size: 0.9rem;
         }
     @keyframes popupIn { from { opacity:0; transform: translate(-50%, 10px); } to { opacity:1; transform: translate(-50%,0); } }
+
+        .global-banner {
+            background: linear-gradient(90deg,#f1c40f,#f39c12);
+            display: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            color: #08121a;
+            font-weight: 800;
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 12px;
+            z-index: 9998;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .game-flow-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .spin-area {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .spin-title { margin-bottom: 12px; }
+
+        .btn-spin {
+            font-size: 1.5rem;
+            padding: 1em 2.6em;
+            margin-bottom: 16px;
+        }
+
+        .spin-result {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            min-height: 48px;
+            text-align: center;
+        }
+
+        .game-dashboard {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .dashboard-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .inventory-tools {
+            margin-top: 18px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .redeem-panel {
+            flex: 1;
+            min-width: 260px;
+        }
+
+        .redeem-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .redeem-input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+        }
+
+        .code-feedback {
+            margin-top: 8px;
+            min-height: 24px;
+            font-weight: 600;
+        }
+
+        .settings-note {
+            margin-top: 12px;
+            color: #bdc3c7;
+            font-size: 0.9rem;
+        }
+
+        .shop-panel {
+            width: 360px;
+            min-width: 260px;
+        }
+
+        .shop-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .shop-item {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 14px 18px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(0, 255, 247, 0.08);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.32);
+            transition: transform 0.18s ease, border 0.18s ease;
+        }
+
+        .shop-item:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 255, 247, 0.22);
+        }
+
+        .shop-item-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .shop-item-info strong { display: block; margin-bottom: 4px; }
+
+        .shop-item-price {
+            font-size: 0.9rem;
+            color: #bdc3c7;
+        }
+
+        .admin-controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .admin-events-container { margin-top: 16px; }
+
+        .text-error { color: #e74c3c; }
+        .text-success { color: #27ae60; }
+        .event-highlight { color: #f39c12; }
+
+        .chat-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .event-flash {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9997;
+            pointer-events: none;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 40%);
+            animation: eventFlash 0.6s ease forwards;
+        }
+
+        @keyframes eventFlash {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .disco-overlay {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9996;
+            pointer-events: none;
+            background: radial-gradient(circle at 20% 20%, rgba(255,0,150,0.08), transparent 10%), radial-gradient(circle at 80% 80%, rgba(0,200,255,0.06), transparent 12%);
+            animation: discoPulse 1s linear infinite;
+        }
+
+        .shop-item-actions { display: flex; gap: 8px; }
 
         /* Modern Cyberpunk Scrollbar */
         ::-webkit-scrollbar {
@@ -694,31 +953,17 @@
     </style>
 </head>
 <body>
-    <div id="global-banner" class="global-banner" style="background:linear-gradient(90deg,#f1c40f,#f39c12);display:none;padding:12px 18px;border-radius:8px;color:#08121a;font-weight:800;position:fixed;left:50%;transform:translateX(-50%);top:12px;z-index:9998;box-shadow:0 8px 30px rgba(0,0,0,0.45);"></div>
+    <div id="global-banner" class="global-banner"></div>
     <!-- Home Page -->
     <div id="home-page" class="container">
         <main class="home-main">
             <div class="welcome-card">
-                <h2>17 News RNG 2</h2>
-                <p>The ultimate RNG experience!</p>
-                <div class="button-group">
-                    <button id="login-btn" class="btn btn-primary">Login</button>
-                    <button id="register-btn" class="btn btn-secondary">Register</button>
-                </div>
-            </div>
-            
-            <div class="features">
-                <div class="feature">
-                    <h3>7 Rarity Tiers</h3>
-                    <p>From Common to Divine, collect them all!</p>
-                </div>
-                <div class="feature">
-                    <h3>Real-time Chat</h3>
-                    <p>Connect with other players worldwide</p>
-                </div>
-                <div class="feature">
-                    <h3>Admin Events</h3>
-                    <p>Special events and announcements</p>
+                <h1 class="welcome-title">17 News RNG 2</h1>
+                <p class="welcome-tagline">The Return</p>
+                <p class="welcome-description">Back with a sharper lobby, faster spins, and live events designed for the 17 News community.</p>
+                <div class="entry-actions">
+                    <button id="login-btn" class="btn btn-primary entry-button">Login</button>
+                    <button id="register-btn" class="btn btn-secondary entry-button">Register</button>
                 </div>
             </div>
         </main>
@@ -784,15 +1029,14 @@
             </header>
             
             <div class="game-content">
-                    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <div id="spin-section" style="width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 2em;">
-                        <h2 style="margin-bottom: 0.5em;">Spin for Items</h2>
-                        <button id="spin-btn" class="btn btn-spin" style="font-size: 1.5em; padding: 1em 2em; margin-bottom: 1em;">Spin Now!</button>
-                        <div id="spin-result" style="font-size: 2em; font-weight: bold; margin-bottom: 1em; text-align: center;"></div>
-                    </div>
-                    <!-- Removed separate code/shop blocks; moved into inventory tab for consistent layout -->
-                    <div class="main-content" style="width: 100%; max-width: 900px; margin: 0 auto;">
-                        <div style="display:flex; align-items:center; gap:12px; justify-content:space-between;">
+                <div class="game-flow-wrapper">
+                    <section id="spin-section" class="spin-area">
+                        <h2 class="spin-title">Spin for Items</h2>
+                        <button id="spin-btn" class="btn btn-spin">Spin Now!</button>
+                        <div id="spin-result" class="spin-result"></div>
+                    </section>
+                    <div class="main-content game-dashboard">
+                        <div class="dashboard-bar">
                             <div class="tabs">
                                 <button class="tab-btn active" data-tab="inventory">Inventory</button>
                                 <button class="tab-btn" data-tab="chat">Chat</button>
@@ -800,7 +1044,7 @@
                                 <button class="tab-btn" data-tab="events">Events</button>
                                 <button class="tab-btn" data-tab="settings">Settings</button>
                             </div>
-                            <div style="display:flex; gap:8px;">
+                            <div class="quick-actions">
                                 <button id="open-codes" class="btn">Codes</button>
                                 <button id="open-shop" class="btn">Shop</button>
                             </div>
@@ -812,20 +1056,19 @@
                                     <!-- Inventory items will be populated here -->
                                 </div>
 
-                                <!-- Put Redeem Codes and Shop into the inventory area -->
-                                <div style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-                                    <div style="flex:1; min-width:260px;">
+                                <div class="inventory-tools">
+                                    <div class="redeem-panel">
                                         <h3>Redeem Codes</h3>
-                                        <div style="display:flex; gap:8px; align-items:center;">
-                                            <input id="code-input-tab" type="text" placeholder="Enter code" style="flex:1; padding:8px; border-radius:6px;">
+                                        <div class="redeem-controls">
+                                            <input id="code-input-tab" type="text" class="redeem-input" placeholder="Enter code">
                                             <button id="redeem-btn-tab" class="btn">Redeem</button>
                                         </div>
-                                        <div id="code-result-tab" style="margin-top:8px;"></div>
+                                        <div id="code-result-tab" class="code-feedback"></div>
                                     </div>
 
-                                    <div style="width:360px; min-width:260px;">
+                                    <div class="shop-panel">
                                         <h3>Shop</h3>
-                                        <div id="shop-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                                        <div id="shop-list" class="shop-list"></div>
                                     </div>
                                 </div>
                             </div>
@@ -859,7 +1102,7 @@
                                     <label for="theme-toggle">Dark Theme</label>
                                     <input type="checkbox" id="theme-toggle">
                                 </div>
-                                <div style="margin-top:12px; color:#bdc3c7; font-size:0.9rem;">Settings are saved locally.</div>
+                                <div class="settings-note">Settings are saved locally.</div>
                             </div>
                         </div>
                     </div>
@@ -926,14 +1169,14 @@
             <div class="admin-section">
                 <h2>Active Announcements & Events</h2>
                 <p>Use the controls below to broadcast global messages and trigger events. Announcements will also appear in chat as system messages.</p>
-                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+                <div class="admin-controls">
                     <button id="broadcast-last-announcement" class="btn">Broadcast Latest Announcement</button>
                     <button id="list-active-events" class="btn">List Active Events</button>
                     <button id="apply-all-active-events" class="btn">Apply All Active Events</button>
                     <button id="aa-disco-start" class="btn">Start Disco (AA Event)</button>
                     <button id="aa-disco-stop" class="btn">Stop Disco (AA Event)</button>
                 </div>
-                <div id="admin-events" style="margin-top:16px;" class="events-list"></div>
+                <div id="admin-events" class="events-list admin-events-container"></div>
             </div>
         </div>
     </div>
@@ -1108,7 +1351,7 @@
                 const messageElement = document.createElement('div');
                 messageElement.className = 'chat-message';
                 messageElement.innerHTML = `
-                    <div style="display:flex;align-items:center;gap:8px;"><span class="username">${data.username}</span><span class="timestamp">${new Date(data.timestamp).toLocaleTimeString()}</span></div>
+                    <div class="chat-meta"><span class="username">${data.username}</span><span class="timestamp">${new Date(data.timestamp).toLocaleTimeString()}</span></div>
                     <div class="message">${data.message}</div>
                 `;
                 chatMessages.appendChild(messageElement);
@@ -1150,21 +1393,14 @@
             socket.on('new_event', (data) => {
                 // Visual flash for exciting events
                 const flash = document.createElement('div');
-                flash.style.position = 'fixed';
-                flash.style.left = 0;
-                flash.style.top = 0;
-                flash.style.width = '100%';
-                flash.style.height = '100%';
-                flash.style.zIndex = 9997;
-                flash.style.pointerEvents = 'none';
-                flash.style.background = 'radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 40%)';
+                flash.className = 'event-flash';
                 document.body.appendChild(flash);
                 setTimeout(() => flash.remove(), 600);
 
                 const chatMessages = document.getElementById('chat-messages');
                 const messageElement = document.createElement('div');
                 messageElement.className = 'chat-message system';
-                messageElement.innerHTML = `<div style="color:#f39c12;">Event: ${data.name} — ${data.description}</div><small>Event activated</small>`;
+                messageElement.innerHTML = `<div class="event-highlight">Event: ${data.name} — ${data.description}</div><small>Event activated</small>`;
                 chatMessages.appendChild(messageElement);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -1306,10 +1542,7 @@
         function startDisco() {
             if (discoEl) return;
             discoEl = document.createElement('div');
-            discoEl.style.position = 'fixed'; discoEl.style.left = 0; discoEl.style.top = 0; discoEl.style.width = '100%'; discoEl.style.height = '100%';
-            discoEl.style.zIndex = 9996; discoEl.style.pointerEvents = 'none';
-            discoEl.style.background = 'radial-gradient(circle at 20% 20%, rgba(255,0,150,0.08), transparent 10%), radial-gradient(circle at 80% 80%, rgba(0,200,255,0.06), transparent 12%)';
-            discoEl.style.animation = 'discoPulse 1s linear infinite';
+            discoEl.className = 'disco-overlay';
             document.body.appendChild(discoEl);
         }
         function stopDisco() { if (discoEl) { discoEl.remove(); discoEl = null; } }
@@ -1505,10 +1738,8 @@
         const shopList = document.getElementById('shop-list');
         SHOP_ITEMS.forEach(it => {
             const row = document.createElement('div');
-            row.className = 'code';
-            row.style.display = 'flex';
-            row.style.justifyContent = 'space-between';
-            row.innerHTML = `<div><strong>${it.name}</strong><div style="font-size:0.9rem;color:#bdc3c7">${it.price} coins</div></div><div><button class="btn buy-btn" data-id="${it.id}" data-price="${it.price}" data-name="${it.name}" data-rarity="${it.rarity}">Buy</button></div>`;
+            row.className = 'shop-item';
+            row.innerHTML = `<div class="shop-item-info"><strong>${it.name}</strong><span class="shop-item-price">${it.price} coins</span></div><div class="shop-item-actions"><button class="btn buy-btn" data-id="${it.id}" data-price="${it.price}" data-name="${it.name}" data-rarity="${it.rarity}">Buy</button></div>`;
             shopList.appendChild(row);
         });
 
@@ -1535,13 +1766,13 @@
         document.getElementById('redeem-btn-tab').addEventListener('click', async () => {
             const code = document.getElementById('code-input-tab').value.trim();
             const out = document.getElementById('code-result-tab');
-            if (!code) { out.innerHTML = '<span style="color:#e74c3c">Enter a code.</span>'; return; }
+            if (!code) { out.innerHTML = '<span class="text-error">Enter a code.</span>'; return; }
             try {
                 const res = await fetch('/api/use-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
                 const d = await res.json();
-                if (d.success) { out.innerHTML = '<span style="color:#27ae60">Redeemed!</span>'; await checkLoginStatus(); }
-                else out.innerHTML = `<span style="color:#e74c3c">${d.error}</span>`;
-            } catch (e) { out.innerHTML = '<span style="color:#e74c3c">Error</span>'; }
+                if (d.success) { out.innerHTML = '<span class="text-success">Redeemed!</span>'; await checkLoginStatus(); }
+                else out.innerHTML = `<span class="text-error">${d.error}</span>`;
+            } catch (e) { out.innerHTML = '<span class="text-error">Error</span>'; }
         });
 
         // Handle spin cutscene (Explosive) — full 4-point star custom animation
@@ -1626,12 +1857,12 @@
                     loadGameData({ user: currentUser });
                     if (data.cutscene) await runExplosiveCutscene(data.item);
                 } else {
-                    spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
+                    spinResult.innerHTML = `<span class="text-error">${data.error}</span>`;
                     showPopup(data.error, '#e74c3c');
                 }
             } catch (error) {
                 spinBtn.disabled = false; spinBtn.innerHTML = 'Spin Now!';
-                spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
+                spinResult.innerHTML = '<span class="text-error">An error occurred.</span>';
                 showPopup('An error occurred.', '#e74c3c');
             }
         }, { once: false });
