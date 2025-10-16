@@ -1349,7 +1349,7 @@
                 const messageElement = document.createElement('div');
                 messageElement.className = 'chat-message';
                 messageElement.innerHTML = `
-                    <div style="display:flex;align-items:center;gap:8px;"><span class="username">${data.username}</span><span class="timestamp">${new Date(data.timestamp).toLocaleTimeString()}</span></div>
+                    <div class="chat-meta"><span class="username">${data.username}</span><span class="timestamp">${new Date(data.timestamp).toLocaleTimeString()}</span></div>
                     <div class="message">${data.message}</div>
                 `;
                 chatMessages.appendChild(messageElement);
