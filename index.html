@@ -1764,13 +1764,13 @@
         document.getElementById('redeem-btn-tab').addEventListener('click', async () => {
             const code = document.getElementById('code-input-tab').value.trim();
             const out = document.getElementById('code-result-tab');
-            if (!code) { out.innerHTML = '<span style="color:#e74c3c">Enter a code.</span>'; return; }
+            if (!code) { out.innerHTML = '<span class="text-error">Enter a code.</span>'; return; }
             try {
                 const res = await fetch('/api/use-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
                 const d = await res.json();
-                if (d.success) { out.innerHTML = '<span style="color:#27ae60">Redeemed!</span>'; await checkLoginStatus(); }
-                else out.innerHTML = `<span style="color:#e74c3c">${d.error}</span>`;
-            } catch (e) { out.innerHTML = '<span style="color:#e74c3c">Error</span>'; }
+                if (d.success) { out.innerHTML = '<span class="text-success">Redeemed!</span>'; await checkLoginStatus(); }
+                else out.innerHTML = `<span class="text-error">${d.error}</span>`;
+            } catch (e) { out.innerHTML = '<span class="text-error">Error</span>'; }
         });
 
         // Handle spin cutscene (Explosive) — full 4-point star custom animation
