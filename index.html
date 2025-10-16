@@ -1391,14 +1391,7 @@
             socket.on('new_event', (data) => {
                 // Visual flash for exciting events
                 const flash = document.createElement('div');
-                flash.style.position = 'fixed';
-                flash.style.left = 0;
-                flash.style.top = 0;
-                flash.style.width = '100%';
-                flash.style.height = '100%';
-                flash.style.zIndex = 9997;
-                flash.style.pointerEvents = 'none';
-                flash.style.background = 'radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 40%)';
+                flash.className = 'event-flash';
                 document.body.appendChild(flash);
                 setTimeout(() => flash.remove(), 600);
 
