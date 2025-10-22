@@ -964,6 +964,54 @@
             showHomePage();
             document.getElementById('show-login').addEventListener('click', showLoginPage);
             document.getElementById('show-register').addEventListener('click', showRegisterPage);
+            // Wire up form submissions
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const username = document.getElementById('login-username').value.trim();
+                    const password = document.getElementById('login-password').value;
+                    const res = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        currentUser = data.user;
+                        showPopup('Login successful', '#27ae60');
+                        showHomePage();
+                    } else {
+                        const el = document.getElementById('login-error');
+                        el.textContent = data.message || 'Login failed';
+                        el.classList.remove('hidden');
+                    }
+                });
+            }
+
+            if (registerForm) {
+                registerForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const username = document.getElementById('register-username').value.trim();
+                    const password = document.getElementById('register-password').value;
+                    const res = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        currentUser = data.user;
+                        showPopup('Registered and logged in', '#27ae60');
+                        showHomePage();
+                    } else {
+                        const el = document.getElementById('register-error');
+                        el.textContent = data.message || 'Register failed';
+                        el.classList.remove('hidden');
+                    }
+                });
+            }
         });
         
         // Utility: Show popup message
