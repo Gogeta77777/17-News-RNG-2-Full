@@ -2,41 +2,11 @@
   "users": [
     {
       "username": "Mr_Fernanski",
-      "password": "$2a$10$5hh1QLeLvfP6/qT.qxFxjernp8nEPvvo4wa6WXv0OuOenN4KehOYi",
+      "password": "admin123",
       "isAdmin": true,
-      "inventory": [
-        {
-          "name": "Arcane Orb (Rare)",
-          "rarity": "rare",
-          "date": "2025-10-05T09:30:28.316Z"
-        }
-      ],
-      "coins": 10500,
-      "joinDate": "2025-10-05T00:00:00.000Z"
-    },
-    {
-      "username": "testreg",
-      "password": "$2a$10$zlvof3fWpA5BM3WrjvrLAuG.NvhMtcc87/KBPPqndLLyL6q3ukhz2",
-      "isAdmin": false,
-      "inventory": [
-        {
-          "name": "Common Item #1759656608207",
-          "rarity": "common",
-          "date": "2025-10-05T09:30:08.207Z"
-        },
-        {
-          "name": "Epic Item #1759656628129",
-          "rarity": "epic",
-          "date": "2025-10-05T09:30:28.129Z"
-        },
-        {
-          "name": "Ancient Crate (Rare)",
-          "rarity": "rare",
-          "date": "2025-10-05T09:30:28.316Z"
-        }
-      ],
-      "coins": 1500,
-      "joinDate": "2025-10-05T09:01:21.952Z"
+      "inventory": [],
+      "coins": 10000,
+      "joinDate": "2025-10-22T00:00:00.000Z"
     }
   ],
   "codes": [
