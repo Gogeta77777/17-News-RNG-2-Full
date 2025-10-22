@@ -702,8 +702,8 @@
                 <h2>17 News RNG 2</h2>
                 <p>The ultimate RNG experience!</p>
                 <div class="button-group">
-                    <button id="login-btn" class="btn btn-primary">Login</button>
-                    <button id="register-btn" class="btn btn-secondary">Register</button>
+                    <button onclick="showLoginPage()" class="btn btn-primary">Login</button>
+                    <button onclick="showRegisterPage()" class="btn btn-secondary">Register</button>
                 </div>
             </div>
             
@@ -940,6 +940,32 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        // Page navigation functions
+        function showLoginPage() {
+            document.getElementById('home-page').classList.add('hidden');
+            document.getElementById('register-page').classList.add('hidden');
+            document.getElementById('login-page').classList.remove('hidden');
+        }
+
+        function showRegisterPage() {
+            document.getElementById('home-page').classList.add('hidden');
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('register-page').classList.remove('hidden');
+        }
+
+        function showHomePage() {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('register-page').classList.add('hidden');
+            document.getElementById('home-page').classList.remove('hidden');
+        }
+
+        // Page load handler
+        document.addEventListener('DOMContentLoaded', () => {
+            showHomePage();
+            document.getElementById('show-login').addEventListener('click', showLoginPage);
+            document.getElementById('show-register').addEventListener('click', showRegisterPage);
+        });
+        
         // Utility: Show popup message
         function showPopup(message, color = '#27ae60') {
             const popup = document.createElement('div');
