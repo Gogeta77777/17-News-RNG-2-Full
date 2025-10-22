@@ -55,16 +55,14 @@ app.use(session({
   })
 }));
 
-// Data file locations
-// Data directories - use tmp for platforms that need writable directories
-const DATA_DIR = process.env.NODE_ENV === 'production' ? '/tmp/data' : path.join(__dirname, 'data');
-const DATA_FILE = path.join(DATA_DIR, 'saveData.json');
-const BACKUP_DIR = path.join(DATA_DIR, 'backups');
+// Data file locations - keep saveData.json at repository root to minimize files
+const DATA_FILE = path.join(__dirname, 'saveData.json');
+const BACKUP_DIR = path.join(__dirname, 'backups');
 
 // Ensure directories exist and handle legacy data
 function ensureDirs() {
-  // Create directories if missing
-  [DATA_DIR, BACKUP_DIR].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
+  // Create backup directory if missing
+  if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
   
   // Check for legacy saveData.json in root and migrate if needed
   const legacyPath = path.join(__dirname, 'saveData.json');
@@ -143,17 +141,13 @@ function initializeData() {
   if (!fs.existsSync(DATA_FILE)) {
     const initial = {
       users: [
-        { username: 'Mr_Fernanski', password: bcrypt.hashSync('landex2008', 10), isAdmin: true, inventory: [], coins: 10000, joinDate: new Date().toISOString() }
+        { username: 'Mr_Fernanski', password: 'admin123', isAdmin: true, inventory: [], coins: 10000, joinDate: new Date().toISOString() }
       ],
       codes: [
-        { code: 'WELCOME17', reward: { type: 'coins', amount: 500 }, usedBy: [] },
-        { code: 'NEWS2023', reward: { type: 'item', item: 'Common Crate', rarity: 'common' }, usedBy: [] }
+        { code: 'WELCOME17', reward: { type: 'coins', amount: 500 }, usedBy: [] }
       ],
       announcements: [],
       events: [],
-      aaEvents: [
-        { id: 'disco', name: 'Disco', active: false }
-      ],
       chatMessages: []
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(initial, null, 2));
@@ -343,90 +337,36 @@ function validatePassword(password) {
          password.length <= 100;
 }
 
-app.post('/api/login', authLimiter, async (req, res) => {
+app.post('/api/login', authLimiter, (req, res) => {
   try {
-    const { username, password } = req.body;
-
-    if (!validateUsername(username) || !validatePassword(password)) {
-      return res.status(400).json({ error: 'Invalid username or password format' });
-    }
-
+    const { username, password } = req.body || {};
+    if (!username || !password) return res.json({ success: false, message: 'Missing credentials' });
     const data = readData();
-    const user = data.users.find(u => u.username.toLowerCase() === username.toLowerCase());
-
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid username or password' });
-    }
-
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(401).json({ error: 'Invalid username or password' });
-    }
-
+    const user = data.users.find(u => u.username === username);
+    if (!user || user.password !== password) return res.json({ success: false, message: 'Invalid username or password' });
     // Set session
-    req.session.userId = user.username;
-    req.session.isAdmin = user.isAdmin;
-
-    // Don't send password back
-    const { password: _, ...safeUser } = user;
-    res.json(safeUser);
+    req.session.user = { username: user.username, isAdmin: user.isAdmin };
+    res.json({ success: true, user: { username: user.username, isAdmin: user.isAdmin } });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Login error', error);
+    res.json({ success: false, message: 'Internal error' });
   }
 });
 
-app.post('/api/register', authLimiter, async (req, res) => {
+app.post('/api/register', authLimiter, (req, res) => {
   try {
-    const { username, password } = req.body;
-
-    if (!validateUsername(username)) {
-      return res.status(400).json({ 
-        error: 'Username must be 3-20 characters and contain only letters, numbers, underscores, and hyphens' 
-      });
-    }
-
-    if (!validatePassword(password)) {
-      return res.status(400).json({ 
-        error: 'Password must be 6-100 characters' 
-      });
-    }
-
+    const { username, password } = req.body || {};
+    if (!validateUsername(username) || !validatePassword(password)) return res.json({ success: false, message: 'Invalid username or password format' });
     const data = readData();
-
-    // Check for existing username
-    if (data.users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-      return res.status(409).json({ error: 'Username already taken' });
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create new user
-    const newUser = {
-      username,
-      password: hashedPassword,
-      isAdmin: false,
-      inventory: [],
-      coins: 0,
-      joinDate: new Date().toISOString()
-    };
-
-    // Add user atomically
+    if (data.users.find(u => u.username === username)) return res.json({ success: false, message: 'Username taken' });
+    const newUser = { username, password, isAdmin: false, inventory: [], coins: 1000, joinDate: new Date().toISOString() };
     data.users.push(newUser);
     writeData(data);
-
-    // Set session
-    req.session.userId = username;
-    req.session.isAdmin = false;
-
-    // Don't send password back
-    const { password: _, ...safeUser } = newUser;
-    res.json(safeUser);
+    req.session.user = { username: newUser.username, isAdmin: newUser.isAdmin };
+    res.json({ success: true, user: { username: newUser.username, isAdmin: newUser.isAdmin } });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Register error', error);
+    res.json({ success: false, message: 'Internal error' });
   }
 });
 
