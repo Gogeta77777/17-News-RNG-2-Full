@@ -50,13 +50,14 @@ app.use(session({
   },
   store: new SQLiteStore({ 
     db: 'sessions.sqlite', 
-    dir: './',
+    dir: process.env.NODE_ENV === 'production' ? '/tmp' : './',
     concurrentDB: true // Handle concurrent access
   })
 }));
 
 // Data file locations
-const DATA_DIR = './data';
+// Data directories - use tmp for platforms that need writable directories
+const DATA_DIR = process.env.NODE_ENV === 'production' ? '/tmp/data' : path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'saveData.json');
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 
@@ -302,17 +303,13 @@ function writeData(data) {
   }
 }
 
-// Simple rarity table
+// Special 17 News rarity table
 const RARITIES = [
-  { name: 'Common', chance: 39, color: '#9e9e9e', coin: 10 },
-  { name: 'Uncommon', chance: 25, color: '#4caf50', coin: 20 },
-  { name: 'Rare', chance: 15, color: '#2196f3', coin: 50 },
-  { name: 'Epic', chance: 10, color: '#9c27b0', coin: 120 },
-  { name: 'Legendary', chance: 6, color: '#ff9800', coin: 300 },
-  { name: 'Mythic', chance: 3, color: '#f44336', coin: 800 },
-  { name: 'Divine', chance: 0.5, color: '#e91e63', coin: 2000 },
-  // Explosive is a special rare cutscene-triggering rarity
-  { name: 'Explosive', chance: 1.5, color: '#ffd700', coin: 0 }
+  { name: '17 News', chance: 45, color: '#4CAF50', coin: 100 },
+  { name: '17 News Reborn', chance: 30, color: '#2196F3', coin: 250 },
+  { name: 'Delan Fernando', chance: 15, color: '#9C27B0', coin: 500 },
+  { name: 'Cooper Metson', chance: 8, color: '#FF9800', coin: 1000 },
+  { name: 'Mr Fernanski', chance: 2, color: '#F44336', coin: 2500 }
 ];
 
 function generateItemName(rarity) {
