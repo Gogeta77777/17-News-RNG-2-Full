@@ -20,17 +20,39 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+// Security middleware
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+
+// Rate limiting for auth routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5 // limit each IP to 5 requests per windowMs
+});
+
 // Middleware
+app.use(helmet()); // Add security headers
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Enhanced session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-17news',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false },
-  store: new SQLiteStore({ db: 'sessions.sqlite', dir: './' })
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'strict',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  },
+  store: new SQLiteStore({ 
+    db: 'sessions.sqlite', 
+    dir: './',
+    concurrentDB: true // Handle concurrent access
+  })
 }));
 
 // Data file locations
@@ -38,21 +60,68 @@ const DATA_DIR = './data';
 const DATA_FILE = path.join(DATA_DIR, 'saveData.json');
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 
-// Ensure directories exist
+// Ensure directories exist and handle legacy data
 function ensureDirs() {
+  // Create directories if missing
   [DATA_DIR, BACKUP_DIR].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
+  
+  // Check for legacy saveData.json in root and migrate if needed
+  const legacyPath = path.join(__dirname, 'saveData.json');
+  if (fs.existsSync(legacyPath)) {
+    try {
+      // If we have a legacy file but no data/saveData.json, migrate it
+      if (!fs.existsSync(DATA_FILE)) {
+        console.log('Migrating legacy saveData.json to data directory...');
+        fs.copyFileSync(legacyPath, DATA_FILE);
+        // Create a backup of the legacy file with timestamp
+        const backupName = `saveData.legacy.${Date.now()}.json`;
+        fs.copyFileSync(legacyPath, path.join(BACKUP_DIR, backupName));
+        // Don't delete legacy file - let admin do that manually
+        console.log('Migration complete. Legacy file preserved at root.');
+      }
+    } catch (e) {
+      console.error('Legacy data migration failed:', e.message);
+    }
+  }
 }
 
-// Simple backup rotation
+// Enhanced backup rotation with safety checks
 function createBackup() {
   try {
     if (!fs.existsSync(DATA_FILE)) return;
+    
+    // Verify current data is valid JSON before backing up
+    try {
+      const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      if (!validateDataShape(data)) {
+        throw new Error('Invalid data shape');
+      }
+    } catch (e) {
+      console.error('Invalid data file, skipping backup:', e.message);
+      return;
+    }
+
+    // Create timestamped backup
     const name = `saveData.backup.${Date.now()}.json`;
     fs.copyFileSync(DATA_FILE, path.join(BACKUP_DIR, name));
-    const files = fs.readdirSync(BACKUP_DIR).filter(f => f.startsWith('saveData.backup')).sort().reverse();
-    if (files.length > 5) files.slice(5).forEach(f => fs.unlinkSync(path.join(BACKUP_DIR, f)));
+    
+    // Rotate backups (keep 5 most recent)
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.startsWith('saveData.backup'))
+      .sort()
+      .reverse();
+      
+    if (files.length > 5) {
+      files.slice(5).forEach(f => {
+        try {
+          fs.unlinkSync(path.join(BACKUP_DIR, f));
+        } catch (e) {
+          console.error('Error removing old backup:', e.message);
+        }
+      });
+    }
   } catch (e) {
-    console.error('Backup error', e.message);
+    console.error('Backup error:', e.message);
   }
 }
 
@@ -90,15 +159,109 @@ function initializeData() {
   }
 }
 
+// Enhanced data reading with retries
 function readData() {
+  const maxRetries = 3;
+  let lastError = null;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const data = fs.readFileSync(DATA_FILE, 'utf8');
+      const parsed = JSON.parse(data);
+      
+      if (!validateDataShape(parsed)) {
+        throw new Error('Invalid data shape');
+      }
+      
+      return parsed;
+    } catch (e) {
+      console.error(`Read attempt ${i + 1} failed:`, e);
+      lastError = e;
+      
+      // Try to restore from backup if file read fails
+      if (e.code === 'ENOENT' || e.name === 'SyntaxError') {
+        const restored = tryRestoreFromBackup();
+        if (restored) return restored;
+      }
+      
+      // Small delay before retry
+      if (i < maxRetries - 1) {
+        require('timers').setTimeout(() => {}, 100 * Math.pow(2, i));
+      }
+    }
+  }
+  
+  throw new Error(`Failed to read data after ${maxRetries} attempts: ${lastError}`);
+}
+
+function validateDataShape(data) {
+  if (!data || typeof data !== 'object') return false;
+  
+  const requiredArrays = ['users', 'codes', 'announcements', 'events', 'chatMessages'];
+  return requiredArrays.every(key => 
+    Array.isArray(data[key]) && 
+    data[key].every(item => item && typeof item === 'object')
+  );
+}
+
+// Try to restore from most recent backup
+function tryRestoreFromBackup() {
   try {
-    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    const backups = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.startsWith('backup-'))
+      .sort()
+      .reverse();
+    
+    for (const backup of backups) {
+      try {
+        const data = fs.readFileSync(path.join(BACKUP_DIR, backup), 'utf8');
+        const parsed = JSON.parse(data);
+        
+        if (validateDataShape(parsed)) {
+          // Found valid backup, restore it
+          fs.copyFileSync(path.join(BACKUP_DIR, backup), DATA_FILE);
+          return parsed;
+        }
+      } catch (e) {
+        console.error('Backup restore failed:', backup, e);
+        continue;
+      }
+    }
   } catch (e) {
-    console.error('readData error:', e.message);
-    // Try to recover by backing up and reinitializing
-    try { if (fs.existsSync(DATA_FILE)) fs.copyFileSync(DATA_FILE, DATA_FILE + '.corrupt.' + Date.now()); } catch (e2) {}
-    initializeData();
-    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    console.error('Backup directory read failed:', e);
+  }
+  return null;
+}
+
+// Atomic write with temporary file
+function writeData(data) {
+  if (!validateDataShape(data)) {
+    throw new Error('Invalid data shape');
+  }
+  
+  ensureDirs();
+  createBackup();
+  
+  const tempFile = `${DATA_FILE}.tmp`;
+  try {
+    // Write to temp file first
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2));
+    
+    // Atomic rename
+    fs.renameSync(tempFile, DATA_FILE);
+    
+    return true;
+  } catch (e) {
+    console.error('Write failed:', e);
+    // Clean up temp file if it exists
+    try {
+      if (fs.existsSync(tempFile)) {
+        fs.unlinkSync(tempFile);
+      }
+    } catch (cleanupError) {
+      console.error('Failed to clean up temp file:', cleanupError);
+    }
+    throw e;
   }
 }
 
@@ -108,10 +271,35 @@ function validateDataShape(data) {
 
 function writeData(data) {
   if (!validateDataShape(data)) throw new Error('Invalid data shape');
+  
+  // Always ensure directories exist
+  ensureDirs();
+  
+  // Create backup first
   createBackup();
-  const tmp = DATA_FILE + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
-  fs.renameSync(tmp, DATA_FILE);
+  
+  try {
+    // Write to temp file first
+    const tmp = DATA_FILE + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+    
+    // Verify the written data is valid JSON
+    const verify = JSON.parse(fs.readFileSync(tmp, 'utf8'));
+    if (!validateDataShape(verify)) {
+      throw new Error('Written data validation failed');
+    }
+    
+    // If verification passed, do the atomic rename
+    fs.renameSync(tmp, DATA_FILE);
+  } catch (e) {
+    console.error('writeData error:', e.message);
+    // Clean up temp file if it exists
+    try {
+      const tmp = DATA_FILE + '.tmp';
+      if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
+    } catch (e2) {}
+    throw e; // Re-throw to let caller handle
+  }
 }
 
 // Simple rarity table
@@ -144,41 +332,104 @@ function requireAdmin(req, res, next) {
 // Routes
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-app.post('/api/login', async (req, res) => {
+// Input validation
+function validateUsername(username) {
+  return typeof username === 'string' && 
+         username.length >= 3 && 
+         username.length <= 20 &&
+         /^[a-zA-Z0-9_-]+$/.test(username);
+}
+
+function validatePassword(password) {
+  return typeof password === 'string' && 
+         password.length >= 6 &&
+         password.length <= 100;
+}
+
+app.post('/api/login', authLimiter, async (req, res) => {
   try {
-    const { username, password } = req.body || {};
-    if (!username || !password) return res.json({ success: false, error: 'Username and password required.' });
+    const { username, password } = req.body;
+
+    if (!validateUsername(username) || !validatePassword(password)) {
+      return res.status(400).json({ error: 'Invalid username or password format' });
+    }
+
     const data = readData();
-    const user = data.users.find(u => u.username === username);
-    if (!user) return res.json({ success: false, error: 'User not found.' });
-    const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.json({ success: false, error: 'Incorrect password.' });
-    req.session.user = { username: user.username, isAdmin: !!user.isAdmin };
-    return res.json({ success: true, user: { username: user.username, isAdmin: !!user.isAdmin, coins: user.coins, inventory: user.inventory } });
-  } catch (e) {
-    console.error('login error', e.message);
-    return res.status(500).json({ success: false, error: 'Internal server error' });
+    const user = data.users.find(u => u.username.toLowerCase() === username.toLowerCase());
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    // Set session
+    req.session.userId = user.username;
+    req.session.isAdmin = user.isAdmin;
+
+    // Don't send password back
+    const { password: _, ...safeUser } = user;
+    res.json(safeUser);
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', authLimiter, async (req, res) => {
   try {
-    const { username, password } = req.body || {};
-    if (!username || !password) return res.json({ success: false, error: 'Username and password required.' });
-    if (typeof username !== 'string' || typeof password !== 'string') return res.json({ success: false, error: 'Invalid types' });
-    if (username.length < 3 || username.length > 20) return res.json({ success: false, error: 'Username length 3-20' });
-    if (password.length < 6 || password.length > 50) return res.json({ success: false, error: 'Password length 6-50' });
+    const { username, password } = req.body;
+
+    if (!validateUsername(username)) {
+      return res.status(400).json({ 
+        error: 'Username must be 3-20 characters and contain only letters, numbers, underscores, and hyphens' 
+      });
+    }
+
+    if (!validatePassword(password)) {
+      return res.status(400).json({ 
+        error: 'Password must be 6-100 characters' 
+      });
+    }
 
     const data = readData();
-    if (data.users.find(u => u.username === username)) return res.json({ success: false, error: 'Username already exists.' });
-    const newUser = { username, password: bcrypt.hashSync(password, 10), isAdmin: false, inventory: [], coins: 1000, joinDate: new Date().toISOString() };
+
+    // Check for existing username
+    if (data.users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+      return res.status(409).json({ error: 'Username already taken' });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create new user
+    const newUser = {
+      username,
+      password: hashedPassword,
+      isAdmin: false,
+      inventory: [],
+      coins: 0,
+      joinDate: new Date().toISOString()
+    };
+
+    // Add user atomically
     data.users.push(newUser);
     writeData(data);
-    req.session.user = { username: newUser.username, isAdmin: false };
-    return res.json({ success: true, user: { username: newUser.username, isAdmin: false, coins: newUser.coins, inventory: newUser.inventory } });
-  } catch (e) {
-    console.error('register error', e.message);
-    return res.status(500).json({ success: false, error: 'Internal server error' });
+
+    // Set session
+    req.session.userId = username;
+    req.session.isAdmin = false;
+
+    // Don't send password back
+    const { password: _, ...safeUser } = newUser;
+    res.json(safeUser);
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
