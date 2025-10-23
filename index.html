@@ -515,6 +515,20 @@
         .home-main { display:flex; align-items:center; justify-content:center; gap:40px; flex-wrap:wrap; min-height:70vh; }
     .welcome-card { background: rgba(255,255,255,0.04); padding: 36px; border-radius: 14px; text-align:center; width: 420px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); transform: translateY(0); transition: transform 0.18s ease, box-shadow 0.18s ease; }
     .welcome-card:hover { transform: translateY(-6px); box-shadow: 0 18px 42px rgba(0,0,0,0.5); }
+    /* Make interactive elements sit above transient overlays (which use z-index:9999) */
+    .welcome-card,
+    .auth-container,
+    .auth-card,
+    .button-group,
+    button,
+    .btn {
+        position: relative;
+        z-index: 10001;
+        pointer-events: auto;
+    }
+
+    /* Safety: ensure announcement/global banner remain visible but not block interactions */
+    .announcement-bar, #global-banner { z-index: 10002; pointer-events: none; }
         .welcome-card h2 { font-size: 2rem; margin-bottom: 6px; color: #00fff7; }
         .welcome-card p { color: #bcd; margin-bottom: 18px; }
         .button-group { display:flex; gap:14px; justify-content:center; }
@@ -1924,6 +1938,21 @@
                 showPage('home');
             }
         }
+
+        // Safety cleanup: remove any stray full-screen overlays (created by prior cutscenes) that may block clicks
+        window.addEventListener('load', () => {
+            const overlays = Array.from(document.querySelectorAll('div'))
+                .filter(d => {
+                    const z = window.getComputedStyle(d).zIndex;
+                    const pos = window.getComputedStyle(d).position;
+                    return (pos === 'fixed' || pos === 'absolute') && z && Number(z) >= 9999;
+                });
+            overlays.forEach(el => {
+                // Keep announcement/global banner if present
+                if (el.id === 'global-banner' || el.classList.contains('announcement-bar')) return;
+                try { el.remove(); } catch (e) { /* ignore */ }
+            });
+        });
 
         // Initialize the app
         checkLoginStatus();
