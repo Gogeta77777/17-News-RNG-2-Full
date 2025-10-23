@@ -715,11 +715,10 @@
                 <h2>17 News RNG 2</h2>
                 <p>The ultimate RNG experience!</p>
                 <div class="button-group">
-                    <button id="login-btn" onclick="showLoginPage()" class="btn">Login</button>
-                    <button id="register-btn" onclick="showRegisterPage()" class="btn">Register</button>
+                    <button id="login-btn" class="btn styled-btn">Login</button>
+                    <button id="register-btn" class="btn styled-btn">Register</button>
                 </div>
             </div>
-            
             <div class="update-log">
                 <h3>📰 Latest Updates</h3>
                 <div class="log-entries">
@@ -740,10 +739,25 @@
                     </div>
                 </div>
             </div>
-            <div class="update-log" style="margin-left:10px;">
-                <h3>🔧 Debug Log</h3>
-                <div id="debug-log" style="max-height:220px;overflow:auto;padding:8px;background:rgba(0,0,0,0.12);border-radius:8px;font-size:0.85rem;"></div>
-            </div>
+        .styled-btn {
+            background: linear-gradient(90deg, #00ffe7 0%, #007cf0 100%);
+            color: #222;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 20px;
+            margin: 0 8px;
+            font-size: 1.1em;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,255,255,0.15);
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+        }
+        .styled-btn:hover, .styled-btn:focus {
+            background: linear-gradient(90deg, #007cf0 0%, #00ffe7 100%);
+            color: #fff;
+            transform: scale(1.05);
+        }
         </main>
     </div>
 
@@ -1159,16 +1173,7 @@
             document.body.appendChild(popup);
             setTimeout(() => popup.remove(), 1200);
         }
-        // Simple debug log panel
-        function pushLog(msg) {
-            try {
-                const panel = document.getElementById('debug-log');
-                if (!panel) return;
-                const entry = document.createElement('div');
-                entry.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
-                panel.prepend(entry);
-            } catch (e) { console.warn('log error', e); }
-        }
+        // Debug log panel removed
         // Global variables
         let currentUser = null;
         let socket = null;
