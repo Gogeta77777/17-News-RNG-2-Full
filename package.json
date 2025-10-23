@@ -5,14 +5,13 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "start:prod": "NODE_ENV=production node index.js"
+    "vercel-build": "echo 'Building for Vercel...'"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "connect-sqlite3": "^0.9.16",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.0",
     "express-session": "^1.17.3",
+    "memorystore": "^1.6.7",
     "helmet": "^7.0.0",
     "socket.io": "^4.7.2"
   },
