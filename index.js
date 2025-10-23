@@ -57,21 +57,31 @@ const IS_VERCEL = process.env.VERCEL === '1';
 const DATA_FILE = path.join(__dirname, 'saveData.json');
 
 // In-memory data store for Vercel
-let inMemoryData = null;
-if (IS_VERCEL) {
-    try {
-        inMemoryData = require('./saveData.json');
-    } catch (error) {
-        console.error('Failed to load initial data:', error);
-        inMemoryData = {
-            users: [],
-            codes: [],
-            announcements: [],
-            events: [],
-            chatMessages: []
-        };
+let inMemoryData = {
+  users: [
+    {
+      username: "Mr_Fernanski",
+      password: "admin123",
+      isAdmin: true,
+      inventory: [],
+      coins: 10000,
+      joinDate: "2025-10-22T00:00:00.000Z"
     }
-}
+  ],
+  codes: [
+    {
+      code: "WELCOME17",
+      reward: {
+        type: "coins",
+        amount: 500
+      },
+      usedBy: []
+    }
+  ],
+  announcements: [],
+  events: [],
+  chatMessages: []
+};
 
 // Ensure directories exist and handle legacy data
 function ensureDirs() {
@@ -591,7 +601,13 @@ io.on('connection', socket => {
   });
 });
 
-// Start
-initializeData();
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`17 News RNG 2 server running on port ${PORT}`));
+// Initialize data and start server
+if (!IS_VERCEL) {
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, () => console.log(`17 News RNG 2 server running on port ${PORT}`));
+} else {
+  console.log('Running in Vercel environment');
+}
+
+// Export for Vercel
+module.exports = server;
