@@ -7,6 +7,101 @@
     <!-- Cybernetic Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
+        /* Core Styles */
+        body {
+            margin: 0;
+            padding-top: 50px; /* Space for announcement bar */
+            min-height: 100vh;
+            background: #111;
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            position: relative;
+        }
+
+        /* Announcement Bar */
+        .announcement-bar {
+            background: linear-gradient(90deg, #4CAF50, #2196F3);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3); }
+            to { box-shadow: 0 2px 15px rgba(33, 150, 243, 0.5); }
+        }
+
+        /* Update Log */
+        .update-log {
+            background: rgba(255,255,255,0.04);
+            padding: 24px;
+            border-radius: 14px;
+            width: 420px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            margin-top: 20px;
+        }
+
+        .update-log h3 {
+            color: #4CAF50;
+            margin-bottom: 16px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .log-entries {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .log-entry {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-entry .date {
+            color: #2196F3;
+            font-size: 0.9em;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .log-entry p {
+            margin: 8px 0;
+            color: #fff;
+        }
+
+        .log-entry ul {
+            list-style: none;
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+
+        .log-entry ul li {
+            color: #fff;
+            margin: 4px 0;
+            position: relative;
+        }
+
+        .log-entry ul li:before {
+            content: "→";
+            position: absolute;
+            left: -20px;
+            color: #4CAF50;
+        }
+
         /* Modern Cyberpunk Button Styles */
         button, .btn {
             background: linear-gradient(135deg, #00fff7 0%, #3498db 100%);
@@ -696,29 +791,38 @@
 <body>
     <div id="global-banner" class="global-banner" style="background:linear-gradient(90deg,#f1c40f,#f39c12);display:none;padding:12px 18px;border-radius:8px;color:#08121a;font-weight:800;position:fixed;left:50%;transform:translateX(-50%);top:12px;z-index:9998;box-shadow:0 8px 30px rgba(0,0,0,0.45);"></div>
     <!-- Home Page -->
+    <!-- Announcement Bar -->
+    <div class="announcement-bar">RNG 2 - Alpha Testing</div>
+
     <div id="home-page" class="container">
         <main class="home-main">
             <div class="welcome-card">
                 <h2>17 News RNG 2</h2>
                 <p>The ultimate RNG experience!</p>
                 <div class="button-group">
-                    <button onclick="showLoginPage()" class="btn btn-primary">Login</button>
-                    <button onclick="showRegisterPage()" class="btn btn-secondary">Register</button>
+                    <button onclick="showLoginPage()" class="btn">Login</button>
+                    <button onclick="showRegisterPage()" class="btn">Register</button>
                 </div>
             </div>
             
-            <div class="features">
-                <div class="feature">
-                    <h3>7 Rarity Tiers</h3>
-                    <p>From Common to Divine, collect them all!</p>
-                </div>
-                <div class="feature">
-                    <h3>Real-time Chat</h3>
-                    <p>Connect with other players worldwide</p>
-                </div>
-                <div class="feature">
-                    <h3>Admin Events</h3>
-                    <p>Special events and announcements</p>
+            <div class="update-log">
+                <h3>📰 Latest Updates</h3>
+                <div class="log-entries">
+                    <div class="log-entry">
+                        <span class="date">Oct 23, 2025</span>
+                        <p>🎮 Alpha Testing Phase Begins</p>
+                    </div>
+                    <div class="log-entry">
+                        <span class="date">Oct 22, 2025</span>
+                        <p>✨ New Rarities Added:</p>
+                        <ul>
+                            <li>17 News</li>
+                            <li>17 News Reborn</li>
+                            <li>Delan Fernando</li>
+                            <li>Cooper Metson</li>
+                            <li>Mr Fernanski (Rarest!)</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </main>
@@ -729,21 +833,19 @@
         <div class="auth-card">
             <h1>Login to 17 News RNG 2</h1>
             <div id="login-error" class="error-message hidden"></div>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="login-username" class="auth-input" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="login-password" class="auth-input" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-full">Login</button>
-            </form>
+            <div class="form-group">
+                <label for="login-username">Username</label>
+                <input type="text" id="login-username" class="auth-input" required>
+            </div>
             
-            <p class="auth-link">Don't have an account? <a id="show-register">Register here</a></p>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" class="auth-input" required>
+            </div>
+            
+            <button onclick="login()" type="button" class="btn">Login</button>
+            
+            <p class="auth-link">Don't have an account? <a href="#" onclick="showRegisterPage()">Register here</a></p>
         </div>
     </div>
 
@@ -752,21 +854,19 @@
         <div class="auth-card">
             <h1>Register for 17 News RNG 2</h1>
             <div id="register-error" class="error-message hidden"></div>
-            <form id="register-form">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="register-username" class="auth-input" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="register-password" class="auth-input" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-full">Register</button>
-            </form>
+            <div class="form-group">
+                <label for="register-username">Username</label>
+                <input type="text" id="register-username" class="auth-input" required>
+            </div>
             
-            <p class="auth-link">Already have an account? <a id="show-login">Login here</a></p>
+            <div class="form-group">
+                <label for="register-password">Password</label>
+                <input type="password" id="register-password" class="auth-input" required>
+            </div>
+            
+            <button onclick="register()" type="button" class="btn">Register</button>
+            
+            <p class="auth-link">Already have an account? <a href="#" onclick="showLoginPage()">Login here</a></p>
         </div>
     </div>
 
@@ -939,6 +1039,105 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Page navigation functions
+        function showLoginPage() {
+            document.getElementById('home-page').classList.add('hidden');
+            document.getElementById('register-page').classList.add('hidden');
+            document.getElementById('login-page').classList.remove('hidden');
+        }
+
+        function showRegisterPage() {
+            document.getElementById('home-page').classList.add('hidden');
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('register-page').classList.remove('hidden');
+        }
+
+        function showHomePage() {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('register-page').classList.add('hidden');
+            document.getElementById('home-page').classList.remove('hidden');
+        }
+
+        function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (!username || !password) {
+                document.getElementById('login-error').textContent = 'Please enter both username and password';
+                document.getElementById('login-error').classList.remove('hidden');
+                return;
+            }
+            
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Refresh to show game page
+                } else {
+                    document.getElementById('login-error').textContent = data.message || 'Login failed';
+                    document.getElementById('login-error').classList.remove('hidden');
+                }
+            })
+            .catch(err => {
+                document.getElementById('login-error').textContent = 'Login failed. Please try again.';
+                document.getElementById('login-error').classList.remove('hidden');
+            });
+        }
+
+        function register() {
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            
+            if (!username || !password) {
+                document.getElementById('register-error').textContent = 'Please enter both username and password';
+                document.getElementById('register-error').classList.remove('hidden');
+                return;
+            }
+            
+            fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showLoginPage(); // Switch to login page after successful registration
+                    showPopup('Registration successful! Please login.', '#4CAF50');
+                } else {
+                    document.getElementById('register-error').textContent = data.message || 'Registration failed';
+                    document.getElementById('register-error').classList.remove('hidden');
+                }
+            })
+            .catch(err => {
+                document.getElementById('register-error').textContent = 'Registration failed. Please try again.';
+                document.getElementById('register-error').classList.remove('hidden');
+            });
+        }
+
+        // Add keyboard event listeners for form submission
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('login-password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') login();
+            });
+
+            document.getElementById('register-password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') register();
+            });
+
+            // Start on home page
+            showHomePage();
+        });
+    </script>
     <script>
         // Page navigation functions
         function showLoginPage() {
