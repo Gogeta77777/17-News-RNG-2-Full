@@ -11,8 +11,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const session = require('express-session');
-const SQLiteStore = require('connect-sqlite3')(session);
-const bcrypt = require('bcryptjs');
+const MemoryStore = require('memorystore')(session);
 const path = require('path');
 const fs = require('fs');
 
@@ -37,8 +36,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Enhanced session configuration
+// Enhanced session configuration with in-memory store
 app.use(session({
+  store: new MemoryStore({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  }),
   secret: process.env.SESSION_SECRET || 'dev-secret-17news',
   resave: false,
   saveUninitialized: false,
@@ -47,17 +49,29 @@ app.use(session({
     httpOnly: true,
     sameSite: 'strict',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  },
-  store: new SQLiteStore({ 
-    db: 'sessions.sqlite', 
-    dir: process.env.NODE_ENV === 'production' ? '/tmp' : './',
-    concurrentDB: true // Handle concurrent access
-  })
+  }
 }));
 
-// Data file locations - keep saveData.json at repository root to minimize files
+// Data file locations - use in-memory fallback for Vercel
+const IS_VERCEL = process.env.VERCEL === '1';
 const DATA_FILE = path.join(__dirname, 'saveData.json');
-const BACKUP_DIR = path.join(__dirname, 'backups');
+
+// In-memory data store for Vercel
+let inMemoryData = null;
+if (IS_VERCEL) {
+    try {
+        inMemoryData = require('./saveData.json');
+    } catch (error) {
+        console.error('Failed to load initial data:', error);
+        inMemoryData = {
+            users: [],
+            codes: [],
+            announcements: [],
+            events: [],
+            chatMessages: []
+        };
+    }
+}
 
 // Ensure directories exist and handle legacy data
 function ensureDirs() {
@@ -154,39 +168,41 @@ function initializeData() {
   }
 }
 
-// Enhanced data reading with retries
+// Data management functions
 function readData() {
-  const maxRetries = 3;
-  let lastError = null;
-
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const data = fs.readFileSync(DATA_FILE, 'utf8');
-      const parsed = JSON.parse(data);
-      
-      if (!validateDataShape(parsed)) {
-        throw new Error('Invalid data shape');
-      }
-      
-      return parsed;
-    } catch (e) {
-      console.error(`Read attempt ${i + 1} failed:`, e);
-      lastError = e;
-      
-      // Try to restore from backup if file read fails
-      if (e.code === 'ENOENT' || e.name === 'SyntaxError') {
-        const restored = tryRestoreFromBackup();
-        if (restored) return restored;
-      }
-      
-      // Small delay before retry
-      if (i < maxRetries - 1) {
-        require('timers').setTimeout(() => {}, 100 * Math.pow(2, i));
-      }
+    if (IS_VERCEL) {
+        return inMemoryData;
     }
-  }
-  
-  throw new Error(`Failed to read data after ${maxRetries} attempts: ${lastError}`);
+    try {
+        const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        return validateDataShape(data) ? data : initializeData();
+    } catch (error) {
+        console.error('Error reading data:', error);
+        return initializeData();
+    }
+}
+
+function validateDataShape(data) {
+    return data && 
+           Array.isArray(data.users) && 
+           Array.isArray(data.codes) && 
+           Array.isArray(data.announcements) && 
+           Array.isArray(data.events) && 
+           Array.isArray(data.chatMessages);
+}
+
+function writeData(data) {
+    if (IS_VERCEL) {
+        inMemoryData = data;
+        return true;
+    }
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        return true;
+    } catch (error) {
+        console.error('Error writing data:', error);
+        return false;
+    }
 }
 
 function validateDataShape(data) {
