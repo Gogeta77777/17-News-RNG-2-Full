@@ -9,7 +9,9 @@ function setupMultiplayer(server, readData, writeData) {
     cors: {
       origin: '*',
       methods: ['GET', 'POST']
-    }
+    },
+    transports: ['websocket', 'polling'],
+    path: '/socket.io'
   });
 
   // Rate limiting
