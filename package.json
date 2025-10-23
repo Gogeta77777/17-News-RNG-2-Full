@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "vercel-build": "echo 'Building for Vercel...'"
+    "build": "echo 'No build step required'",
+    "vercel-build": "echo 'Ready for Vercel deployment'"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -16,6 +17,6 @@
     "socket.io": "^4.7.2"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": "18.x"
   }
 }
