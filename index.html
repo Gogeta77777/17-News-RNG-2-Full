@@ -21,105 +21,6 @@
         /* Announcement Bar */
         .announcement-bar {
             background: linear-gradient(90deg, #4CAF50, #2196F3);
-            color: white;
-            text-align: center;
-            padding: 10px;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: bold;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            left: 0;
-            z-index: 9999;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes glow {
-            from { box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3); }
-            to { box-shadow: 0 2px 15px rgba(33, 150, 243, 0.5); }
-        }
-
-        /* Update Log */
-        .update-log {
-            background: rgba(255,255,255,0.04);
-            padding: 24px;
-            border-radius: 14px;
-            width: 420px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-            margin-top: 20px;
-        }
-
-        .update-log h3 {
-            color: #4CAF50;
-            margin-bottom: 16px;
-            font-family: 'Orbitron', sans-serif;
-        }
-
-        .log-entries {
-            max-height: 300px;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-
-        .log-entry {
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .log-entry:last-child {
-            border-bottom: none;
-        }
-
-        .log-entry .date {
-            color: #2196F3;
-            font-size: 0.9em;
-            font-family: 'Share Tech Mono', monospace;
-        }
-
-        .log-entry p {
-            margin: 8px 0;
-            color: #fff;
-        }
-
-        .log-entry ul {
-            list-style: none;
-            padding-left: 20px;
-            margin: 8px 0;
-        }
-
-        .log-entry ul li {
-            color: #fff;
-            margin: 4px 0;
-            position: relative;
-        }
-
-        .log-entry ul li:before {
-            content: "→";
-            position: absolute;
-            left: -20px;
-            color: #4CAF50;
-        }
-
-        /* Modern Cyberpunk Button Styles */
-        button, .btn {
-            background: linear-gradient(135deg, #00fff7 0%, #3498db 100%);
-            color: #0a1219;
-            border: none;
-            border-radius: 8px;
-            padding: 14px 32px;
-            font-family: 'Orbitron', 'Share Tech Mono', monospace;
-            font-size: 1rem;
-            font-weight: bold;
-            box-shadow: 0 0 20px rgba(0, 255, 247, 0.3), 
-                       0 0 40px rgba(52, 152, 219, 0.1),
-                       inset 0 0 15px rgba(255, 255, 255, 0.1);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            margin: 10px 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
             position: relative;
             overflow: hidden;
         }
@@ -814,8 +715,8 @@
                 <h2>17 News RNG 2</h2>
                 <p>The ultimate RNG experience!</p>
                 <div class="button-group">
-                    <button onclick="showLoginPage()" class="btn">Login</button>
-                    <button onclick="showRegisterPage()" class="btn">Register</button>
+                    <button id="login-btn" onclick="showLoginPage()" class="btn">Login</button>
+                    <button id="register-btn" onclick="showRegisterPage()" class="btn">Register</button>
                 </div>
             </div>
             
@@ -838,6 +739,10 @@
                         </ul>
                     </div>
                 </div>
+            </div>
+            <div class="update-log" style="margin-left:10px;">
+                <h3>🔧 Debug Log</h3>
+                <div id="debug-log" style="max-height:220px;overflow:auto;padding:8px;background:rgba(0,0,0,0.12);border-radius:8px;font-size:0.85rem;"></div>
             </div>
         </main>
     </div>
@@ -1059,12 +964,17 @@
             document.getElementById('home-page').classList.add('hidden');
             document.getElementById('register-page').classList.add('hidden');
             document.getElementById('login-page').classList.remove('hidden');
+            pushLog('showLoginPage() called');
+            // focus first input
+            const l = document.getElementById('login-username'); if (l) l.focus();
         }
 
         function showRegisterPage() {
             document.getElementById('home-page').classList.add('hidden');
             document.getElementById('login-page').classList.add('hidden');
             document.getElementById('register-page').classList.remove('hidden');
+            pushLog('showRegisterPage() called');
+            const r = document.getElementById('register-username'); if (r) r.focus();
         }
 
         function showHomePage() {
@@ -1073,7 +983,8 @@
             document.getElementById('home-page').classList.remove('hidden');
         }
 
-        function login() {
+        async function login() {
+            pushLog('login() invoked');
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
             
@@ -1082,30 +993,40 @@
                 document.getElementById('login-error').classList.remove('hidden');
                 return;
             }
-            
-            fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            })
-            .then(res => res.json())
-            .then(data => {
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                pushLog('login response: ' + JSON.stringify(data));
                 if (data.success) {
-                    location.reload(); // Refresh to show game page
+                    pushLog('/api/data fetch starting');
+                    // fetch user data from /api/data
+                    const status = await fetch('/api/data');
+                    const statusData = await status.json();
+                    pushLog('/api/data response: ' + JSON.stringify(statusData));
+                    if (statusData.success) {
+                        currentUser = statusData.user;
+                        loadGameData(statusData);
+                        showPage('game');
+                        showPopup('Login successful', '#27ae60');
+                    } else {
+                        showPopup('Login succeeded but failed to load data', '#e74c3c');
+                    }
                 } else {
                     document.getElementById('login-error').textContent = data.message || 'Login failed';
                     document.getElementById('login-error').classList.remove('hidden');
                 }
-            })
-            .catch(err => {
+            } catch (err) {
                 document.getElementById('login-error').textContent = 'Login failed. Please try again.';
                 document.getElementById('login-error').classList.remove('hidden');
-            });
+            }
         }
 
-        function register() {
+        async function register() {
+            pushLog('register() invoked');
             const username = document.getElementById('register-username').value;
             const password = document.getElementById('register-password').value;
             
@@ -1114,45 +1035,39 @@
                 document.getElementById('register-error').classList.remove('hidden');
                 return;
             }
-            
-            fetch('/api/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            })
-            .then(res => res.json())
-            .then(data => {
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                pushLog('register response: ' + JSON.stringify(data));
                 if (data.success) {
-                    showLoginPage(); // Switch to login page after successful registration
-                    showPopup('Registration successful! Please login.', '#4CAF50');
+                    pushLog('/api/data fetch starting after register');
+                    // After registration, load user data and go to game
+                    const status = await fetch('/api/data');
+                    const statusData = await status.json();
+                    pushLog('/api/data response after register: ' + JSON.stringify(statusData));
+                    if (statusData.success) {
+                        currentUser = statusData.user;
+                        loadGameData(statusData);
+                        showPage('game');
+                        showPopup('Registered and logged in', '#27ae60');
+                    } else {
+                        showPopup('Registered but failed to load data', '#e74c3c');
+                    }
                 } else {
                     document.getElementById('register-error').textContent = data.message || 'Registration failed';
                     document.getElementById('register-error').classList.remove('hidden');
                 }
-            })
-            .catch(err => {
+            } catch (err) {
                 document.getElementById('register-error').textContent = 'Registration failed. Please try again.';
                 document.getElementById('register-error').classList.remove('hidden');
-            });
+            }
         }
 
-        // Add keyboard event listeners for form submission
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('login-password').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') login();
-            });
-
-            document.getElementById('register-password').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') register();
-            });
-
-            // Start on home page
-            showHomePage();
-        });
-    </script>
-    <script>
+        // Add keyboard event listeners are wired in the main DOMContentLoaded below
         // Page navigation functions
         function showLoginPage() {
             document.getElementById('home-page').classList.add('hidden');
@@ -1175,8 +1090,10 @@
         // Page load handler
         document.addEventListener('DOMContentLoaded', () => {
             showHomePage();
-            document.getElementById('show-login').addEventListener('click', showLoginPage);
-            document.getElementById('show-register').addEventListener('click', showRegisterPage);
+            const btnShowLogin = document.getElementById('show-login') || document.getElementById('login-btn');
+            const btnShowRegister = document.getElementById('show-register') || document.getElementById('register-btn');
+            if (btnShowLogin) btnShowLogin.addEventListener('click', showLoginPage);
+            if (btnShowRegister) btnShowRegister.addEventListener('click', showRegisterPage);
             // Wire up form submissions
             const loginForm = document.getElementById('login-form');
             const registerForm = document.getElementById('register-form');
@@ -1202,6 +1119,12 @@
                     }
                 });
             }
+
+            // Keyboard Enter shortcuts
+            const loginPass = document.getElementById('login-password');
+            if (loginPass) loginPass.addEventListener('keypress', (e) => { if (e.key === 'Enter') login(); });
+            const registerPass = document.getElementById('register-password');
+            if (registerPass) registerPass.addEventListener('keypress', (e) => { if (e.key === 'Enter') register(); });
 
             if (registerForm) {
                 registerForm.addEventListener('submit', async (e) => {
@@ -1235,6 +1158,16 @@
             popup.textContent = message;
             document.body.appendChild(popup);
             setTimeout(() => popup.remove(), 1200);
+        }
+        // Simple debug log panel
+        function pushLog(msg) {
+            try {
+                const panel = document.getElementById('debug-log');
+                if (!panel) return;
+                const entry = document.createElement('div');
+                entry.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+                panel.prepend(entry);
+            } catch (e) { console.warn('log error', e); }
         }
         // Global variables
         let currentUser = null;
