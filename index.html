@@ -7,17 +7,34 @@
     <!-- Cybernetic Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* Root Variables */
+        /* Theme Variables */
         :root {
-            --z-base: 1;
-            --z-game: 10;
-            --z-overlay: 100;
-            --z-popup: 1000;
-            --z-banner: 2000;
-            --accent-1: #00ffe7;
-            --accent-2: #007cf0;
+            /* Colors */
+            --accent-primary: #00ffe7;
+            --accent-secondary: #007cf0;
+            --bg-dark: #0a1219;
+            --bg-darker: #061017;
+            --text-light: #e6f7ff;
+            --text-dark: #08121a;
+            
+            /* Shadows & Effects */
+            --shadow-neon: 0 0 20px rgba(0, 255, 247, 0.2);
+            --shadow-glow: 0 8px 24px rgba(0, 127, 240, 0.15);
+            --gradient-accent: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            --gradient-alert: linear-gradient(90deg, #f1c40f 0%, #f39c12 100%);
+            
+            /* Animation Timing */
+            --transition-instant: 0.08s ease;
             --transition-fast: 0.12s ease;
             --transition-normal: 0.2s ease;
+            
+            /* Z-Index Layers */
+            --z-base: 1;
+            --z-content: 10;
+            --z-header: 100;
+            --z-overlay: 1000;
+            --z-popup: 2000;
+            --z-banner: 3000;
         }
 
         /* Core Styles */
@@ -97,18 +114,25 @@
 
         /* Styled buttons used across the UI */
         .styled-btn {
-            background: linear-gradient(90deg, var(--accent-1) 0%, var(--accent-2) 100%);
-            color: #061017;
+            background: var(--gradient-accent);
+            color: var(--text-dark);
             border: none;
             border-radius: 8px;
-            padding: 8px 18px;
+            padding: 10px 20px;
             margin: 0 6px;
             font-size: 1rem;
             font-family: inherit;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 6px 24px rgba(0,127,240,0.12);
-            transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+            box-shadow: var(--shadow-glow);
+            transition: transform var(--transition-instant), 
+                      box-shadow var(--transition-fast),
+                      filter var(--transition-fast);
+            position: relative;
+            z-index: var(--z-content);
+            overflow: hidden;
+            backface-visibility: hidden;
+            transform: translate3d(0,0,0);
         }
         .styled-btn:hover, .styled-btn:focus {
             transform: translateY(-2px) scale(1.03);
@@ -187,12 +211,33 @@
             opacity: 0.5;
         }
 
-        /* Utility classes to control visibility and simple animations */
-        .hidden { display: none !important; }
-        .fade-in { animation: fadeIn 0.6s ease; }
+        /* Animations & Transitions */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translate3d(-50%, -20px, 0); }
+            to { opacity: 1; transform: translate3d(-50%, 0, 0); }
+        }
+        
+        /* Utility Classes */
+        .hidden { 
+            display: none !important;
+            pointer-events: none !important;
+        }
+        
+        .fade-in { 
+            animation: fadeIn 0.3s var(--transition-normal) both;
+            backface-visibility: hidden;
+            transform: translate3d(0,0,0);
+        }
+        
+        /* Prevent Animation Glitches */
+        * {
+            backface-visibility: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* All CSS is now inside the main <style> block above. Removed stray raw CSS. */
@@ -1956,44 +2001,57 @@
             }
         }
 
-        // Cleanup any stray overlays and fix pointer-events issues
+        // Enhanced cleanup for overlays and interaction issues
         function cleanupOverlays() {
-            // Remove any stray overlays
+            // Remove any stray overlays that could block interaction
             const overlays = Array.from(document.querySelectorAll('div'))
                 .filter(d => {
-                    const z = window.getComputedStyle(d).zIndex;
-                    const pos = window.getComputedStyle(d).position;
-                    return (pos === 'fixed' || pos === 'absolute') && z && Number(z) >= 9999;
+                    const style = window.getComputedStyle(d);
+                    const z = parseInt(style.zIndex, 10);
+                    const pos = style.position;
+                    const isOverlay = (pos === 'fixed' || pos === 'absolute') && z >= 1000;
+                    const isSystem = d.id === 'global-banner' || 
+                                   d.classList.contains('announcement-bar') ||
+                                   d.classList.contains('popup');
+                    return isOverlay && !isSystem;
                 });
+                
             overlays.forEach(el => {
-                // Keep announcement/global banner if present
-                if (el.id === 'global-banner' || el.classList.contains('announcement-bar')) return;
                 try { el.remove(); } catch (e) { /* ignore */ }
             });
 
-            // Fix button interactions
-            document.querySelectorAll('button, .btn').forEach(btn => {
-                btn.style.pointerEvents = 'auto';
-                btn.style.position = 'relative';
-                btn.style.zIndex = '1';
+            // Ensure proper z-index and interaction for UI elements
+            const zIndexMap = {
+                '.game-header': 'var(--z-header)',
+                '.styled-btn, .btn': 'var(--z-content)',
+                '.popup': 'var(--z-popup)',
+                '.announcement-bar': 'var(--z-banner)',
+                '#global-banner': 'var(--z-banner)'
+            };
+
+            Object.entries(zIndexMap).forEach(([selector, zIndex]) => {
+                document.querySelectorAll(selector).forEach(el => {
+                    el.style.position = 'relative';
+                    el.style.zIndex = zIndex;
+                    el.style.pointerEvents = 'auto';
+                });
             });
-            
-            // Ensure announcements are clickable
-            const announcement = document.querySelector('.announcement-bar');
-            if (announcement) {
-                announcement.style.pointerEvents = 'auto';
-                announcement.style.zIndex = '2000';
-            }
-            const banner = document.getElementById('global-banner');
-            if (banner) {
-                banner.style.pointerEvents = 'auto';
-                banner.style.zIndex = '2000';
-            }
+
+            // Fix any specific interaction issues
+            document.querySelectorAll('button, .btn, .dismiss-btn').forEach(btn => {
+                if (btn.style.pointerEvents === 'none') {
+                    btn.style.pointerEvents = 'auto';
+                }
+            });
         }
         
-        // Run cleanup on load and after any overlay/popup is shown
+        // Run cleanup on load and after dynamic content changes
         window.addEventListener('load', cleanupOverlays);
-        setInterval(cleanupOverlays, 1000); // Periodically check and fix
+        const observer = new MutationObserver(cleanupOverlays);
+        observer.observe(document.body, { 
+            childList: true, 
+            subtree: true 
+        });
 
         // Announcement dismiss handlers + persistence
         document.addEventListener('click', (e) => {
