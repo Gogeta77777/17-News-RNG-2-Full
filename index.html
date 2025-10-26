@@ -50,7 +50,12 @@
                 pointer-events: auto;
                 min-width: 220px;
                 max-width: calc(100% - 32px);
-                transition: opacity 0.2s, transform 0.2s;
+                opacity: 1;
+                transition: opacity 0.25s cubic-bezier(.4,0,.2,1), transform 0.2s;
+            }
+            .announcement-bar.hide {
+                opacity: 0;
+                pointer-events: none;
             }
 
             #global-banner {
@@ -91,6 +96,7 @@
                 margin-left: 8px;
                 opacity: 0.7;
                 transition: opacity 0.15s, background 0.15s;
+                z-index: 1;
             }
             .dismiss-btn:hover, .dismiss-btn:focus-visible {
                 opacity: 1;
@@ -2120,7 +2126,28 @@
         } catch (e) { /* ignore */ }
 
 
-        // No JS hacks needed: CSS is now correct. Only add event listeners for dismiss.
+        // Announcement bar dismiss with fade-out
+        document.addEventListener('DOMContentLoaded', function() {
+            var bar = document.querySelector('.announcement-bar');
+            var btn = bar && bar.querySelector('.dismiss-btn');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    bar.classList.add('hide');
+                    setTimeout(function() {
+                        bar.style.display = 'none';
+                    }, 300);
+                });
+            }
+        });
+
+        // Guarantee all buttons are clickable
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('button, .btn, .styled-btn').forEach(function(btn) {
+                btn.style.pointerEvents = 'auto';
+                btn.style.zIndex = '2';
+                btn.style.position = 'relative';
+            });
+        });
 
         // Initialize the app
         checkLoginStatus();
