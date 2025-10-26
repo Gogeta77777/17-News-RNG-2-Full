@@ -30,72 +30,72 @@
             --transition-fast: 0.12s ease;
             --transition-normal: 0.2s ease;
             
-            /* Z-Index Layers */
-            --z-base: 1;
-            --z-content: 10;
-            --z-header: 100;
-            --z-overlay: 1000;
-            --z-popup: 2000;
-            --z-banner: 3000;
-        }
 
-        /* Reset & Core Layout */
-        *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+            /* Announcement Bar */
+            .announcement-bar {
+                position: fixed;
+                top: 12px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 18px;
+                background: var(--gradient-alert);
+                color: var(--text-dark);
+                border-radius: 8px;
+                box-shadow: var(--shadow-glow);
+                font-weight: 700;
+                z-index: 3000;
+                pointer-events: auto;
+                min-width: 220px;
+                max-width: calc(100% - 32px);
+                transition: opacity 0.2s, transform 0.2s;
+            }
 
-        html {
-            height: 100%;
-            font-size: 16px;
-        }
+            #global-banner {
+                position: fixed;
+                top: 64px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: none;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 18px;
+                background: var(--gradient-alert);
+                color: var(--text-dark);
+                border-radius: 8px;
+                box-shadow: var(--shadow-glow);
+                font-weight: 700;
+                z-index: 2999;
+                pointer-events: auto;
+                min-width: 220px;
+                max-width: calc(100% - 32px);
+                opacity: 0;
+                transition: opacity 0.2s, transform 0.2s;
+            }
+            #global-banner.visible {
+                display: flex;
+                opacity: 1;
+                transform: translateX(-50%) scale(1.02);
+            }
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
-            color: var(--text-light);
-            font-family: 'Share Tech Mono', monospace;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            overflow-x: hidden;
-            padding-top: 64px; /* Space for announcement bar */
-        }
-
-        /* Create stacking context for proper z-index handling */
-        #app-root {
-            position: relative;
-            min-height: calc(100vh - 64px);
-            z-index: var(--z-base);
-        }
-
-        /* Announcement Bar (improved) */
-        :root{
-            --accent-1: #00ffe7;
-            --accent-2: #007cf0;
-            --muted: rgba(255,255,255,0.08);
-            --glass: rgba(10,18,25,0.85);
-        }
-
-        .announcement-bar {
-            position: fixed;
-            top: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            background: linear-gradient(90deg,#f1c40f,#f39c12);
-            color: #08121a;
-            border-radius: 10px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.45);
-            z-index: 10002;
-            max-width: calc(100% - 32px);
-            pointer-events: auto;
-            font-weight: 700;
-            transition: transform 0.18s ease, opacity 0.18s ease;
+            .dismiss-btn {
+                background: transparent;
+                border: none;
+                color: inherit;
+                font-size: 1.3em;
+                line-height: 1;
+                cursor: pointer;
+                border-radius: 4px;
+                margin-left: 8px;
+                opacity: 0.7;
+                transition: opacity 0.15s, background 0.15s;
+            }
+            .dismiss-btn:hover, .dismiss-btn:focus-visible {
+                opacity: 1;
+                background: rgba(0,0,0,0.08);
+            }
         }
 
         .announcement-bar .dismiss-btn {
@@ -2119,65 +2119,8 @@
             }
         } catch (e) { /* ignore */ }
 
-        // Fix all UI interactions
-        function fixInteractions() {
-            // Remove any blocking overlays
-            document.querySelectorAll('div').forEach(el => {
-                const style = window.getComputedStyle(el);
-                if ((style.position === 'fixed' || style.position === 'absolute') &&
-                    style.zIndex && parseInt(style.zIndex) > 9000 &&
-                    !el.closest('.system-ui') && // Don't remove system UI
-                    !el.matches('#global-banner, .announcement-bar, .popup')) {
-                    el.remove();
-                }
-            });
 
-            // Ensure buttons are clickable
-            document.querySelectorAll('button, .btn, .styled-btn').forEach(btn => {
-                if (!btn.style.zIndex) btn.style.zIndex = '2';
-                btn.style.position = 'relative';
-                btn.style.pointerEvents = 'auto';
-                // Remove any transform that might break clicking
-                if (btn.style.transform && !btn.style.transform.includes('translateY')) {
-                    btn.style.transform = 'none';
-                }
-            });
-
-            // Fix system UI
-            const systemElements = {
-                '.announcement-bar': { zIndex: 3000, top: '12px' },
-                '#global-banner': { zIndex: 2999, top: '76px' },
-                '.popup': { zIndex: 2000 },
-                '.modal': { zIndex: 1500 },
-                '.game-header': { zIndex: 100 }
-            };
-
-            Object.entries(systemElements).forEach(([selector, props]) => {
-                document.querySelectorAll(selector).forEach(el => {
-                    Object.assign(el.style, {
-                        position: 'fixed',
-                        pointerEvents: 'auto',
-                        zIndex: props.zIndex,
-                        ...(props.top && { top: props.top })
-                    });
-                });
-            });
-
-            // Ensure main content is clickable
-            document.querySelectorAll('.container, .main-content').forEach(el => {
-                el.style.position = 'relative';
-                el.style.zIndex = '1';
-            });
-        }
-
-        // Run immediately and watch for changes
-        fixInteractions();
-        new MutationObserver(fixInteractions).observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['style', 'class']
-        });
+        // No JS hacks needed: CSS is now correct. Only add event listeners for dismiss.
 
         // Initialize the app
         checkLoginStatus();
