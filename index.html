@@ -18,11 +18,88 @@
             position: relative;
         }
 
-        /* Announcement Bar */
+        /* Announcement Bar (improved) */
+        :root{
+            --accent-1: #00ffe7;
+            --accent-2: #007cf0;
+            --muted: rgba(255,255,255,0.08);
+            --glass: rgba(10,18,25,0.85);
+        }
+
         .announcement-bar {
-            background: linear-gradient(90deg, #4CAF50, #2196F3);
-            position: relative;
-            overflow: hidden;
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: linear-gradient(90deg,#f1c40f,#f39c12);
+            color: #08121a;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+            z-index: 10002;
+            max-width: calc(100% - 32px);
+            pointer-events: auto;
+            font-weight: 700;
+            transition: transform 0.18s ease, opacity 0.18s ease;
+        }
+
+        .announcement-bar .dismiss-btn {
+            margin-left: 8px;
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-size: 1.2rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+        }
+        .announcement-bar .dismiss-btn:focus { outline: 2px solid rgba(0,0,0,0.08); }
+
+        /* Global banner used for admin broadcasts (appears below announcement-bar) */
+        #global-banner {
+            position: fixed;
+            top: 64px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            color: #08121a;
+            background: linear-gradient(90deg,#f1c40f,#f39c12);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+            z-index: 10002;
+            max-width: calc(100% - 48px);
+            pointer-events: auto;
+            font-weight: 800;
+        }
+
+        #global-banner.visible { display: flex; animation: fadeIn 0.28s ease both; }
+
+        /* Styled buttons used across the UI */
+        .styled-btn {
+            background: linear-gradient(90deg, var(--accent-1) 0%, var(--accent-2) 100%);
+            color: #061017;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 18px;
+            margin: 0 6px;
+            font-size: 1rem;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 24px rgba(0,127,240,0.12);
+            transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+        }
+        .styled-btn:hover, .styled-btn:focus {
+            transform: translateY(-2px) scale(1.03);
+            color: #fff;
+            filter: saturate(1.05) brightness(1.02);
         }
         button::before, .btn::before {
             content: '';
@@ -704,10 +781,13 @@
     </style>
 </head>
 <body>
-    <div id="global-banner" class="global-banner" style="background:linear-gradient(90deg,#f1c40f,#f39c12);display:none;padding:12px 18px;border-radius:8px;color:#08121a;font-weight:800;position:fixed;left:50%;transform:translateX(-50%);top:12px;z-index:9998;box-shadow:0 8px 30px rgba(0,0,0,0.45);"></div>
+    <div id="global-banner" aria-live="polite" role="status"></div>
     <!-- Home Page -->
     <!-- Announcement Bar -->
-    <div class="announcement-bar">RNG 2 - Alpha Testing</div>
+    <div class="announcement-bar">
+        <span>RNG 2 - Alpha Testing</span>
+        <button class="dismiss-btn" aria-label="Dismiss announcement">×</button>
+    </div>
 
     <div id="home-page" class="container">
         <main class="home-main">
@@ -738,26 +818,7 @@
                         </ul>
                     </div>
                 </div>
-            </div>
-        .styled-btn {
-            background: linear-gradient(90deg, #00ffe7 0%, #007cf0 100%);
-            color: #222;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 20px;
-            margin: 0 8px;
-            font-size: 1.1em;
-            font-family: inherit;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,255,255,0.15);
-            transition: background 0.2s, color 0.2s, transform 0.1s;
-        }
-        .styled-btn:hover, .styled-btn:focus {
-            background: linear-gradient(90deg, #007cf0 0%, #00ffe7 100%);
-            color: #fff;
-            transform: scale(1.05);
-        }
+                </div>
         </main>
     </div>
 
@@ -1343,9 +1404,13 @@
             // Handle announcements from admin (show banner + chat system message)
             socket.on('new_announcement', (data) => {
                 const banner = document.getElementById('global-banner');
-                banner.textContent = `${data.title}: ${data.content}`;
-                banner.style.display = 'block';
-                setTimeout(() => { banner.style.display = 'none'; }, 6000);
+                // include a dismiss button so users can manually close the broadcast
+                banner.innerHTML = `<span>${data.title}: ${data.content}</span><button class="dismiss-btn" aria-label="Dismiss announcement">&times;</button>`;
+                banner.classList.add('visible');
+                const hideBanner = () => { banner.classList.remove('visible'); };
+                const dismissBtn = banner.querySelector('.dismiss-btn');
+                if (dismissBtn) dismissBtn.addEventListener('click', hideBanner, { once: true });
+                setTimeout(hideBanner, 6000);
 
                 // Push a system chat message
                 const chatMessages = document.getElementById('chat-messages');
@@ -1891,6 +1956,32 @@
                 try { el.remove(); } catch (e) { /* ignore */ }
             });
         });
+
+        // Announcement dismiss handlers + persistence
+        document.addEventListener('click', (e) => {
+            // dismiss announcement bar
+            if (e.target.matches('.announcement-bar .dismiss-btn')) {
+                const bar = document.querySelector('.announcement-bar');
+                if (bar) {
+                    bar.style.display = 'none';
+                    try { localStorage.setItem('announcement-dismissed-v1', '1'); } catch (e) { /* ignore */ }
+                }
+            }
+
+            // dismiss global broadcast banner
+            if (e.target.matches('#global-banner .dismiss-btn')) {
+                const gb = document.getElementById('global-banner');
+                if (gb) gb.classList.remove('visible');
+            }
+        });
+
+        // respect persisted announcement dismissal across loads
+        try {
+            if (localStorage.getItem('announcement-dismissed-v1') === '1') {
+                const bar = document.querySelector('.announcement-bar');
+                if (bar) bar.style.display = 'none';
+            }
+        } catch (e) { /* ignore */ }
 
         // Initialize the app
         checkLoginStatus();
