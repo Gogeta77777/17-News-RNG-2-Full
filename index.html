@@ -7,6 +7,19 @@
     <!-- Cybernetic Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
+        /* Root Variables */
+        :root {
+            --z-base: 1;
+            --z-game: 10;
+            --z-overlay: 100;
+            --z-popup: 1000;
+            --z-banner: 2000;
+            --accent-1: #00ffe7;
+            --accent-2: #007cf0;
+            --transition-fast: 0.12s ease;
+            --transition-normal: 0.2s ease;
+        }
+
         /* Core Styles */
         body {
             margin: 0;
@@ -16,6 +29,7 @@
             color: #fff;
             font-family: 'Share Tech Mono', monospace;
             position: relative;
+            overflow-x: hidden;
         }
 
         /* Announcement Bar (improved) */
@@ -505,8 +519,8 @@
         pointer-events: auto;
     }
 
-    /* Safety: ensure announcement/global banner remain visible but not block interactions */
-    .announcement-bar, #global-banner { z-index: 10002; pointer-events: none; }
+    /* Ensure announcements remain above content but allow interaction */
+    .announcement-bar, #global-banner { z-index: 10002; pointer-events: auto; }
         .welcome-card h2 { font-size: 2rem; margin-bottom: 6px; color: #00fff7; }
         .welcome-card p { color: #bcd; margin-bottom: 18px; }
         .button-group { display:flex; gap:14px; justify-content:center; }
@@ -1942,8 +1956,9 @@
             }
         }
 
-        // Safety cleanup: remove any stray full-screen overlays (created by prior cutscenes) that may block clicks
-        window.addEventListener('load', () => {
+        // Cleanup any stray overlays and fix pointer-events issues
+        function cleanupOverlays() {
+            // Remove any stray overlays
             const overlays = Array.from(document.querySelectorAll('div'))
                 .filter(d => {
                     const z = window.getComputedStyle(d).zIndex;
@@ -1955,7 +1970,30 @@
                 if (el.id === 'global-banner' || el.classList.contains('announcement-bar')) return;
                 try { el.remove(); } catch (e) { /* ignore */ }
             });
-        });
+
+            // Fix button interactions
+            document.querySelectorAll('button, .btn').forEach(btn => {
+                btn.style.pointerEvents = 'auto';
+                btn.style.position = 'relative';
+                btn.style.zIndex = '1';
+            });
+            
+            // Ensure announcements are clickable
+            const announcement = document.querySelector('.announcement-bar');
+            if (announcement) {
+                announcement.style.pointerEvents = 'auto';
+                announcement.style.zIndex = '2000';
+            }
+            const banner = document.getElementById('global-banner');
+            if (banner) {
+                banner.style.pointerEvents = 'auto';
+                banner.style.zIndex = '2000';
+            }
+        }
+        
+        // Run cleanup on load and after any overlay/popup is shown
+        window.addEventListener('load', cleanupOverlays);
+        setInterval(cleanupOverlays, 1000); // Periodically check and fix
 
         // Announcement dismiss handlers + persistence
         document.addEventListener('click', (e) => {
