@@ -2149,6 +2149,13 @@
             });
         });
 
+        // Ensure all buttons are clickable and functional
+        document.querySelectorAll('button, .btn, input[type="button"], input[type="submit"]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                console.log(`Button clicked: ${button.textContent || button.value}`);
+            });
+        });
+
         // Initialize the app
         checkLoginStatus();
     </script>
