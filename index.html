@@ -29,11 +29,14 @@
             --transition-instant: 0.08s ease;
             --transition-fast: 0.12s ease;
             --transition-normal: 0.2s ease;
-            /* z-index stacking variables */
-            --z-header: 110;
-            --z-content: 10001;
-            --z-popup: 10003;
-            --z-banner: 10004;
+            /* Proper z-index stacking order */
+            --z-base: 1;
+            --z-header: 100;
+            --z-content: 200;
+            --z-overlay: 300;
+            --z-popup: 400;
+            --z-banner: 500;
+            --z-max: 9999;
         }
 
             /* Announcement Bar */
@@ -150,12 +153,15 @@
         input[type="button"],
         input[type="submit"] {
             position: relative;
-            z-index: 2;
+            z-index: 200;
             cursor: pointer;
             border: none;
             font-family: inherit;
             -webkit-tap-highlight-color: transparent;
             transform: translateZ(0);
+            pointer-events: auto !important;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         /* Styled buttons used across the UI */
@@ -208,13 +214,23 @@
         button:hover::before, .btn:hover::before {
             left: 100%;
         }
-        button:hover, .btn:hover {
+        button:hover, .btn:hover,
+        button:focus-visible, .btn:focus-visible {
             background: linear-gradient(135deg, #3498db 0%, #00fff7 100%);
             color: #fff;
             box-shadow: 0 0 30px rgba(0, 255, 247, 0.4),
                        0 0 60px rgba(52, 152, 219, 0.2),
                        inset 0 0 20px rgba(255, 255, 255, 0.15);
             transform: translateY(-2px);
+            outline: none;
+            position: relative;
+            z-index: var(--z-content);
+        }
+        
+        /* Active state for better touch feedback */
+        button:active, .btn:active {
+            transform: translateY(1px);
+            transition: transform 0.1s;
         }
         button:disabled, .btn:disabled {
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
@@ -895,9 +911,24 @@
             position: relative !important;
         }
 
-        /* Most transient visual overlays should not block interaction unless explicitly intended */
-        .popup, .flash-overlay, .disco-overlay {
+        /* Prevent any transient overlays from blocking clicks */
+        .popup, .flash-overlay, .disco-overlay, .announcement-overlay, .event-overlay {
             pointer-events: none !important;
+            z-index: var(--z-overlay) !important;
+        }
+        
+        /* Ensure clickable elements stay interactive */
+        .clickable, button, .btn, input[type="button"], input[type="submit"], a[href], [role="button"],
+        .auth-card, .welcome-card, .tab-btn, .form-group, .inventory-item, .chat-input {
+            pointer-events: auto !important;
+            position: relative;
+            z-index: var(--z-content);
+        }
+        
+        /* Keep announcements above content but below max z-index */
+        .announcement-bar, #global-banner {
+            z-index: var(--z-banner);
+            pointer-events: auto;
         }
     </style>
 </head>
@@ -1283,8 +1314,22 @@
             document.getElementById('home-page').classList.remove('hidden');
         }
 
+        // Clean up any stuck overlays
+        function cleanupOverlays() {
+            document.querySelectorAll('[data-transient="1"]').forEach(el => el.remove());
+            document.querySelectorAll('.popup, .flash-overlay, .disco-overlay').forEach(el => el.remove());
+        }
+
+        // Handle any click outside of interactive elements
+        document.addEventListener('click', (e) => {
+            if (e.target === document.body || e.target === document.documentElement) {
+                cleanupOverlays();
+            }
+        });
+
         // Page load handler
         document.addEventListener('DOMContentLoaded', () => {
+            cleanupOverlays(); // Clean up any overlays on page load
             showHomePage();
             const btnShowLogin = document.getElementById('show-login') || document.getElementById('login-btn');
             const btnShowRegister = document.getElementById('show-register') || document.getElementById('register-btn');
