@@ -1923,6 +1923,148 @@
             // Clean up any transient elements
             $$('[data-transient="1"]').forEach(el => el.remove());
         });
+        // Initialize all form handlers when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialization
+            initUI();
+            checkLoginStatus();
+            initSocketIO();
+            initEventHandlers();
+            
+            // Clean up any stuck overlays
+            cleanupOverlays();
+        });
+
+        // Core UI initialization
+        function initUI() {
+            // Set up button states
+            document.querySelectorAll('button, .btn, .styled-btn').forEach(function(btn) {
+                btn.style.position = 'relative';
+                btn.style.zIndex = '1001';  // Use explicit z-index
+                btn.style.pointerEvents = 'auto';
+                
+                // Ensure click handler is attached
+                btn.addEventListener('click', function(e) {
+                    // Prevent any stuck overlays from blocking clicks
+                    cleanupOverlays();
+                    console.log('Button clicked:', btn.textContent || btn.value);
+                });
+            });
+
+            // Initialize settings
+            initSettings();
+            
+            // Set up tabs
+            initTabs();
+
+            // Initialize shop
+            initShop();
+        }
+
+        // Initialize event handlers
+        function initEventHandlers() {
+            // Form handlers
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+            
+            if (registerForm) {
+                registerForm.addEventListener('submit', handleRegister);
+            }
+
+            // Chat handlers
+            const sendBtn = document.getElementById('send-btn');
+            const chatInput = document.getElementById('chat-input');
+            
+            if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+            if (chatInput) chatInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            // Admin handlers
+            initAdminHandlers();
+
+            // Announcement bar
+            initAnnouncementBar();
+        }
+
+        // Socket.IO initialization
+        function initSocketIO() {
+            if (socket) {
+                socket.disconnect();
+            }
+            socket = io();
+            
+            socket.on('chat_message', handleChatMessage);
+            socket.on('new_announcement', handleAnnouncement);
+            socket.on('aa_event', handleAAEvent);
+            socket.on('new_event', handleEvent);
+        }
+
+        // Settings initialization
+        function initSettings() {
+            const soundToggle = document.getElementById('sound-toggle');
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            try {
+                const saved = JSON.parse(localStorage.getItem('settings') || '{}');
+                if (saved.sound !== undefined && soundToggle) soundToggle.checked = !!saved.sound;
+                if (saved.theme !== undefined && themeToggle) themeToggle.checked = !!saved.theme;
+                applyTheme(themeToggle ? themeToggle.checked : false);
+            } catch (e) { /* ignore */ }
+
+            if (soundToggle) soundToggle.addEventListener('change', saveSettings);
+            if (themeToggle) themeToggle.addEventListener('change', () => {
+                applyTheme(themeToggle.checked);
+                saveSettings();
+            });
+        }
+
+        // Clean up any stuck overlays
+        function cleanupOverlays() {
+            // Remove transient overlays
+            document.querySelectorAll('[data-transient="1"]').forEach(el => el.remove());
+            document.querySelectorAll('.flash-overlay, .disco-overlay').forEach(el => el.remove());
+            
+            // Fix any stuck buttons
+            document.querySelectorAll('button, .btn, .styled-btn').forEach(btn => {
+                btn.style.position = 'relative';
+                btn.style.zIndex = '1001';
+                btn.style.pointerEvents = 'auto';
+                btn.disabled = false;
+            });
+            
+            // Ensure announcement bar is above content but below popups
+            const announceBar = document.querySelector('.announcement-bar');
+            if (announceBar) {
+                announceBar.style.zIndex = '1002';
+                announceBar.style.pointerEvents = 'auto';
+            }
+        }
+
+        // Handle any clicks/touches
+        document.addEventListener('pointerdown', (e) => {
+            // Clean up overlays when clicking anywhere
+            cleanupOverlays();
+            
+            // If clicking a button, ensure it's interactive
+            const btn = e.target.closest('button, .btn, .styled-btn');
+            if (btn) {
+                btn.style.position = 'relative';
+                btn.style.zIndex = '1001';
+                btn.style.pointerEvents = 'auto';
+                btn.disabled = false;
+            }
+            
+            // Remove any transient overlay under the pointer
+            const el = document.elementFromPoint(e.clientX, e.clientY);
+            if (el?.dataset?.transient === '1' || el?.closest('[data-transient="1"]')) {
+                el.remove();
+            }
+        }, { capture: true, passive: true });
     </script>
 
     <!-- Initialize Socket.IO connection -->
