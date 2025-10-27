@@ -1417,92 +1417,80 @@
         async function handleLogin(e) {
             if (e) e.preventDefault();
             
-            const form = $('#login-form');
-            const button = form?.querySelector('button[type="submit"]');
             const errorDiv = $('#login-error');
+            const button = $('#login-form button[type="submit"]');
+            const username = $('#login-username')?.value?.trim();
+            const password = $('#login-password')?.value;
+            
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
             
             try {
                 setLoading(button, true);
                 errorDiv?.classList.add('hidden');
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-            
-            if (!username || !password) {
-                document.getElementById('login-error').textContent = 'Please enter both username and password';
-                document.getElementById('login-error').classList.remove('hidden');
-                return;
-            }
-            try {
-                const res = await fetch('/api/login', {
+                
+                const loginData = await handleAPIRequest('/api/login', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                const data = await res.json();
-                pushLog('login response: ' + JSON.stringify(data));
-                if (data.success) {
-                    pushLog('/api/data fetch starting');
-                    // fetch user data from /api/data
-                    const status = await fetch('/api/data');
-                    const statusData = await status.json();
-                    pushLog('/api/data response: ' + JSON.stringify(statusData));
-                    if (statusData.success) {
-                        currentUser = statusData.user;
-                        loadGameData(statusData);
-                        showPage('game');
-                        showPopup('Login successful', '#27ae60');
-                    } else {
-                        showPopup('Login succeeded but failed to load data', '#e74c3c');
-                    }
-                } else {
-                    document.getElementById('login-error').textContent = data.message || 'Login failed';
-                    document.getElementById('login-error').classList.remove('hidden');
+                
+                const userData = await handleAPIRequest('/api/data');
+                currentUser = userData.user;
+                loadGameData(userData);
+                
+                if (currentUser?.isAdmin) {
+                    $('#admin-btn')?.classList.remove('hidden');
                 }
+                
+                showPopup('Login successful!', '#27ae60');
+                showPage('game');
             } catch (err) {
-                document.getElementById('login-error').textContent = 'Login failed. Please try again.';
-                document.getElementById('login-error').classList.remove('hidden');
+                errorDiv.textContent = err.message || 'An error occurred. Please try again.';
+                errorDiv.classList.remove('hidden');
+                showPopup('Login failed', '#e74c3c');
+            } finally {
+                setLoading(button, false);
             }
         }
 
-        async function register() {
-            pushLog('register() invoked');
-            const username = document.getElementById('register-username').value;
-            const password = document.getElementById('register-password').value;
+        async function handleRegister(e) {
+            if (e) e.preventDefault();
+            
+            const errorDiv = $('#register-error');
+            const button = $('#register-form button[type="submit"]');
+            const username = $('#register-username')?.value?.trim();
+            const password = $('#register-password')?.value;
             
             if (!username || !password) {
-                document.getElementById('register-error').textContent = 'Please enter both username and password';
-                document.getElementById('register-error').classList.remove('hidden');
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.classList.remove('hidden');
                 return;
             }
+            
             try {
-                const res = await fetch('/api/register', {
+                setLoading(button, true);
+                errorDiv?.classList.add('hidden');
+                
+                const registerData = await handleAPIRequest('/api/register', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                const data = await res.json();
-                pushLog('register response: ' + JSON.stringify(data));
-                if (data.success) {
-                    pushLog('/api/data fetch starting after register');
-                    // After registration, load user data and go to game
-                    const status = await fetch('/api/data');
-                    const statusData = await status.json();
-                    pushLog('/api/data response after register: ' + JSON.stringify(statusData));
-                    if (statusData.success) {
-                        currentUser = statusData.user;
-                        loadGameData(statusData);
-                        showPage('game');
-                        showPopup('Registered and logged in', '#27ae60');
-                    } else {
-                        showPopup('Registered but failed to load data', '#e74c3c');
-                    }
-                } else {
-                    document.getElementById('register-error').textContent = data.message || 'Registration failed';
-                    document.getElementById('register-error').classList.remove('hidden');
-                }
+                
+                const userData = await handleAPIRequest('/api/data');
+                currentUser = userData.user;
+                loadGameData(userData);
+                
+                showPopup('Registration successful!', '#27ae60');
+                showPage('game');
             } catch (err) {
-                document.getElementById('register-error').textContent = 'Registration failed. Please try again.';
-                document.getElementById('register-error').classList.remove('hidden');
+                errorDiv.textContent = err.message || 'An error occurred. Please try again.';
+                errorDiv.classList.remove('hidden');
+                showPopup('Registration failed', '#e74c3c');
+            } finally {
+                setLoading(button, false);
             }
         }
 
@@ -2159,14 +2147,78 @@
             });
         })();
 
-        // Spin functionality is wired below (to support cutscenes and extra logic)
-        // Note: redeem/shop handlers are in-tab (inventory area). Top-level code inputs were removed to avoid duplicates.
+        // Spin functionality with cutscene support
+        function initSpinHandler() {
+            const spinBtn = document.getElementById('spin-btn');
+            if (!spinBtn) return;
+            
+            spinBtn.addEventListener('click', async () => {
+                try {
+                    const spinResult = document.getElementById('spin-result');
+                    spinBtn.disabled = true;
+                    spinBtn.innerHTML = ' Spinning...';
+                    spinResult.innerHTML = '';
+                    
+                    const response = await fetch('/api/spin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Update coins immediately
+                        if (typeof data.coins === 'number') {
+                            document.getElementById('coin-count').textContent = data.coins;
+                            if (currentUser) currentUser.coins = data.coins;
+                        }
+                        
+                        // Run cutscene if specified
+                        if (data.cutscene) {
+                            await runExplosiveCutscene(data.item);
+                        }
+                        
+                        // Show result with earned coins
+                        const awardedHtml = (typeof data.awarded === 'number' && data.awarded > 0) 
+                            ? `<br><span style="color:#f1c40f">+${data.awarded} coins</span>` 
+                            : '';
+                            
+                        spinResult.innerHTML = `<div style="font-size:1.3em;animation:fadeIn 1s;">${data.item} (${data.rarity.name})${awardedHtml}</div>`;
+                        showPopup(`You got a ${data.rarity.name}!`, data.rarity.color || '#9b59b6');
+                        
+                        // Add to inventory
+                        if (currentUser?.inventory) {
+                            currentUser.inventory.push({ 
+                                name: data.item, 
+                                rarity: data.rarity.name.toLowerCase(), 
+                                date: new Date().toISOString() 
+                            });
+                            loadGameData({ user: currentUser });
+                        }
+                    } else {
+                        spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
+                        showPopup(data.error, '#e74c3c');
+                    }
+                } catch (error) {
+                    const spinResult = document.getElementById('spin-result');
+                    spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
+                    showPopup('An error occurred.', '#e74c3c');
+                } finally {
+                    spinBtn.disabled = false;
+                    spinBtn.innerHTML = 'Spin Now!';
+                }
+            });
+        }
 
         // Chat functionality
-        (function(){
-            const _sendBtn = document.getElementById('send-btn'); if (_sendBtn) _sendBtn.addEventListener('click', sendMessage);
-            const _chatInput = document.getElementById('chat-input'); if (_chatInput) _chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-        })();
+        function initChatHandlers() {
+            const sendBtn = document.getElementById('send-btn');
+            const chatInput = document.getElementById('chat-input');
+            
+            if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+            if (chatInput) chatInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter') sendMessage();
+            });
+        }
 
         function sendMessage() {
             const chatInput = document.getElementById('chat-input');
@@ -2183,28 +2235,96 @@
 
         // Disco visuals
         let discoEl = null;
+        
         function startDisco() {
             if (discoEl) return;
+            
             discoEl = document.createElement('div');
             discoEl.className = 'disco-overlay';
             discoEl.dataset.transient = '1';
-            discoEl.style.position = 'fixed'; discoEl.style.left = 0; discoEl.style.top = 0; discoEl.style.width = '100%'; discoEl.style.height = '100%';
-            discoEl.style.zIndex = 9996; discoEl.style.pointerEvents = 'none';
-            discoEl.style.background = 'radial-gradient(circle at 20% 20%, rgba(255,0,150,0.08), transparent 10%), radial-gradient(circle at 80% 80%, rgba(0,200,255,0.06), transparent 12%)';
-            discoEl.style.animation = 'discoPulse 1s linear infinite';
+            
+            discoEl.style.cssText = `
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                z-index: var(--z-overlay);
+                pointer-events: none;
+                background: 
+                    radial-gradient(circle at 20% 20%, rgba(255,0,150,0.08), transparent 10%),
+                    radial-gradient(circle at 80% 80%, rgba(0,200,255,0.06), transparent 12%);
+                animation: discoPulse 1s linear infinite;
+            `;
+            
             document.body.appendChild(discoEl);
         }
-        function stopDisco() { if (discoEl) { discoEl.remove(); discoEl = null; } }
+        
+        function stopDisco() {
+            if (discoEl) {
+                discoEl.remove();
+                discoEl = null;
+            }
+        }
 
-        // Core animations
-        const globalStyles = document.createElement('style');
-        globalStyles.innerHTML = `
-            @keyframes discoPulse { 
-                0% { filter: hue-rotate(0deg); } 
-                50% { filter: hue-rotate(90deg); } 
-                100% { filter: hue-rotate(180deg); }
+        // Core animations and event handlers
+        function initAnimationsAndHandlers() {
+            // Add global animation styles
+            const globalStyles = document.createElement('style');
+            globalStyles.innerHTML = `
+                @keyframes discoPulse { 
+                    0% { filter: hue-rotate(0deg); } 
+                    50% { filter: hue-rotate(90deg); } 
+                    100% { filter: hue-rotate(180deg); }
+                }
+                
+                @keyframes fadeIn { 
+                    from { opacity: 0; transform: translateY(8px); } 
+                    to { opacity: 1; transform: translateY(0); } 
+                }
+                
+                @keyframes popupIn { 
+                    from { opacity: 0; transform: translate(-50%, 10px); } 
+                    to { opacity: 1; transform: translate(-50%, 0); } 
+                }
+            `;
+            document.head.appendChild(globalStyles);
+            
+            // Setup interactive elements
+            document.querySelectorAll('button, .btn, .styled-btn, [role="button"]').forEach(btn => {
+                btn.style.cssText = `
+                    position: relative;
+                    z-index: var(--z-content);
+                    pointer-events: auto;
+                `;
+            });
+            
+            // Clean up any stray overlays
+            function cleanupOverlays() {
+                document.querySelectorAll('[data-transient="1"]').forEach(el => el.remove());
             }
             
+            // Handle any click outside of interactive elements
+            document.addEventListener('click', (e) => {
+                if (e.target === document.body || e.target === document.documentElement) {
+                    cleanupOverlays();
+                }
+            });
+            
+            // Initialize features
+            initSpinHandler();
+            initChatHandlers();
+            checkLoginStatus();
+            
+            // Clean up on page unload
+            window.addEventListener('unload', () => {
+                if (socket) socket.disconnect();
+                cleanupOverlays();
+            });
+        }
+        
+        // Call initialization when DOM is ready
+        document.addEventListener('DOMContentLoaded', initAnimationsAndHandlers);
             @keyframes fadeIn {
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
@@ -2527,57 +2647,148 @@ a.rarity.name})</span>${awardedHtml}</div>`;
             originalSpinBtn.addEventListener('click', async () => {ata.item, rarity: data.rarity.name.toLowerCase(), date: new Date().toISOString() });
             const spinBtn = originalSpinBtn; spinResult = document.getElementById('spin-result');m);
             spinBtn.disabled = true;data.cutscene) await runExplosiveCutscene(data.item); else {
-            spinBtn.innerHTML = '<span class="loading-spinner"></span> Spinning...';
-            try {le="color:#e74c3c">${data.error}</span>`;
-                const response = await fetch('/api/spin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });   showPopup(data.error, '#e74c3c');
-                const data = await response.json();
-                spinBtn.disabled = false; spinBtn.innerHTML = 'Spin Now!';L = 'Spin Now!';
-                if (data.success) {color:#e74c3c">An error occurred.</span>`;
-                    // Use server-provided rarity color when possible#e74c3c">An error occurred.</span>`;       showPopup('An error occurred.', '#e74c3c');
-                    const rarityColor = (data.rarity && data.rarity.color) ? data.rarity.color : '#9b59b6';   showPopup('An error occurred.', '#e74c3c');            }
-                    // expose for cutscene to pick up
-                    window.lastSpinRarityColor = rarityColor;   }, { once: false });
-                    showPopup(`You got a ${data.rarity.name}!`, rarityColor);        }
-                    // Show the item, rarity and awarded coins (if any)
-                    const awardedHtml = (typeof data.awarded === 'number' && data.awarded > 0) ? `<div style="font-size:0.9rem;color:${rarityColor}">+${data.awarded} coins</div>` : '';
-                    spinResult.innerHTML = `<div><strong style="color:${rarityColor};font-size:1.3em;animation:fadeIn 1s;">${data.item}</strong> <span style="font-weight:bold;">(${data.rarity.name})</span>${awardedHtml}</div>`;ction logout() {
-                    document.getElementById('coin-count').textContent = data.coins;
-                    currentUser.coins = data.coins;ogout');;
-                    currentUser.inventory.push({ name: data.item, rarity: data.rarity.name.toLowerCase(), date: new Date().toISOString() }); null;f (socket) {
-                    loadGameData({ user: currentUser });
-                    if (data.cutscene) await runExplosiveCutscene(data.item);ect();null;
-                } else {   socket = null;
-                    spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
-                    showPopup(data.error, '#e74c3c');e'); catch (error) {
-                }out error:', error);
-            } catch (error) {gout error:', error);                showPage('home');
-                spinBtn.disabled = false; spinBtn.innerHTML = 'Spin Now!';   showPage('home');
-                spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;   }
-                showPopup('An error occurred.', '#e74c3c');        }
-            }
-            }, { once: false });lays and interaction issues
+            // Initialize spin handler
+            if (!spinBtn) return;
+            
+            spinBtn.addEventListener('click', async () => {
+                try {
+                    const spinResult = document.getElementById('spin-result');
+                    if (!spinResult) return;
+                    
+                    // Show loading state
+                    spinBtn.disabled = true;
+                    spinBtn.innerHTML = '<span class="loading-spinner"></span> Spinning...';
+                    spinResult.innerHTML = '';
+
+                    // Make API request
+                    const response = await fetch('/api/spin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Update coins
+                        if (typeof data.coins === 'number') {
+                            document.getElementById('coin-count').textContent = data.coins;
+                            if (currentUser) currentUser.coins = data.coins;
+                        }
+
+                        // Use server-provided rarity color or fallback
+                        const rarityColor = (data.rarity && data.rarity.color) ? data.rarity.color : '#9b59b6';
+                        window.lastSpinRarityColor = rarityColor;
+
+                        // Play cutscene if specified
+                        if (data.cutscene) {
+                            await runExplosiveCutscene(data.item);
+                        }
+
+                        // Format award coins HTML if present
+                        const awardedHtml = (typeof data.awarded === 'number' && data.awarded > 0) 
+                            ? `<div style="font-size:0.9rem;color:${rarityColor}">+${data.awarded} coins</div>`
+                            : '';
+
+                        // Show results
+                        spinResult.innerHTML = `
+                            <div>
+                                <strong style="color:${rarityColor};font-size:1.3em;animation:fadeIn 1s;">
+                                    ${data.item}
+                                </strong>
+                                <span style="font-weight:bold;">
+                                    (${data.rarity.name})
+                                </span>
+                                ${awardedHtml}
+                            </div>
+                        `;
+
+                        // Add to inventory
+                        if (currentUser?.inventory) {
+                            currentUser.inventory.push({
+                                name: data.item,
+                                rarity: data.rarity.name.toLowerCase(),
+                                date: new Date().toISOString()
+                            });
+                            loadGameData({ user: currentUser });
+                        }
+
+                        showPopup(`You got a ${data.rarity.name}!`, rarityColor);
+                    } else {
+                        spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
+                        showPopup(data.error, '#e74c3c');
+                    }
+                } catch (error) {
+                    console.error('Spin error:', error);
+                    const spinResult = document.getElementById('spin-result');
+                    if (spinResult) {
+                        spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
+                    }
+                    showPopup('An error occurred.', '#e74c3c');
+                } finally {
+                    spinBtn.disabled = false;
+                    spinBtn.innerHTML = 'Spin Now!';
+                }
+            });
         }
 
-        // Logout functionte, visible, covers center point or large area, and not a known system element.window.innerWidth;
+        // Logout and cleanup functionality
         async function logout() {
             try {
-                await fetch('/api/logout'); Array.from(document.querySelectorAll('div'))
+                await fetch('/api/logout');
                 currentUser = null;
-                if (socket) {cument.documentElement) return false;
+                if (socket) {
                     socket.disconnect();
-                    socket = null;' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return false;
+                    socket = null;
                 }
-                showPage('home');eturn false;r remove
-            } catch (error) {sh-overlay');
-                console.error('Logout error:', error);global-banner' || d.classList.contains('announcement-bar') || d.classList.contains('popup') || d.classList.contains('disco-overlay') || d.classList.contains('flash-overlay');
+                cleanupOverlays();
                 showPage('home');
-            }ct();
+            } catch (error) {
+                console.error('Logout error:', error);
+                showPage('home');
+            }
         }
- rect.top <= viewportH/2 && rect.bottom >= viewportH/2;
-        // Enhanced cleanup for overlays and interaction issuesW/2 && rect.top <= viewportH/2 && rect.bottom >= viewportH/2;                    const areaRatio = (rect.width * rect.height) / (viewportW * viewportH);
-        function cleanupOverlays() {ght) / (viewportW * viewportH);r || areaRatio > 0.25;
-            // Remove any stray overlays that could block interaction. return coversCenter || areaRatio > 0.25;
-            // Heuristics: position fixed/absolute, visible, covers center point or large area, and not a known system element.                });
+
+        // Enhanced cleanup for overlays and interaction issues
+        function cleanupOverlays() {
+            // Remove any stray overlays that could block interaction
+            const viewportW = window.innerWidth;
+            const viewportH = window.innerHeight;
+            
+            Array.from(document.querySelectorAll('div')).forEach(el => {
+                if (!el || el === document.body || el === document.documentElement) return;
+                
+                // Get computed style
+                const style = window.getComputedStyle(el);
+                if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
+                
+                // Check if fixed/absolute and has transient flag
+                const pos = style.position;
+                if (!(pos === 'fixed' || pos === 'absolute' || el.dataset.transient === '1')) return;
+                
+                // Exclude known system elements
+                const isSystem = el.id === 'global-banner' || 
+                               el.classList.contains('announcement-bar') ||
+                               el.classList.contains('popup') ||
+                               el.classList.contains('disco-overlay') ||
+                               el.classList.contains('flash-overlay');
+                if (isSystem) return;
+                
+                // Check size and position
+                const rect = el.getBoundingClientRect();
+                if (rect.width < 40 || rect.height < 40) return;
+                
+                const coversCenter = rect.left <= viewportW/2 && rect.right >= viewportW/2 && 
+                                   rect.top <= viewportH/2 && rect.bottom >= viewportH/2;
+                                   
+                const areaRatio = (rect.width * rect.height) / (viewportW * viewportH);
+                
+                // Remove if element is too large or covers center
+                if (coversCenter || areaRatio > 0.25) {
+                    try {
+                        el.remove();
+                    } catch (e) { /* ignore */ }
+                }
+            });
+        }
             const viewportW = window.innerWidth;
             const viewportH = window.innerHeight;
             const candidates = Array.from(document.querySelectorAll('div')) try { el.remove(); } catch (e) { /* ignore */ }
@@ -2678,24 +2889,54 @@ spect persisted announcement dismissal across loads
             }
         });
 
-        // Initialize the app
+        // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            // Ensure all buttons are clickable and functional
+            // Initialize interactive elements
             document.querySelectorAll('button, .btn, .styled-btn').forEach(function(btn) {
-                btn.style.position = 'relative';
-                btn.style.zIndex = '2';
-                btn.style.pointerEvents = 'auto';
+                btn.style.cssText = `
+                    position: relative;
+                    z-index: var(--z-content);
+                    pointer-events: auto;
+                `;
             });
 
-            // Add click tracking for analytics
+            // Add interaction tracking
             document.querySelectorAll('button, .btn, input[type="button"], input[type="submit"]').forEach(button => {
                 button.addEventListener('click', (e) => {
                     console.log(`Button clicked: ${button.textContent || button.value}`);
                 });
             });
 
+            // Initialize handlers
+            initSpinHandler();
+            initChatHandlers();
+            cleanupOverlays();
+
             // Check initial login status
             checkLoginStatus();
+
+            // Set up a MutationObserver for dynamic content
+            const observer = new MutationObserver(cleanupOverlays);
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+
+            // Always ensure interactive elements work
+            document.addEventListener('pointerdown', (e) => {
+                const el = document.elementFromPoint(e.clientX, e.clientY);
+                if (!el) return;
+
+                const transient = el.closest('[data-transient="1"]') || 
+                                (el.dataset && el.dataset.transient === '1' ? el : null);
+                if (transient) {
+                    transient.remove();
+                    cleanupOverlays();
+                }
+            }, {
+                capture: true,
+                passive: true
+            });
         });
 
         // Login handler
