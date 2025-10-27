@@ -17,6 +17,30 @@
     <!-- Core Styles -->
     <style>
         /*******************************
+         * Z-Index & Interaction System
+         *******************************/
+        
+        /* Interactive Elements */
+        button, .btn, input[type="button"], input[type="submit"], .clickable {
+            position: relative !important;
+            z-index: 1001 !important;
+            pointer-events: auto !important;
+        }
+        
+        /* System Components */
+        .announcement-bar {
+            z-index: 1002 !important;
+            pointer-events: auto !important;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)) !important;
+        }
+        
+        /* Visual Overlays */
+        .flash-overlay, .disco-overlay {
+            z-index: 1000 !important;
+            pointer-events: none !important;
+        }
+        
+        /*******************************
          * Modern Theme System 2025
          *******************************/
         
@@ -67,6 +91,7 @@
         }
 
         /* Announcement Bar */
+            /* Announcement Bar */
             .announcement-bar {
                 position: fixed;
                 top: 12px;
@@ -76,17 +101,17 @@
                 align-items: center;
                 gap: 12px;
                 padding: 10px 18px;
-                background: var(--gradient-alert);
+                background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
                 color: var(--text-dark);
                 border-radius: 8px;
                 box-shadow: var(--shadow-glow);
                 font-weight: 700;
-                z-index: 3000;
+                z-index: var(--z-banner);
                 pointer-events: auto;
                 min-width: 220px;
                 max-width: calc(100% - 32px);
                 opacity: 1;
-                transition: opacity 0.25s cubic-bezier(.4,0,.2,1), transform 0.2s;
+                transition: opacity 0.3s ease, transform 0.2s ease;
             }
         .announcement-bar.hide {
             opacity: 0;
@@ -1047,8 +1072,33 @@
     <!-- Announcement Bar -->
     <div class="announcement-bar" id="announcement-bar">
         <span>RNG 2 - Alpha Testing</span>
-        <button onclick="document.getElementById('announcement-bar').classList.add('hide')" class="dismiss-btn" aria-label="Dismiss announcement">×</button>
+        <button class="dismiss-btn" aria-label="Dismiss announcement">×</button>
     </div>
+    
+    <script>
+        // Initialize announcement bar
+        document.addEventListener('DOMContentLoaded', function() {
+            const bar = document.querySelector('.announcement-bar');
+            const dismissBtn = bar?.querySelector('.dismiss-btn');
+            
+            // Check if previously dismissed
+            try {
+                if (localStorage.getItem('announcement-dismissed-v1') === '1') {
+                    bar?.classList.add('hide');
+                }
+            } catch (e) { /* ignore */ }
+            
+            // Set up dismiss handler
+            if (dismissBtn && bar) {
+                dismissBtn.addEventListener('click', () => {
+                    bar.classList.add('hide');
+                    try {
+                        localStorage.setItem('announcement-dismissed-v1', '1');
+                    } catch (e) { /* ignore */ }
+                });
+            }
+        });
+    </script>
 
     <div id="home-page" class="container">
         <main class="home-main">
