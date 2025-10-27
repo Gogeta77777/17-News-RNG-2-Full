@@ -9,15 +9,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <style>
-        /* Theme Variables */
+        /* Modern Theme System */
         :root {
-            /* Colors */
+            /* Core Colors */
             --accent-primary: #00ffe7;
             --accent-secondary: #007cf0;
+            --accent-tertiary: #7928ca;
             --bg-dark: #0a1219;
             --bg-darker: #061017;
+            --bg-darkest: #030a0f;
             --text-light: #e6f7ff;
             --text-dark: #08121a;
+            
+            /* UI States */
+            --success: #27ae60;
+            --warning: #f39c12;
+            --error: #e74c3c;
+            --info: #3498db;
             
             /* Shadows & Effects */
             --shadow-neon: 0 0 20px rgba(0, 255, 247, 0.2);
@@ -1182,7 +1190,72 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Page navigation functions
+        // Global error handling
+        window.onerror = function(msg, url, line) {
+            console.error(`Error: ${msg}\nFile: ${url}\nLine: ${line}`);
+            showPopup('An error occurred', '#e74c3c');
+        };
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+            showPopup('Operation failed', '#e74c3c');
+        });
+
+        // Core state management
+        const state = {
+            currentUser: null,
+            activePage: 'home',
+            isLoading: false
+        };
+
+        // Utility functions
+        const $ = (selector) => document.querySelector(selector);
+        const $$ = (selector) => document.querySelectorAll(selector);
+        
+        function setLoading(button, isLoading) {
+            if (!button) return;
+            const spinner = button.querySelector('.loading-spinner');
+            const content = button.querySelector('.btn-content');
+            button.disabled = isLoading;
+            if (isLoading) {
+                button.classList.add('loading');
+                if (spinner) spinner.classList.remove('hidden');
+                if (content) content.classList.add('hidden');
+            } else {
+                button.classList.remove('loading');
+                if (spinner) spinner.classList.add('hidden');
+                if (content) content.classList.remove('hidden');
+            }
+        }
+
+        async function handleAPIRequest(url, options = {}) {
+            try {
+                const res = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message || 'Operation failed');
+                return data;
+            } catch (err) {
+                console.error(`API Error (${url}):`, err);
+                throw err;
+            }
+        }
+
+        // Navigation system
+        function showPage(pageName) {
+            $$('.page').forEach(page => page.classList.add('hidden'));
+            $(`#${pageName}-page`).classList.remove('hidden');
+            state.activePage = pageName;
+            
+            // Focus management
+            const focusTarget = $(`#${pageName}-page [data-autofocus]`);
+            if (focusTarget) focusTarget.focus();
+        }
         function showLoginPage() {
             const pages = ['home-page', 'register-page', 'game-page', 'admin-panel'];
             pages.forEach(page => document.getElementById(page)?.classList.add('hidden'));
