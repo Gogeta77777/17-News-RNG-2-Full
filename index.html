@@ -1718,6 +1718,8 @@
         function startDisco() {
             if (discoEl) return;
             discoEl = document.createElement('div');
+            discoEl.className = 'disco-overlay';
+            discoEl.dataset.transient = '1';
             discoEl.style.position = 'fixed'; discoEl.style.left = 0; discoEl.style.top = 0; discoEl.style.width = '100%'; discoEl.style.height = '100%';
             discoEl.style.zIndex = 9996; discoEl.style.pointerEvents = 'none';
             discoEl.style.background = 'radial-gradient(circle at 20% 20%, rgba(255,0,150,0.08), transparent 10%), radial-gradient(circle at 80% 80%, rgba(0,200,255,0.06), transparent 12%)';
@@ -1974,8 +1976,11 @@
         // Handle spin cutscene (Explosive) — full 4-point star custom animation
         async function runExplosiveCutscene(itemName) {
             const overlay = document.createElement('div');
+            overlay.className = 'flash-overlay';
+            overlay.dataset.transient = '1';
             overlay.style.position = 'fixed'; overlay.style.left = 0; overlay.style.top = 0; overlay.style.width = '100%'; overlay.style.height = '100%';
             overlay.style.background = '#000'; overlay.style.zIndex = 9999; overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center';
+            overlay.style.pointerEvents = 'none';
 
             // star element (4-point star using CSS)
             const star = document.createElement('div');
@@ -2083,45 +2088,39 @@
 
         // Enhanced cleanup for overlays and interaction issues
         function cleanupOverlays() {
-            // Remove any stray overlays that could block interaction
-            const overlays = Array.from(document.querySelectorAll('div'))
+            // Remove any stray overlays that could block interaction.
+            // Heuristics: position fixed/absolute, visible, covers center point or large area, and not a known system element.
+            const viewportW = window.innerWidth;
+            const viewportH = window.innerHeight;
+            const candidates = Array.from(document.querySelectorAll('div'))
                 .filter(d => {
+                    if (!d || d === document.body || d === document.documentElement) return false;
                     const style = window.getComputedStyle(d);
-                    const z = parseInt(style.zIndex, 10);
+                    if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return false;
                     const pos = style.position;
-                    const isOverlay = (pos === 'fixed' || pos === 'absolute') && z >= 1000;
-                    const isSystem = d.id === 'global-banner' || 
-                                   d.classList.contains('announcement-bar') ||
-                                   d.classList.contains('popup');
-                    return isOverlay && !isSystem;
+                    if (!(pos === 'fixed' || pos === 'absolute')) return false;
+                    // known system elements we should never remove
+                    const isSystem = d.id === 'global-banner' || d.classList.contains('announcement-bar') || d.classList.contains('popup') || d.classList.contains('disco-overlay') || d.classList.contains('flash-overlay');
+                    if (isSystem) return false;
+                    const rect = d.getBoundingClientRect();
+                    // ignore tiny decorative elements
+                    if (rect.width < 40 || rect.height < 40) return false;
+                    const coversCenter = rect.left <= viewportW/2 && rect.right >= viewportW/2 && rect.top <= viewportH/2 && rect.bottom >= viewportH/2;
+                    const areaRatio = (rect.width * rect.height) / (viewportW * viewportH);
+                    return coversCenter || areaRatio > 0.25;
                 });
-                
-            overlays.forEach(el => {
+
+            candidates.forEach(el => {
                 try { el.remove(); } catch (e) { /* ignore */ }
             });
 
-            // Ensure proper z-index and interaction for UI elements
-            const zIndexMap = {
-                '.game-header': 'var(--z-header)',
-                '.styled-btn, .btn': 'var(--z-content)',
-                '.popup': 'var(--z-popup)',
-                '.announcement-bar': 'var(--z-banner)',
-                '#global-banner': 'var(--z-banner)'
-            };
-
-            Object.entries(zIndexMap).forEach(([selector, zIndex]) => {
-                document.querySelectorAll(selector).forEach(el => {
-                    el.style.position = 'relative';
-                    el.style.zIndex = zIndex;
-                    el.style.pointerEvents = 'auto';
-                });
-            });
-
-            // Fix any specific interaction issues
-            document.querySelectorAll('button, .btn, .dismiss-btn').forEach(btn => {
-                if (btn.style.pointerEvents === 'none') {
+            // Ensure interactive elements are clickable and sit above transient overlays
+            document.querySelectorAll('button, .btn, .dismiss-btn, .tab-btn').forEach(btn => {
+                try {
                     btn.style.pointerEvents = 'auto';
-                }
+                    btn.style.zIndex = '10001';
+                    btn.style.position = 'relative';
+                } catch (e) {}
             });
         }
         
@@ -2132,6 +2131,23 @@
             childList: true, 
             subtree: true 
         });
+
+        // Defensive safety-net: if the user clicks and the element under the pointer is a transient
+        // visual overlay (created by cutscenes or admin effects), remove it immediately so the
+        // underlying UI can receive the interaction. Runs in capture phase to act before other listeners.
+        document.addEventListener('pointerdown', (e) => {
+            try {
+                const el = document.elementFromPoint(e.clientX, e.clientY);
+                if (!el) return;
+                // If the element is a visual overlay marked transient, remove it and allow the event to continue
+                const transient = el.closest('[data-transient="1"]') || (el.dataset && el.dataset.transient === '1' ? el : null);
+                if (transient) {
+                    transient.remove();
+                    // run cleanup afterwards to be safe
+                    setTimeout(cleanupOverlays, 10);
+                }
+            } catch (err) { /* ignore */ }
+        }, { capture: true, passive: true });
 
         // Announcement dismiss handlers + persistence
         document.addEventListener('click', (e) => {
