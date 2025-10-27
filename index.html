@@ -29,6 +29,11 @@
             --transition-instant: 0.08s ease;
             --transition-fast: 0.12s ease;
             --transition-normal: 0.2s ease;
+            /* z-index stacking variables */
+            --z-header: 110;
+            --z-content: 10001;
+            --z-popup: 10003;
+            --z-banner: 10004;
         }
 
             /* Announcement Bar */
@@ -883,6 +888,17 @@
                 flex-wrap: wrap;
             }
         }
+        /* Ensure interactive elements are always clickable and sit above transient overlays */
+        button, .btn, input[type="button"], input[type="submit"], .tab-btn {
+            pointer-events: auto !important;
+            z-index: 10001 !important;
+            position: relative !important;
+        }
+
+        /* Most transient visual overlays should not block interaction unless explicitly intended */
+        .popup, .flash-overlay, .disco-overlay {
+            pointer-events: none !important;
+        }
     </style>
 </head>
 <body>
@@ -1577,14 +1593,16 @@
         }
 
         // Event Listeners
-        document.getElementById('login-btn').addEventListener('click', () => showPage('login'));
-        document.getElementById('register-btn').addEventListener('click', () => showPage('register'));
-        document.getElementById('show-register').addEventListener('click', () => showPage('register'));
-        document.getElementById('show-login').addEventListener('click', () => showPage('login'));
-        document.getElementById('logout-btn').addEventListener('click', logout);
-        document.getElementById('admin-logout').addEventListener('click', logout);
-        document.getElementById('admin-btn').addEventListener('click', () => showPage('admin'));
-        document.getElementById('back-to-game').addEventListener('click', () => showPage('game'));
+        (function(){
+            const _loginBtn = document.getElementById('login-btn'); if (_loginBtn) _loginBtn.addEventListener('click', () => showPage('login'));
+            const _registerBtn = document.getElementById('register-btn'); if (_registerBtn) _registerBtn.addEventListener('click', () => showPage('register'));
+            const _showRegister = document.getElementById('show-register'); if (_showRegister) _showRegister.addEventListener('click', () => showPage('register'));
+            const _showLogin = document.getElementById('show-login'); if (_showLogin) _showLogin.addEventListener('click', () => showPage('login'));
+            const _logoutBtn = document.getElementById('logout-btn'); if (_logoutBtn) _logoutBtn.addEventListener('click', logout);
+            const _adminLogout = document.getElementById('admin-logout'); if (_adminLogout) _adminLogout.addEventListener('click', logout);
+            const _adminBtn = document.getElementById('admin-btn'); if (_adminBtn) _adminBtn.addEventListener('click', () => showPage('admin'));
+            const _backToGame = document.getElementById('back-to-game'); if (_backToGame) _backToGame.addEventListener('click', () => showPage('game'));
+        })();
 
         // Login form
         (function(){
@@ -1677,12 +1695,10 @@
         // Note: redeem/shop handlers are in-tab (inventory area). Top-level code inputs were removed to avoid duplicates.
 
         // Chat functionality
-        document.getElementById('send-btn').addEventListener('click', sendMessage);
-        document.getElementById('chat-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
+        (function(){
+            const _sendBtn = document.getElementById('send-btn'); if (_sendBtn) _sendBtn.addEventListener('click', sendMessage);
+            const _chatInput = document.getElementById('chat-input'); if (_chatInput) _chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+        })();
 
         function sendMessage() {
             const chatInput = document.getElementById('chat-input');
@@ -1737,7 +1753,10 @@
         });
 
         // Admin forms
-        document.getElementById('announcement-form').addEventListener('submit', async (e) => {
+        (function(){
+            const _announcementForm = document.getElementById('announcement-form');
+            if (!_announcementForm) return;
+            _announcementForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const title = document.getElementById('announcement-title').value;
             const content = document.getElementById('announcement-content').value;
@@ -1762,9 +1781,13 @@
             } catch (error) {
                 alert('An error occurred. Please try again.');
             }
-        });
+            });
+        })();
 
-        document.getElementById('event-form').addEventListener('submit', async (e) => {
+        (function(){
+            const _eventForm = document.getElementById('event-form');
+            if (!_eventForm) return;
+            _eventForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('event-name').value;
             const description = document.getElementById('event-description').value;
@@ -1791,7 +1814,8 @@
             } catch (error) {
                 alert('An error occurred. Please try again.');
             }
-        });
+            });
+        })();
 
         // Admin quick controls
         const broadcastBtn = document.getElementById('broadcast-last-announcement');
@@ -1874,13 +1898,13 @@
         const themeToggle = document.getElementById('theme-toggle');
         try {
             const saved = JSON.parse(localStorage.getItem('settings') || '{}');
-            if (saved.sound !== undefined) soundToggle.checked = !!saved.sound;
-            if (saved.theme !== undefined) themeToggle.checked = !!saved.theme;
-            applyTheme(themeToggle.checked);
+            if (saved.sound !== undefined && soundToggle) soundToggle.checked = !!saved.sound;
+            if (saved.theme !== undefined && themeToggle) themeToggle.checked = !!saved.theme;
+            applyTheme(themeToggle ? themeToggle.checked : false);
         } catch (e) { /* ignore */ }
 
-        soundToggle.addEventListener('change', () => saveSettings());
-        themeToggle.addEventListener('change', () => { applyTheme(themeToggle.checked); saveSettings(); });
+        if (soundToggle) soundToggle.addEventListener('change', () => saveSettings());
+        if (themeToggle) themeToggle.addEventListener('change', () => { applyTheme(themeToggle.checked); saveSettings(); });
 
         function saveSettings() {
             const s = { sound: soundToggle.checked, theme: themeToggle.checked };
@@ -1899,17 +1923,18 @@
             { id: 'spin_token', name: 'Spin Token', price: 500, rarity: 'uncommon' }
         ];
         const shopList = document.getElementById('shop-list');
-        SHOP_ITEMS.forEach(it => {
-            const row = document.createElement('div');
-            row.className = 'code';
-            row.style.display = 'flex';
-            row.style.justifyContent = 'space-between';
-            row.innerHTML = `<div><strong>${it.name}</strong><div style="font-size:0.9rem;color:#bdc3c7">${it.price} coins</div></div><div><button class="btn buy-btn" data-id="${it.id}" data-price="${it.price}" data-name="${it.name}" data-rarity="${it.rarity}">Buy</button></div>`;
-            shopList.appendChild(row);
-        });
+        if (shopList) {
+            SHOP_ITEMS.forEach(it => {
+                const row = document.createElement('div');
+                row.className = 'code';
+                row.style.display = 'flex';
+                row.style.justifyContent = 'space-between';
+                row.innerHTML = `<div><strong>${it.name}</strong><div style="font-size:0.9rem;color:#bdc3c7">${it.price} coins</div></div><div><button class="btn buy-btn" data-id="${it.id}" data-price="${it.price}" data-name="${it.name}" data-rarity="${it.rarity}">Buy</button></div>`;
+                shopList.appendChild(row);
+            });
 
-        // Buy handler
-        shopList.addEventListener('click', async (e) => {
+            // Buy handler
+            shopList.addEventListener('click', async (e) => {
             const btn = e.target.closest('.buy-btn');
             if (!btn) return;
             const price = Number(btn.dataset.price);
@@ -1925,20 +1950,26 @@
             } catch (err) { showPopup('Purchase error', '#e74c3c'); }
             btn.disabled = false;
             btn.textContent = 'Buy';
-        });
+            });
+        }
 
         // Redeem in-tab handling
-        document.getElementById('redeem-btn-tab').addEventListener('click', async () => {
-            const code = document.getElementById('code-input-tab').value.trim();
-            const out = document.getElementById('code-result-tab');
-            if (!code) { out.innerHTML = '<span style="color:#e74c3c">Enter a code.</span>'; return; }
-            try {
-                const res = await fetch('/api/use-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
-                const d = await res.json();
-                if (d.success) { out.innerHTML = '<span style="color:#27ae60">Redeemed!</span>'; await checkLoginStatus(); }
-                else out.innerHTML = `<span style="color:#e74c3c">${d.error}</span>`;
-            } catch (e) { out.innerHTML = '<span style="color:#e74c3c">Error</span>'; }
-        });
+        (function(){
+            const _redeemBtn = document.getElementById('redeem-btn-tab');
+            if (!_redeemBtn) return;
+            _redeemBtn.addEventListener('click', async () => {
+                const codeInput = document.getElementById('code-input-tab');
+                const out = document.getElementById('code-result-tab');
+                const code = codeInput ? codeInput.value.trim() : '';
+                if (!code) { if (out) out.innerHTML = '<span style="color:#e74c3c">Enter a code.</span>'; return; }
+                try {
+                    const res = await fetch('/api/use-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+                    const d = await res.json();
+                    if (d.success) { if (out) out.innerHTML = '<span style="color:#27ae60">Redeemed!</span>'; await checkLoginStatus(); }
+                    else if (out) out.innerHTML = `<span style="color:#e74c3c">${d.error}</span>`;
+                } catch (e) { if (out) out.innerHTML = '<span style="color:#e74c3c">Error</span>'; }
+            });
+        })();
 
         // Handle spin cutscene (Explosive) — full 4-point star custom animation
         async function runExplosiveCutscene(itemName) {
@@ -1998,7 +2029,8 @@
 
         // Modify spin handler to show cutscene when flagged
         const originalSpinBtn = document.getElementById('spin-btn');
-        originalSpinBtn.addEventListener('click', async () => {
+        if (originalSpinBtn) {
+            originalSpinBtn.addEventListener('click', async () => {
             const spinBtn = originalSpinBtn;
             const spinResult = document.getElementById('spin-result');
             spinBtn.disabled = true;
@@ -2030,7 +2062,8 @@
                 spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
                 showPopup('An error occurred.', '#e74c3c');
             }
-        }, { once: false });
+            }, { once: false });
+        }
 
         // Logout function
         async function logout() {
