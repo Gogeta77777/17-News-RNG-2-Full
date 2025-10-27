@@ -1,15 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
+    <meta name="description" content="17 News RNG 2 - The ultimate RNG experience">
+    <meta name="author" content="17 News">
+    
     <title>17 News RNG 2</title>
-    <!-- Cybernetic Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Core Styles -->
     <style>
-        /* Modern Theme System */
+        /*******************************
+         * Modern Theme System 2025
+         *******************************/
+        
+        /* Theme Variables */
         :root {
             /* Core Colors */
             --accent-primary: #00ffe7;
@@ -21,33 +32,41 @@
             --text-light: #e6f7ff;
             --text-dark: #08121a;
             
-            /* UI States */
+            /* Functional Colors */
             --success: #27ae60;
             --warning: #f39c12;
             --error: #e74c3c;
             --info: #3498db;
             
-            /* Shadows & Effects */
-            --shadow-neon: 0 0 20px rgba(0, 255, 247, 0.2);
-            --shadow-glow: 0 8px 24px rgba(0, 127, 240, 0.15);
-            --gradient-accent: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-            --gradient-alert: linear-gradient(90deg, #f1c40f 0%, #f39c12 100%);
+            /* Z-Index System */
+            --z-base: 1;
+            --z-content: 100;
+            --z-overlay: 200;
+            --z-popup: 300;
+            --z-banner: 400;
             
             /* Animation Timing */
-            --transition-instant: 0.08s ease;
-            --transition-fast: 0.12s ease;
+            --transition-fast: 0.1s ease;
             --transition-normal: 0.2s ease;
-            /* Proper z-index stacking order */
-            --z-base: 1;
-            --z-header: 100;
-            --z-content: 200;
-            --z-overlay: 300;
-            --z-popup: 400;
-            --z-banner: 500;
-            --z-max: 9999;
+            --transition-slow: 0.3s ease;
         }
 
-            /* Announcement Bar */
+        /* Cleanup duplicate styles */
+        button.styled-btn,
+        .btn.styled-btn {
+            /* Override and merge duplicate button styles */
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--text-dark);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            position: relative;
+            z-index: var(--z-content);
+            transition: transform var(--transition-fast), box-shadow var(--transition-normal);
+        }
+
+        /* Announcement Bar */
             .announcement-bar {
                 position: fixed;
                 top: 12px;
@@ -69,58 +88,58 @@
                 opacity: 1;
                 transition: opacity 0.25s cubic-bezier(.4,0,.2,1), transform 0.2s;
             }
-            .announcement-bar.hide {
-                opacity: 0;
-                pointer-events: none;
-            }
-
-            #global-banner {
-                position: fixed;
-                top: 64px;
-                left: 50%;
-                transform: translateX(-50%);
-                display: none;
-                align-items: center;
-                gap: 10px;
-                padding: 10px 18px;
-                background: var(--gradient-alert);
-                color: var(--text-dark);
-                border-radius: 8px;
-                box-shadow: var(--shadow-glow);
-                font-weight: 700;
-                z-index: 2999;
-                pointer-events: auto;
-                min-width: 220px;
-                max-width: calc(100% - 32px);
-                opacity: 0;
-                transition: opacity 0.2s, transform 0.2s;
-            }
-            #global-banner.visible {
-                display: flex;
-                opacity: 1;
-                transform: translateX(-50%) scale(1.02);
-            }
-
-            .dismiss-btn {
-                background: transparent;
-                border: none;
-                color: inherit;
-                font-size: 1.3em;
-                line-height: 1;
-                cursor: pointer;
-                border-radius: 4px;
-                margin-left: 8px;
-                opacity: 0.7;
-                transition: opacity 0.15s, background 0.15s;
-                z-index: 1;
-            }
-            .dismiss-btn:hover, .dismiss-btn:focus-visible {
-                opacity: 1;
-                background: rgba(0,0,0,0.08);
-            }
+        .announcement-bar.hide {
+            opacity: 0;
+            pointer-events: none;
         }
 
-        .announcement-bar .dismiss-btn {
+        #global-banner {
+            position: fixed;
+            top: 64px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            background: var(--gradient-alert);
+            color: var(--text-dark);
+            border-radius: 8px;
+            box-shadow: var(--shadow-glow);
+            font-weight: 700;
+            z-index: 2999;
+            pointer-events: auto;
+            min-width: 220px;
+            max-width: calc(100% - 32px);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        #global-banner.visible {
+            display: flex;
+            opacity: 1;
+            transform: translateX(-50%) scale(1.02);
+        }
+
+        .dismiss-btn {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-size: 1.3em;
+            line-height: 1;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 8px;
+            opacity: 0.7;
+            transition: opacity 0.15s, background 0.15s;
+            z-index: 1;
+        }
+
+        .dismiss-btn:hover, 
+        .dismiss-btn:focus-visible {
+            opacity: 1;
+            background: rgba(0,0,0,0.08);
+        }        .announcement-bar .dismiss-btn {
             margin-left: 8px;
             background: transparent;
             border: none;
@@ -172,7 +191,11 @@
             user-select: none;
         }
 
-        /* Styled buttons used across the UI */
+        /*******************************
+         * Button Styles
+         *******************************/
+        
+        /* Primary styled buttons used across the UI */
         .styled-btn {
             display: inline-flex;
             align-items: center;
@@ -187,15 +210,12 @@
             font-weight: 700;
             cursor: pointer;
             position: relative;
-            z-index: 2;
+            z-index: var(--z-content);
             overflow: hidden;
             box-shadow: var(--shadow-glow);
             transition: transform var(--transition-instant), 
                       box-shadow var(--transition-fast),
                       filter var(--transition-fast);
-            position: relative;
-            z-index: var(--z-content);
-            overflow: hidden;
             backface-visibility: hidden;
             transform: translate3d(0,0,0);
         }
@@ -286,33 +306,56 @@
             opacity: 0.5;
         }
 
-        /* Animations & Transitions */
+        /*******************************
+         * Animations & Transitions
+         *******************************/
+        
+        /* Fade In - Used for content appearing */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { 
+                opacity: 0; 
+                transform: translateY(8px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
         }
         
+        /* Slide In - Used for notifications/banners */
         @keyframes slideIn {
-            from { opacity: 0; transform: translate3d(-50%, -20px, 0); }
-            to { opacity: 1; transform: translate3d(-50%, 0, 0); }
+            from { 
+                opacity: 0; 
+                transform: translate3d(-50%, -20px, 0); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translate3d(-50%, 0, 0); 
+            }
         }
         
-        /* Utility Classes */
+        /*******************************
+         * Utility Classes & Helpers
+         *******************************/
+        
+        /* Visibility Control */
         .hidden { 
             display: none !important;
             pointer-events: none !important;
         }
         
+        /* Animation Classes */
         .fade-in { 
             animation: fadeIn 0.3s var(--transition-normal) both;
             backface-visibility: hidden;
             transform: translate3d(0,0,0);
         }
         
-        /* Prevent Animation Glitches */
+        /* Performance & Rendering */
         * {
             backface-visibility: hidden;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* All CSS is now inside the main <style> block above. Removed stray raw CSS. */
@@ -372,16 +415,24 @@
             .auth-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); color: #e6f7ff; box-sizing: border-box; }
         }
 
+        /*******************************
+         * Form Elements & Controls
+         *******************************/
+        
+        /* Form Groups - Standard input containers */
         .form-group {
             margin-bottom: 20px;
         }
 
+        /* Form Labels */
         .form-group label {
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
+            color: var(--text-light);
         }
 
+        /* Form Inputs & Textareas */
         .form-group input,
         .form-group textarea {
             width: 100%;
@@ -393,6 +444,7 @@
             font-family: 'Share Tech Mono', monospace;
             transition: all 0.3s ease;
             box-shadow: 0 0 20px rgba(0, 255, 247, 0.1);
+            outline: none;
         }
         .form-group input:focus,
         .form-group textarea:focus {
@@ -451,11 +503,16 @@
             text-decoration: underline;
         }
 
-        /* Game Page */
+        /*******************************
+         * Game Layout & Structure
+         *******************************/
+        
+        /* Main game page container */
         #game-page {
             min-height: 100vh;
         }
 
+        /* Game header with navigation and user info */
         .game-header {
             background: rgba(10, 18, 25, 0.95);
             padding: 25px;
@@ -470,7 +527,7 @@
             backdrop-filter: blur(10px);
             position: sticky;
             top: 20px;
-            z-index: 100;
+            z-index: var(--z-content);
             transition: all 0.3s ease;
         }
         .game-header:hover {
@@ -660,20 +717,24 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Popup */
-                .popup {
+        /*******************************
+         * Notifications & Popups
+         *******************************/
+        
+        /* Popup Base */
+        .popup {
             position: fixed;
             left: 50%;
             transform: translateX(-50%);
             bottom: 24px;
             padding: 16px 28px;
             border-radius: 12px;
-            color: #fff;
-            background: rgba(10, 18, 25, 0.9);
+            color: var(--text-light);
+            background: rgba(var(--bg-dark), 0.9);
             box-shadow: 0 8px 32px rgba(0,0,0,0.5),
-                       inset 0 0 0 1px rgba(0, 255, 247, 0.3),
-                       0 0 20px rgba(0, 255, 247, 0.2);
-            z-index: 9999;
+                       inset 0 0 0 1px rgba(var(--accent-primary), 0.3),
+                       0 0 20px rgba(var(--accent-primary), 0.2);
+            z-index: var(--z-popup);
             font-weight: 700;
             backdrop-filter: blur(10px);
             animation: popupIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -681,24 +742,45 @@
             letter-spacing: 1px;
             font-size: 0.9rem;
         }
-    @keyframes popupIn { from { opacity:0; transform: translate(-50%, 10px); } to { opacity:1; transform: translate(-50%,0); } }
 
-        /* Modern Cyberpunk Scrollbar */
+        /* Popup Animation */
+        @keyframes popupIn { 
+            from { 
+                opacity: 0; 
+                transform: translate(-50%, 10px); 
+            } 
+            to { 
+                opacity: 1; 
+                transform: translate(-50%, 0); 
+            } 
+        }
+
+        /*******************************
+         * Custom Scrollbar Styling
+         *******************************/
+        
+        /* Scrollbar Base */
         ::-webkit-scrollbar {
             width: 12px;
             height: 12px;
         }
+
+        /* Scrollbar Thumb */
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #3498db, #00fff7);
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
             border-radius: 6px;
-            border: 3px solid rgba(10, 18, 25, 0.9);
+            border: 3px solid var(--bg-dark);
             box-shadow: inset 0 0 6px rgba(0, 255, 247, 0.2);
         }
+
+        /* Scrollbar Track */
         ::-webkit-scrollbar-track {
             background: rgba(255,255,255,0.02);
             border-radius: 6px;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
         }
+
+        /* Scrollbar Corner */
         ::-webkit-scrollbar-corner {
             background: transparent;
         }        .tab-btn {
@@ -892,24 +974,43 @@
             margin-bottom: 5px;
         }
 
-        /* Responsive Design */
+        /*******************************
+         * Responsive Design
+         *******************************/
+        
+        /* Tablet & Mobile Adjustments */
         @media (max-width: 768px) {
+            /* Layout Adjustments */
             .game-content {
                 grid-template-columns: 1fr;
+                padding: 10px;
             }
             
+            /* Button & Navigation */
             .button-group {
                 flex-direction: column;
                 align-items: center;
+                gap: 10px;
             }
             
+            /* User Interface */
             .user-info {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 8px;
             }
             
+            /* Tab Navigation */
             .tabs {
                 flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            /* Form Adjustments */
+            .form-group input,
+            .form-group textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 12px;
             }
         }
         /* Ensure interactive elements are always clickable and sit above transient overlays */
@@ -997,7 +1098,10 @@
                     <input type="password" id="login-password" class="auth-input" required onkeypress="if(event.key === 'Enter') login()">
                 </div>
                 
-                <button onclick="login(); return false;" type="button" class="btn styled-btn">Login</button>            <p class="auth-link">Don't have an account? <a href="#" onclick="showRegisterPage()">Register here</a></p>
+                <button onclick="login(); return false;" type="submit" class="btn styled-btn">
+    <span class="btn-content">Login</span>
+    <div class="loading-spinner" style="display: none;"></div>
+</button>            <p class="auth-link">Don't have an account? <a href="#" onclick="showRegisterPage()">Register here</a></p>
         </div>
     </div>
 
@@ -1188,54 +1292,33 @@
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Main Application Scripts -->
     <script>
-        // Global error handling
-        window.onerror = function(msg, url, line) {
-            console.error(`Error: ${msg}\nFile: ${url}\nLine: ${line}`);
-            showPopup('An error occurred', '#e74c3c');
-        };
-
-        window.addEventListener('unhandledrejection', function(e) {
-            console.error('Unhandled promise rejection:', e.reason);
-            showPopup('Operation failed', '#e74c3c');
-        });
-
-        // Core state management
+        // Global state and error handling
         const state = {
             currentUser: null,
-            activePage: 'home',
             isLoading: false
         };
 
         // Utility functions
-        const $ = (selector) => document.querySelector(selector);
-        const $$ = (selector) => document.querySelectorAll(selector);
-        
+        const $ = selector => document.querySelector(selector);
+        const $$ = selector => document.querySelectorAll(selector);
+
         function setLoading(button, isLoading) {
             if (!button) return;
+            button.disabled = isLoading;
+            button.classList.toggle('loading', isLoading);
             const spinner = button.querySelector('.loading-spinner');
             const content = button.querySelector('.btn-content');
-            button.disabled = isLoading;
-            if (isLoading) {
-                button.classList.add('loading');
-                if (spinner) spinner.classList.remove('hidden');
-                if (content) content.classList.add('hidden');
-            } else {
-                button.classList.remove('loading');
-                if (spinner) spinner.classList.add('hidden');
-                if (content) content.classList.remove('hidden');
-            }
+            if (spinner) spinner.style.display = isLoading ? 'block' : 'none';
+            if (content) content.style.opacity = isLoading ? '0' : '1';
         }
 
         async function handleAPIRequest(url, options = {}) {
             try {
                 const res = await fetch(url, {
                     ...options,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...options.headers
-                    }
+                    headers: { 'Content-Type': 'application/json', ...options.headers }
                 });
                 const data = await res.json();
                 if (!data.success) throw new Error(data.message || 'Operation failed');
@@ -1246,13 +1329,10 @@
             }
         }
 
-        // Navigation system
+        // Modern navigation
         function showPage(pageName) {
             $$('.page').forEach(page => page.classList.add('hidden'));
-            $(`#${pageName}-page`).classList.remove('hidden');
-            state.activePage = pageName;
-            
-            // Focus management
+            $(`#${pageName}-page`)?.classList.remove('hidden');
             const focusTarget = $(`#${pageName}-page [data-autofocus]`);
             if (focusTarget) focusTarget.focus();
         }
@@ -1284,10 +1364,16 @@
             document.getElementById('home-page').classList.remove('hidden');
         }
 
-        async function login() {
-            console.log('Login attempt started');
-            const errorDiv = document.getElementById('login-error');
+        async function handleLogin(e) {
+            if (e) e.preventDefault();
+            
+            const form = $('#login-form');
+            const button = form?.querySelector('button[type="submit"]');
+            const errorDiv = $('#login-error');
+            
             try {
+                setLoading(button, true);
+                errorDiv?.classList.add('hidden');
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
             
@@ -1403,6 +1489,26 @@
             }
         });
 
+        document.addEventListener('DOMContentLoaded', () => {
+    // Setup forms
+    $('#login-form')?.addEventListener('submit', handleLogin);
+    $('#register-form')?.addEventListener('submit', handleRegister);
+    
+    // Setup navigation
+    $('#login-btn')?.addEventListener('click', () => showPage('login'));
+    $('#register-btn')?.addEventListener('click', () => showPage('register'));
+    
+    // Setup dismissible elements
+    $$('.dismiss-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.target.closest('.dismissible')?.classList.add('hide');
+        });
+    });
+    
+    // Start on home page
+    showPage('home');
+});
         // Page load handler
         document.addEventListener('DOMContentLoaded', () => {
             cleanupOverlays(); // Clean up any overlays on page load
@@ -1426,9 +1532,13 @@
                     });
                     const data = await res.json();
                     if (data.success) {
-                        currentUser = data.user;
-                        showPopup('Login successful', '#27ae60');
-                        showHomePage();
+                        // After login we request the full data set to ensure client-side state is complete
+                        showPopup('Login successful!');
+                        await checkLoginStatus();
+                        if (currentUser && currentUser.isAdmin) {
+                            const adminBtn = document.getElementById('admin-btn'); if (adminBtn) adminBtn.classList.remove('hidden');
+                        }
+                        showPage('game');
                     } else {
                         const el = document.getElementById('login-error');
                         el.textContent = data.message || 'Login failed';
@@ -1455,9 +1565,9 @@
                     });
                     const data = await res.json();
                     if (data.success) {
-                        currentUser = data.user;
                         showPopup('Registered and logged in', '#27ae60');
-                        showHomePage();
+                        await checkLoginStatus();
+                        showPage('game');
                     } else {
                         const el = document.getElementById('register-error');
                         el.textContent = data.message || 'Register failed';
@@ -1672,38 +1782,50 @@
             // AA event handling (disco)
             socket.on('aa_event', (evt) => {
                 if (evt.id === 'disco') {
-                    // show disco effect when started, remove when stopped
                     if (evt.active) startDisco(); else stopDisco();
                     showPopup(`${evt.name} ${evt.active ? 'started' : 'stopped'}`, '#f1c40f');
                 }
             });
 
-            // Handle new events from admin (special effects + chat system message)
             socket.on('new_event', (data) => {
-                // Visual flash for exciting events
+                // Transient visual effect
                 const flash = document.createElement('div');
-                flash.style.position = 'fixed';
-                flash.style.left = 0;
-                flash.style.top = 0;
-                flash.style.width = '100%';
-                flash.style.height = '100%';
-                flash.style.zIndex = 9997;
-                flash.style.pointerEvents = 'none';
-                flash.style.background = 'radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 40%)';
+                flash.dataset.transient = '1';
+                flash.style.cssText = `
+                    position: fixed;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: var(--z-overlay);
+                    pointer-events: none;
+                    background: radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 40%);
+                `;
                 document.body.appendChild(flash);
                 setTimeout(() => flash.remove(), 600);
 
+                // System message in chat
                 const chatMessages = document.getElementById('chat-messages');
-                const messageElement = document.createElement('div');
-                messageElement.className = 'chat-message system';
-                messageElement.innerHTML = `<div style="color:#f39c12;">Event: ${data.name} — ${data.description}</div><small>Event activated</small>`;
-                chatMessages.appendChild(messageElement);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                if (Notification.permission === 'granted') {
-                    new Notification('Event', { body: `${data.name}: ${data.description}` });
+                if (chatMessages) {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'chat-message system';
+                    messageElement.innerHTML = `
+                        <div style="color:var(--warning);">Event: ${data.name} — ${data.description}</div>
+                        <small>Event activated</small>
+                    `;
+                    chatMessages.appendChild(messageElement);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
                 }
-                // Refresh events/announcements
+
+                // Desktop notification
+                if (Notification.permission === 'granted') {
+                    new Notification('Event', { 
+                        body: `${data.name}: ${data.description}`,
+                        icon: '/favicon.ico'
+                    });
+                }
+
+                // Refresh data
                 checkLoginStatus();
             });
 
@@ -1713,17 +1835,50 @@
             }
         }
 
-        // Event Listeners
-        (function(){
-            const _loginBtn = document.getElementById('login-btn'); if (_loginBtn) _loginBtn.addEventListener('click', () => showPage('login'));
-            const _registerBtn = document.getElementById('register-btn'); if (_registerBtn) _registerBtn.addEventListener('click', () => showPage('register'));
-            const _showRegister = document.getElementById('show-register'); if (_showRegister) _showRegister.addEventListener('click', () => showPage('register'));
-            const _showLogin = document.getElementById('show-login'); if (_showLogin) _showLogin.addEventListener('click', () => showPage('login'));
-            const _logoutBtn = document.getElementById('logout-btn'); if (_logoutBtn) _logoutBtn.addEventListener('click', logout);
-            const _adminLogout = document.getElementById('admin-logout'); if (_adminLogout) _adminLogout.addEventListener('click', logout);
-            const _adminBtn = document.getElementById('admin-btn'); if (_adminBtn) _adminBtn.addEventListener('click', () => showPage('admin'));
-            const _backToGame = document.getElementById('back-to-game'); if (_backToGame) _backToGame.addEventListener('click', () => showPage('game'));
-        })();
+        // Initialize Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Core navigation
+            const navButtons = {
+                'login-btn': () => showPage('login'),
+                'register-btn': () => showPage('register'),
+                'show-register': () => showPage('register'),
+                'show-login': () => showPage('login'),
+                'logout-btn': logout,
+                'admin-logout': logout,
+                'admin-btn': () => showPage('admin'),
+                'back-to-game': () => showPage('game')
+            };
+
+            // Attach event listeners
+            Object.entries(navButtons).forEach(([id, handler]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        handler();
+                    });
+                }
+            });
+
+            // Initial setup
+            showPage('home');
+            initializeEventHandlers();
+        });
+
+        // Clean up on page unload
+        window.addEventListener('unload', () => {
+            if (socket) {
+                socket.disconnect();
+            }
+            // Clean up any transient elements
+            $$('[data-transient="1"]').forEach(el => el.remove());
+        });
+    </script>
+
+    <!-- Initialize Socket.IO connection -->
+    <script src="/socket.io/socket.io.js"></script>
+</body>
+</html>
 
         // Login form
         (function(){
@@ -1849,10 +2004,34 @@
         }
         function stopDisco() { if (discoEl) { discoEl.remove(); discoEl = null; } }
 
-        // Disco keyframes
-        const styleSheet = document.createElement('style');
-        styleSheet.innerHTML = `@keyframes discoPulse { 0% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(90deg); } 100% { filter: hue-rotate(180deg); } }`;
-        document.head.appendChild(styleSheet);
+        // Core animations
+        const globalStyles = document.createElement('style');
+        globalStyles.innerHTML = `
+            @keyframes discoPulse { 
+                0% { filter: hue-rotate(0deg); } 
+                50% { filter: hue-rotate(90deg); } 
+                100% { filter: hue-rotate(180deg); }
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            @keyframes slideIn {
+                from { transform: translateX(-100%); }
+                to { transform: translateX(0); }
+            }
+            
+            .fade-in {
+                animation: fadeIn 0.3s ease forwards;
+            }
+            
+            .slide-in {
+                animation: slideIn 0.3s ease forwards;
+            }
+        `;
+        document.head.appendChild(globalStyles);
 
         // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -2126,209 +2305,245 @@
             star.appendChild(createPoint(270, color));
 
             const info = document.createElement('div');
-            info.style.position = 'absolute'; info.style.bottom = '-80px'; info.style.width = '100%'; info.style.textAlign = 'center';
+            info.style.position = 'absolute'; info.style.bottom = '-80px'; info.style.width = '100%'; info.style.textAlign = 'center';            overlay.appendChild(star);
             info.style.color = '#fff'; info.style.fontSize = '1.4rem'; info.style.opacity = '0'; info.style.transition = 'opacity 0.4s';
             info.textContent = itemName;
-
-            overlay.appendChild(star);
-            overlay.appendChild(info);
             document.body.appendChild(overlay);
-
+ over ~4.5s then flash to white
             // spin loop: increase speed over ~4.5s then flash to white
             let speed = 2000; // ms per rotation
             const endAt = Date.now() + 5000;
-            while (Date.now() < endAt) {
-                star.style.transition = `transform ${speed}ms linear`;
-                star.style.transform = `rotate(${Math.random()*360 + 360}deg)`;
-                await new Promise(r => setTimeout(r, 250));
+            while (Date.now() < endAt) {${speed}ms linear`;
+                star.style.transition = `transform ${speed}ms linear`;   star.style.transform = `rotate(${Math.random()*360 + 360}deg)`;ent.getElementById('spin-result');
+                star.style.transform = `rotate(${Math.random()*360 + 360}deg)`;                await new Promise(r => setTimeout(r, 250));
+                await new Promise(r => setTimeout(r, 250)); = Math.max(120, speed - 120);tn.innerHTML = '<span class="loading-spinner"></span> Spinning...';
                 speed = Math.max(120, speed - 120);
-            }
+            }spin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
 
-            // reveal
+            // revealfalse; spinBtn.innerHTML = 'Spin Now!';
             info.style.opacity = '1';
-            // flash to white
-            overlay.style.transition = 'background 0.25s ease';
-            overlay.style.background = '#fff';
+            // flash to whitensition = 'background 0.25s ease';
+            overlay.style.transition = 'background 0.25s ease';   overlay.style.background = '#fff';&& data.rarity.color) ? data.rarity.color : '#9b59b6';
+            overlay.style.background = '#fff';            await new Promise(r => setTimeout(r, 450));
             await new Promise(r => setTimeout(r, 450));
-            overlay.remove();
-        }
-
-        // Modify spin handler to show cutscene when flagged
-        const originalSpinBtn = document.getElementById('spin-btn');
-        if (originalSpinBtn) {
-            originalSpinBtn.addEventListener('click', async () => {
-            const spinBtn = originalSpinBtn;
-            const spinResult = document.getElementById('spin-result');
-            spinBtn.disabled = true;
+            overlay.remove();olor);
+        }} coins</div>` : '';
+a.rarity.name})</span>${awardedHtml}</div>`;
+        // Modify spin handler to show cutscene when flaggedElementById('spin-btn');};font-size:1.3em;animation:fadeIn 1s;">${data.item}</strong> <span style="font-weight:bold;">(${data.rarity.name})</span>${awardedHtml}</div>`;).textContent = data.coins;
+        const originalSpinBtn = document.getElementById('spin-btn');ount').textContent = data.coins;
+        if (originalSpinBtn) {Listener('click', async () => {ew Date().toISOString() });
+            originalSpinBtn.addEventListener('click', async () => {ata.item, rarity: data.rarity.name.toLowerCase(), date: new Date().toISOString() });
+            const spinBtn = originalSpinBtn; spinResult = document.getElementById('spin-result');m);
+            spinBtn.disabled = true;data.cutscene) await runExplosiveCutscene(data.item); else {
             spinBtn.innerHTML = '<span class="loading-spinner"></span> Spinning...';
-            try {
-                const response = await fetch('/api/spin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+            try {le="color:#e74c3c">${data.error}</span>`;
+                const response = await fetch('/api/spin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });   showPopup(data.error, '#e74c3c');
                 const data = await response.json();
-                spinBtn.disabled = false; spinBtn.innerHTML = 'Spin Now!';
-                if (data.success) {
-                    // Use server-provided rarity color when possible
-                    const rarityColor = (data.rarity && data.rarity.color) ? data.rarity.color : '#9b59b6';
+                spinBtn.disabled = false; spinBtn.innerHTML = 'Spin Now!';L = 'Spin Now!';
+                if (data.success) {color:#e74c3c">An error occurred.</span>`;
+                    // Use server-provided rarity color when possible#e74c3c">An error occurred.</span>`;       showPopup('An error occurred.', '#e74c3c');
+                    const rarityColor = (data.rarity && data.rarity.color) ? data.rarity.color : '#9b59b6';   showPopup('An error occurred.', '#e74c3c');            }
                     // expose for cutscene to pick up
-                    window.lastSpinRarityColor = rarityColor;
-                    showPopup(`You got a ${data.rarity.name}!`, rarityColor);
+                    window.lastSpinRarityColor = rarityColor;   }, { once: false });
+                    showPopup(`You got a ${data.rarity.name}!`, rarityColor);        }
                     // Show the item, rarity and awarded coins (if any)
                     const awardedHtml = (typeof data.awarded === 'number' && data.awarded > 0) ? `<div style="font-size:0.9rem;color:${rarityColor}">+${data.awarded} coins</div>` : '';
-                    spinResult.innerHTML = `<div><strong style="color:${rarityColor};font-size:1.3em;animation:fadeIn 1s;">${data.item}</strong> <span style="font-weight:bold;">(${data.rarity.name})</span>${awardedHtml}</div>`;
+                    spinResult.innerHTML = `<div><strong style="color:${rarityColor};font-size:1.3em;animation:fadeIn 1s;">${data.item}</strong> <span style="font-weight:bold;">(${data.rarity.name})</span>${awardedHtml}</div>`;ction logout() {
                     document.getElementById('coin-count').textContent = data.coins;
-                    currentUser.coins = data.coins;
-                    currentUser.inventory.push({ name: data.item, rarity: data.rarity.name.toLowerCase(), date: new Date().toISOString() });
+                    currentUser.coins = data.coins;ogout');;
+                    currentUser.inventory.push({ name: data.item, rarity: data.rarity.name.toLowerCase(), date: new Date().toISOString() }); null;f (socket) {
                     loadGameData({ user: currentUser });
-                    if (data.cutscene) await runExplosiveCutscene(data.item);
-                } else {
+                    if (data.cutscene) await runExplosiveCutscene(data.item);ect();null;
+                } else {   socket = null;
                     spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
-                    showPopup(data.error, '#e74c3c');
-                }
-            } catch (error) {
-                spinBtn.disabled = false; spinBtn.innerHTML = 'Spin Now!';
-                spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
-                showPopup('An error occurred.', '#e74c3c');
+                    showPopup(data.error, '#e74c3c');e'); catch (error) {
+                }out error:', error);
+            } catch (error) {gout error:', error);                showPage('home');
+                spinBtn.disabled = false; spinBtn.innerHTML = 'Spin Now!';   showPage('home');
+                spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;   }
+                showPopup('An error occurred.', '#e74c3c');        }
             }
-            }, { once: false });
+            }, { once: false });lays and interaction issues
         }
 
-        // Logout function
+        // Logout functionte, visible, covers center point or large area, and not a known system element.window.innerWidth;
         async function logout() {
             try {
-                await fetch('/api/logout');
+                await fetch('/api/logout'); Array.from(document.querySelectorAll('div'))
                 currentUser = null;
-                if (socket) {
+                if (socket) {cument.documentElement) return false;
                     socket.disconnect();
-                    socket = null;
+                    socket = null;' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return false;
                 }
+                showPage('home');eturn false;r remove
+            } catch (error) {sh-overlay');
+                console.error('Logout error:', error);global-banner' || d.classList.contains('announcement-bar') || d.classList.contains('popup') || d.classList.contains('disco-overlay') || d.classList.contains('flash-overlay');
                 showPage('home');
-            } catch (error) {
-                console.error('Logout error:', error);
-                showPage('home');
-            }
+            }ct();
         }
-
-        // Enhanced cleanup for overlays and interaction issues
-        function cleanupOverlays() {
-            // Remove any stray overlays that could block interaction.
-            // Heuristics: position fixed/absolute, visible, covers center point or large area, and not a known system element.
+ rect.top <= viewportH/2 && rect.bottom >= viewportH/2;
+        // Enhanced cleanup for overlays and interaction issuesW/2 && rect.top <= viewportH/2 && rect.bottom >= viewportH/2;                    const areaRatio = (rect.width * rect.height) / (viewportW * viewportH);
+        function cleanupOverlays() {ght) / (viewportW * viewportH);r || areaRatio > 0.25;
+            // Remove any stray overlays that could block interaction. return coversCenter || areaRatio > 0.25;
+            // Heuristics: position fixed/absolute, visible, covers center point or large area, and not a known system element.                });
             const viewportW = window.innerWidth;
             const viewportH = window.innerHeight;
-            const candidates = Array.from(document.querySelectorAll('div'))
-                .filter(d => {
+            const candidates = Array.from(document.querySelectorAll('div')) try { el.remove(); } catch (e) { /* ignore */ }
+                .filter(d => {            });
                     if (!d || d === document.body || d === document.documentElement) return false;
-                    const style = window.getComputedStyle(d);
-                    if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return false;
+                    const style = window.getComputedStyle(d); .dismiss-btn, .tab-btn').forEach(btn => {
+                    if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return false;querySelectorAll('button, .btn, .dismiss-btn, .tab-btn').forEach(btn => {
                     const pos = style.position;
-                    if (!(pos === 'fixed' || pos === 'absolute')) return false;
-                    // known system elements we should never remove
-                    const isSystem = d.id === 'global-banner' || d.classList.contains('announcement-bar') || d.classList.contains('popup') || d.classList.contains('disco-overlay') || d.classList.contains('flash-overlay');
-                    if (isSystem) return false;
-                    const rect = d.getBoundingClientRect();
-                    // ignore tiny decorative elements
+                    if (!(pos === 'fixed' || pos === 'absolute')) return false;auto';     btn.style.zIndex = '10001';
+                    // known system elements we should never remove      btn.style.position = 'relative';
+                    const isSystem = d.id === 'global-banner' || d.classList.contains('announcement-bar') || d.classList.contains('popup') || d.classList.contains('disco-overlay') || d.classList.contains('flash-overlay');position = 'relative';        } catch (e) {}
+                    if (isSystem) return false; } catch (e) {}
+                    const rect = d.getBoundingClientRect();   });
+                    // ignore tiny decorative elements}
                     if (rect.width < 40 || rect.height < 40) return false;
-                    const coversCenter = rect.left <= viewportW/2 && rect.right >= viewportW/2 && rect.top <= viewportH/2 && rect.bottom >= viewportH/2;
-                    const areaRatio = (rect.width * rect.height) / (viewportW * viewportH);
-                    return coversCenter || areaRatio > 0.25;
-                });
-
-            candidates.forEach(el => {
-                try { el.remove(); } catch (e) { /* ignore */ }
+                    const coversCenter = rect.left <= viewportW/2 && rect.right >= viewportW/2 && rect.top <= viewportH/2 && rect.bottom >= viewportH/2;changeser('load', cleanupOverlays);
+                    const areaRatio = (rect.width * rect.height) / (viewportW * viewportH);ationObserver(cleanupOverlays);
+                    return coversCenter || areaRatio > 0.25;ver(cleanupOverlays);erver.observe(document.body, { 
+                });ment.body, {             childList: true, 
+e, 
+            candidates.forEach(el => { subtree: true 
+                try { el.remove(); } catch (e) { /* ignore */ }        });
             });
-
-            // Ensure interactive elements are clickable and sit above transient overlays
-            document.querySelectorAll('button, .btn, .dismiss-btn, .tab-btn').forEach(btn => {
-                try {
+sient overlay (created by cutscenes or admin effects), remove it immediately so the
+            // Ensure interactive elements are clickable and sit above transient overlaysore other listeners.
+            document.querySelectorAll('button, .btn, .dismiss-btn, .tab-btn').forEach(btn => {s in capture phase to act before other listeners.r('pointerdown', (e) => {
+                try {addEventListener('pointerdown', (e) => {
                     btn.style.pointerEvents = 'auto';
-                    btn.style.zIndex = '10001';
+                    btn.style.zIndex = '10001';ent.elementFromPoint(e.clientX, e.clientY);
                     btn.style.position = 'relative';
-                } catch (e) {}
-            });
-        }
+                } catch (e) {}(el.dataset && el.dataset.transient === '1' ? el : null);
+            });= el.closest('[data-transient="1"]') || (el.dataset && el.dataset.transient === '1' ? el : null);
+        }sient.remove();
         
-        // Run cleanup on load and after dynamic content changes
-        window.addEventListener('load', cleanupOverlays);
+        // Run cleanup on load and after dynamic content changessafes, 10);
+        window.addEventListener('load', cleanupOverlays);   setTimeout(cleanupOverlays, 10);                }
         const observer = new MutationObserver(cleanupOverlays);
         observer.observe(document.body, { 
-            childList: true, 
+            childList: true,         }, { capture: true, passive: true });
             subtree: true 
-        });
-
+        });nce
+k', (e) => {ouncement bar
         // Defensive safety-net: if the user clicks and the element under the pointer is a transient
         // visual overlay (created by cutscenes or admin effects), remove it immediately so the
-        // underlying UI can receive the interaction. Runs in capture phase to act before other listeners.
-        document.addEventListener('pointerdown', (e) => {
-            try {
-                const el = document.elementFromPoint(e.clientX, e.clientY);
-                if (!el) return;
-                // If the element is a visual overlay marked transient, remove it and allow the event to continue
+        // underlying UI can receive the interaction. Runs in capture phase to act before other listeners.= document.querySelector('.announcement-bar');f (bar) {
+        document.addEventListener('pointerdown', (e) => {lay = 'none';
+            try {smissed-v1', '1'); } catch (e) { /* ignore */ }
+                const el = document.elementFromPoint(e.clientX, e.clientY);   try { localStorage.setItem('announcement-dismissed-v1', '1'); } catch (e) { /* ignore */ }
+                if (!el) return;   }
+                // If the element is a visual overlay marked transient, remove it and allow the event to continue            }
                 const transient = el.closest('[data-transient="1"]') || (el.dataset && el.dataset.transient === '1' ? el : null);
-                if (transient) {
-                    transient.remove();
-                    // run cleanup afterwards to be safe
-                    setTimeout(cleanupOverlays, 10);
-                }
-            } catch (err) { /* ignore */ }
+                if (transient) {'#global-banner .dismiss-btn')) {
+                    transient.remove();   const gb = document.getElementById('global-banner');
+                    // run cleanup afterwards to be safebal-banner');                if (gb) gb.classList.remove('visible');
+                    setTimeout(cleanupOverlays, 10);   if (gb) gb.classList.remove('visible');
+                } }
+            } catch (err) { /* ignore */ }        });
         }, { capture: true, passive: true });
-
+spect persisted announcement dismissal across loads
         // Announcement dismiss handlers + persistence
-        document.addEventListener('click', (e) => {
-            // dismiss announcement bar
-            if (e.target.matches('.announcement-bar .dismiss-btn')) {
+        document.addEventListener('click', (e) => {') {.querySelector('.announcement-bar');
+            // dismiss announcement bar.announcement-bar');                if (bar) bar.style.display = 'none';
+            if (e.target.matches('.announcement-bar .dismiss-btn')) {   if (bar) bar.style.display = 'none';            }
                 const bar = document.querySelector('.announcement-bar');
-                if (bar) {
+                if (bar) {        } catch (e) { /* ignore */ }
                     bar.style.display = 'none';
                     try { localStorage.setItem('announcement-dismissed-v1', '1'); } catch (e) { /* ignore */ }
-                }
-            }
-
-            // dismiss global broadcast banner
+                }ontentLoaded', function() {
+            }t-bar');
+');('.dismiss-btn');
+            // dismiss global broadcast bannerbar && bar.querySelector('.dismiss-btn');
             if (e.target.matches('#global-banner .dismiss-btn')) {
-                const gb = document.getElementById('global-banner');
-                if (gb) gb.classList.remove('visible');
-            }
-        });
-
-        // respect persisted announcement dismissal across loads
-        try {
-            if (localStorage.getItem('announcement-dismissed-v1') === '1') {
+                const gb = document.getElementById('global-banner');function() {sList.add('hide');
+                if (gb) gb.classList.remove('visible');'); setTimeout(function() {
+            }   bar.style.display = 'none';
+        });style.display = 'none';         }, 300);
+ }, 300);                });
+        // respect persisted announcement dismissal across loads   });
+        try { }
+            if (localStorage.getItem('announcement-dismissed-v1') === '1') {        });
                 const bar = document.querySelector('.announcement-bar');
-                if (bar) bar.style.display = 'none';
-            }
-        } catch (e) { /* ignore */ }
-
-
-        // Announcement bar dismiss with fade-out
-        document.addEventListener('DOMContentLoaded', function() {
-            var bar = document.querySelector('.announcement-bar');
+                if (bar) bar.style.display = 'none';ion() {
+            }ch(function(btn) {
+        } catch (e) { /* ignore */ }tn, .styled-btn').forEach(function(btn) { btn.style.pointerEvents = 'auto';
+ = 'auto';     btn.style.zIndex = '2';
+       btn.style.position = 'relative';
+        // Announcement bar dismiss with fade-out btn.style.position = 'relative';
+        document.addEventListener('DOMContentLoaded', function() { });
+            var bar = document.querySelector('.announcement-bar');        });
             var btn = bar && bar.querySelector('.dismiss-btn');
-            if (btn) {
-                btn.addEventListener('click', function() {
-                    bar.classList.add('hide');
-                    setTimeout(function() {
-                        bar.style.display = 'none';
-                    }, 300);
+            if (btn) { input[type="submit"]').forEach(button => {
+                btn.addEventListener('click', function() {t[type="button"], input[type="submit"]').forEach(button => { button.addEventListener('click', (e) => {
+                    bar.classList.add('hide');ton clicked: ${button.textContent || button.value}`);
+                    setTimeout(function() { console.log(`Button clicked: ${button.textContent || button.value}`);
+                        bar.style.display = 'none'; });
+                    }, 300);        });
                 });
             }
-        });
-
-        // Guarantee all buttons are clickable
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('button, .btn, .styled-btn').forEach(function(btn) {
-                btn.style.pointerEvents = 'auto';
-                btn.style.zIndex = '2';
-                btn.style.position = 'relative';
-            });
-        });
-
-        // Ensure all buttons are clickable and functional
-        document.querySelectorAll('button, .btn, input[type="button"], input[type="submit"]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                console.log(`Button clicked: ${button.textContent || button.value}`);
-            });
         });
 
         // Initialize the app
-        checkLoginStatus();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure all buttons are clickable and functional
+            document.querySelectorAll('button, .btn, .styled-btn').forEach(function(btn) {
+                btn.style.position = 'relative';
+                btn.style.zIndex = '2';
+                btn.style.pointerEvents = 'auto';
+            });
+
+            // Add click tracking for analytics
+            document.querySelectorAll('button, .btn, input[type="button"], input[type="submit"]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    console.log(`Button clicked: ${button.textContent || button.value}`);
+                });
+            });
+
+            // Check initial login status
+            checkLoginStatus();
+        });
+
+        // Login handler
+        async function handleLogin(e) {
+            if (e) e.preventDefault();
+            
+            const form = $('#login-form');
+            const button = form?.querySelector('button[type="submit"]');
+            const errorDiv = $('#login-error');
+            
+            try {
+                setLoading(button, true);
+                errorDiv?.classList.add('hidden');
+                
+                const username = $('#login-username').value.trim();
+                const password = $('#login-password').value;
+                
+                if (!username || !password) {
+                    throw new Error('Please enter both username and password');
+                }
+                
+                const loginData = await handleAPIRequest('/api/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const userData = await handleAPIRequest('/api/data');
+                state.currentUser = userData.user;
+                loadGameData(userData);
+                showPage('game');
+                showPopup('Welcome back!', '#27ae60');
+                
+            } catch (err) {
+                errorDiv.textContent = err.message || 'Login failed';
+                errorDiv.classList.remove('hidden');
+                showPopup('Login failed', '#e74c3c');
+            } finally {
+                setLoading(button, false);
+            }
+        }
     </script>
 </body>
 </html>
