@@ -29,7 +29,7 @@
             --transition-instant: 0.08s ease;
             --transition-fast: 0.12s ease;
             --transition-normal: 0.2s ease;
-            
+        }
 
             /* Announcement Bar */
             .announcement-bar {
@@ -1587,90 +1587,91 @@
         document.getElementById('back-to-game').addEventListener('click', () => showPage('game'));
 
         // Login form
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-            const errorDiv = document.getElementById('login-error');
-            
-            // Show spinner
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
-            btn.disabled = true;
-            errorDiv.classList.add('hidden');
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await response.json();
-                btn.innerHTML = 'Login';
-                btn.disabled = false;
-                if (data.success) {
-                    // After login we request the full data set to ensure client-side state is complete
-                    showPopup('Login successful!');
-                    await checkLoginStatus();
-                    if (currentUser && currentUser.isAdmin) {
-                        document.getElementById('admin-btn').classList.remove('hidden');
-                    }
-                    showPage('game');
-                } else {
-                    errorDiv.textContent = data.error;
-                    errorDiv.classList.remove('hidden');
-                    showPopup(data.error, '#e74c3c');
+        (function(){
+            const _loginForm = document.getElementById('login-form');
+            if (!_loginForm) return;
+            _loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                const errorDiv = document.getElementById('login-error');
+                
+                // Show spinner
+                const btn = e.target.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
+                    btn.disabled = true;
                 }
-            } catch (error) {
-                btn.innerHTML = 'Login';
-                btn.disabled = false;
-                errorDiv.textContent = 'An error occurred. Please try again.';
-                errorDiv.classList.remove('hidden');
-                showPopup('An error occurred.', '#e74c3c');
-            }
-        });
+                if (errorDiv) errorDiv.classList.add('hidden');
+                try {
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await response.json();
+                    if (btn) { btn.innerHTML = 'Login'; btn.disabled = false; }
+                    if (data.success) {
+                        // After login we request the full data set to ensure client-side state is complete
+                        showPopup('Login successful!');
+                        await checkLoginStatus();
+                        if (currentUser && currentUser.isAdmin) {
+                            const adminBtn = document.getElementById('admin-btn'); if (adminBtn) adminBtn.classList.remove('hidden');
+                        }
+                        showPage('game');
+                    } else {
+                        if (errorDiv) { errorDiv.textContent = data.error; errorDiv.classList.remove('hidden'); }
+                        showPopup(data.error, '#e74c3c');
+                    }
+                } catch (error) {
+                    if (btn) { btn.innerHTML = 'Login'; btn.disabled = false; }
+                    if (errorDiv) { errorDiv.textContent = 'An error occurred. Please try again.'; errorDiv.classList.remove('hidden'); }
+                    showPopup('An error occurred.', '#e74c3c');
+                }
+            });
+        })();
 
         // Register form
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('register-username').value;
-            const password = document.getElementById('register-password').value;
-            const errorDiv = document.getElementById('register-error');
-            
-            // Show spinner
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.innerHTML = '<span class="loading-spinner"></span> Registering...';
-            btn.disabled = true;
-            errorDiv.classList.add('hidden');
-            try {
-                const response = await fetch('/api/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await response.json();
-                btn.innerHTML = 'Register';
-                btn.disabled = false;
-                if (data.success) {
-                    showPopup('Registration successful!');
-                    await checkLoginStatus();
-                    showPage('game');
-                } else {
-                    errorDiv.textContent = data.error;
-                    errorDiv.classList.remove('hidden');
-                    showPopup(data.error, '#e74c3c');
+        (function(){
+            const _registerForm = document.getElementById('register-form');
+            if (!_registerForm) return;
+            _registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('register-username').value;
+                const password = document.getElementById('register-password').value;
+                const errorDiv = document.getElementById('register-error');
+                
+                // Show spinner
+                const btn = e.target.querySelector('button[type="submit"]');
+                if (btn) { btn.innerHTML = '<span class="loading-spinner"></span> Registering...'; btn.disabled = true; }
+                if (errorDiv) errorDiv.classList.add('hidden');
+                try {
+                    const response = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await response.json();
+                    if (btn) { btn.innerHTML = 'Register'; btn.disabled = false; }
+                    if (data.success) {
+                        showPopup('Registration successful!');
+                        await checkLoginStatus();
+                        showPage('game');
+                    } else {
+                        if (errorDiv) { errorDiv.textContent = data.error; errorDiv.classList.remove('hidden'); }
+                        showPopup(data.error, '#e74c3c');
+                    }
+                } catch (error) {
+                    if (btn) { btn.innerHTML = 'Register'; btn.disabled = false; }
+                    if (errorDiv) { errorDiv.textContent = 'An error occurred. Please try again.'; errorDiv.classList.remove('hidden'); }
+                    showPopup('An error occurred.', '#e74c3c');
                 }
-            } catch (error) {
-                btn.innerHTML = 'Register';
-                btn.disabled = false;
-                errorDiv.textContent = 'An error occurred. Please try again.';
-                errorDiv.classList.remove('hidden');
-                showPopup('An error occurred.', '#e74c3c');
-            }
-        });
+            });
+        })();
 
         // Spin functionality is wired below (to support cutscenes and extra logic)
         // Note: redeem/shop handlers are in-tab (inventory area). Top-level code inputs were removed to avoid duplicates.
