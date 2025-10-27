@@ -936,9 +936,9 @@
     <div id="global-banner" aria-live="polite" role="status"></div>
     <!-- Home Page -->
     <!-- Announcement Bar -->
-    <div class="announcement-bar">
+    <div class="announcement-bar" id="announcement-bar">
         <span>RNG 2 - Alpha Testing</span>
-        <button class="dismiss-btn" aria-label="Dismiss announcement">×</button>
+        <button onclick="document.getElementById('announcement-bar').classList.add('hide')" class="dismiss-btn" aria-label="Dismiss announcement">×</button>
     </div>
 
     <div id="home-page" class="container">
@@ -947,8 +947,8 @@
                 <h2>17 News RNG 2</h2>
                 <p>The ultimate RNG experience!</p>
                 <div class="button-group">
-                    <button id="login-btn" class="btn styled-btn">Login</button>
-                    <button id="register-btn" class="btn styled-btn">Register</button>
+                    <button onclick="showLoginPage()" id="login-btn" class="btn styled-btn">Login</button>
+                    <button onclick="showRegisterPage()" id="register-btn" class="btn styled-btn">Register</button>
                 </div>
             </div>
             <div class="update-log">
@@ -979,19 +979,17 @@
         <div class="auth-card">
             <h1>Login to 17 News RNG 2</h1>
             <div id="login-error" class="error-message hidden"></div>
-            <div class="form-group">
-                <label for="login-username">Username</label>
-                <input type="text" id="login-username" class="auth-input" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="login-password">Password</label>
-                <input type="password" id="login-password" class="auth-input" required>
-            </div>
-            
-            <button onclick="login()" type="button" class="btn">Login</button>
-            
-            <p class="auth-link">Don't have an account? <a href="#" onclick="showRegisterPage()">Register here</a></p>
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" class="auth-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" class="auth-input" required onkeypress="if(event.key === 'Enter') login()">
+                </div>
+                
+                <button onclick="login(); return false;" type="button" class="btn styled-btn">Login</button>            <p class="auth-link">Don't have an account? <a href="#" onclick="showRegisterPage()">Register here</a></p>
         </div>
     </div>
 
@@ -1000,19 +998,17 @@
         <div class="auth-card">
             <h1>Register for 17 News RNG 2</h1>
             <div id="register-error" class="error-message hidden"></div>
-            <div class="form-group">
-                <label for="register-username">Username</label>
-                <input type="text" id="register-username" class="auth-input" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="register-password">Password</label>
-                <input type="password" id="register-password" class="auth-input" required>
-            </div>
-            
-            <button onclick="register()" type="button" class="btn">Register</button>
-            
-            <p class="auth-link">Already have an account? <a href="#" onclick="showLoginPage()">Login here</a></p>
+                <div class="form-group">
+                    <label for="register-username">Username</label>
+                    <input type="text" id="register-username" class="auth-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" class="auth-input" required onkeypress="if(event.key === 'Enter') register()">
+                </div>
+                
+                <button onclick="register(); return false;" type="button" class="btn styled-btn">Register</button>            <p class="auth-link">Already have an account? <a href="#" onclick="showLoginPage()">Login here</a></p>
         </div>
     </div>
 
@@ -1188,30 +1184,37 @@
     <script>
         // Page navigation functions
         function showLoginPage() {
-            document.getElementById('home-page').classList.add('hidden');
-            document.getElementById('register-page').classList.add('hidden');
+            const pages = ['home-page', 'register-page', 'game-page', 'admin-panel'];
+            pages.forEach(page => document.getElementById(page)?.classList.add('hidden'));
             document.getElementById('login-page').classList.remove('hidden');
-            pushLog('showLoginPage() called');
-            // focus first input
-            const l = document.getElementById('login-username'); if (l) l.focus();
+            const loginInput = document.getElementById('login-username');
+            if (loginInput) {
+                loginInput.focus();
+                loginInput.select();
+            }
         }
 
         function showRegisterPage() {
-            document.getElementById('home-page').classList.add('hidden');
-            document.getElementById('login-page').classList.add('hidden');
+            const pages = ['home-page', 'login-page', 'game-page', 'admin-panel'];
+            pages.forEach(page => document.getElementById(page)?.classList.add('hidden'));
             document.getElementById('register-page').classList.remove('hidden');
-            pushLog('showRegisterPage() called');
-            const r = document.getElementById('register-username'); if (r) r.focus();
+            const registerInput = document.getElementById('register-username');
+            if (registerInput) {
+                registerInput.focus();
+                registerInput.select();
+            }
         }
 
         function showHomePage() {
-            document.getElementById('login-page').classList.add('hidden');
-            document.getElementById('register-page').classList.add('hidden');
+            const pages = ['login-page', 'register-page', 'game-page', 'admin-panel'];
+            pages.forEach(page => document.getElementById(page)?.classList.add('hidden'));
             document.getElementById('home-page').classList.remove('hidden');
         }
 
         async function login() {
-            pushLog('login() invoked');
+            console.log('Login attempt started');
+            const errorDiv = document.getElementById('login-error');
+            try {
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
             
