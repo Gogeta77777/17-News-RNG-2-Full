@@ -768,6 +768,40 @@
         let currentUser = null;
         let socket = null;
 
+        // Check for existing session on page load
+        async function checkExistingSession() {
+            try {
+                console.log('🔍 Checking for existing session...');
+                const data = await handleAPI('/api/check-session');
+                
+                if (data.success && data.loggedIn) {
+                    console.log('✅ Found existing session:', data.user.username);
+                    currentUser = data.user;
+                    await loadFullGameData();
+                    showPage('game');
+                    initSocket();
+                    return true;
+                }
+                
+                console.log('ℹ️ No existing session');
+                return false;
+            } catch (err) {
+                console.log('ℹ️ No existing session');
+                return false;
+            }
+        }
+
+        async function loadFullGameData() {
+            try {
+                const data = await handleAPI('/api/data');
+                if (data.success) {
+                    loadGameData(data);
+                }
+            } catch (err) {
+                console.error('Failed to load game data:', err);
+            }
+        }
+
         function showPage(pageName) {
             console.log('Switching to page:', pageName);
             const pages = ['home-page', 'login-page', 'register-page', 'game-page', 'admin-panel'];
