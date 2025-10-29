@@ -1,9 +1,9 @@
 /*
-  17-News-RNG Server - All Bugs Fixed
-  - Fixed session persistence
-  - Fixed data saving
-  - Fixed admin authentication
-  - Fixed shop system
+  17-News-RNG Server - Final Version with All Fixes
+  - Session persistence across refreshes
+  - Fixed admin/code authentication
+  - Fixed chat real-time updates
+  - Proper data saving
 */
 
 const express = require('express');
@@ -32,7 +32,7 @@ const authLimiter = rateLimit({
   message: { success: false, message: 'Too many attempts, please try again later' }
 });
 
-// Middleware - CRITICAL ORDER
+// Middleware
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
@@ -41,18 +41,20 @@ app.use(helmet({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session configuration - FIXED
+// Session configuration - PERSISTENT
 const sessionMiddleware = session({
   store: new MemoryStore({
     checkPeriod: 86400000
   }),
-  secret: process.env.SESSION_SECRET || 'dev-secret-17news-rng-2025',
+  secret: process.env.SESSION_SECRET || 'dev-secret-17news-rng-2025-super-secure',
   resave: false,
   saveUninitialized: false,
+  name: 'rng2.sid', // Custom cookie name
   cookie: {
-    secure: false, // Changed to false for development
+    secure: false,
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    sameSite: 'lax'
   }
 });
 
@@ -60,10 +62,10 @@ app.use(sessionMiddleware);
 
 // Share session with Socket.IO
 io.use((socket, next) => {
-  sessionMiddleware(socket.request, {}, next);
+  sessionMiddleware(socket.request, socket.request.res || {}, next);
 });
 
-// Serve static files AFTER session middleware
+// Serve static files
 app.use(express.static(__dirname, {
   index: false,
   setHeaders: (res, filePath) => {
@@ -73,102 +75,90 @@ app.use(express.static(__dirname, {
   }
 }));
 
-// Explicitly serve index.html at root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Data management - FIXED
+// Data management
 const IS_VERCEL = process.env.VERCEL === '1';
-const DATA_DIR = path.join(__dirname, 'data');
-const DATA_FILE = path.join(DATA_DIR, 'saveData.json');
-
-// Ensure data directory exists
-if (!IS_VERCEL && !fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-
-let inMemoryData = {
-  users: [
-    {
-      username: "Mr_Fernanski",
-      password: "admin123",
-      isAdmin: true,
-      inventory: [],
-      coins: 10000,
-      joinDate: new Date().toISOString()
-    }
-  ],
-  codes: [
-    {
-      code: "WELCOME17",
-      reward: { type: "coins", amount: 500 },
-      usedBy: []
-    },
-    {
-      code: "ALPHA2025",
-      reward: { type: "coins", amount: 1000 },
-      usedBy: []
-    }
-  ],
-  announcements: [],
-  events: [],
-  chatMessages: [],
-  aaEvents: [
-    { id: 'disco', name: 'Disco Mode', active: false }
-  ]
-};
+const DATA_FILE = path.join(__dirname, 'saveData.json');
 
 function readData() {
   if (IS_VERCEL) {
-    console.log('📦 Reading from memory (Vercel mode)');
-    return inMemoryData;
+    // For Vercel, use in-memory
+    return global.gameData || initializeData();
   }
   
   try {
     if (!fs.existsSync(DATA_FILE)) {
-      console.log('📝 Creating new data file');
-      writeData(inMemoryData);
-      return inMemoryData;
+      console.log('📝 Creating new saveData.json');
+      return initializeData();
     }
     
     const rawData = fs.readFileSync(DATA_FILE, 'utf8');
     const data = JSON.parse(rawData);
     
-    // Ensure all required fields exist
+    // Ensure all required fields
     if (!data.users) data.users = [];
-    if (!data.codes) data.codes = inMemoryData.codes;
+    if (!data.codes) data.codes = [];
     if (!data.announcements) data.announcements = [];
     if (!data.events) data.events = [];
     if (!data.chatMessages) data.chatMessages = [];
-    if (!data.aaEvents) data.aaEvents = inMemoryData.aaEvents;
+    if (!data.aaEvents) data.aaEvents = [{ id: 'disco', name: 'Disco Mode', active: false }];
     
-    console.log('✅ Data loaded successfully');
+    console.log('✅ Data loaded:', data.users.length, 'users');
     return data;
   } catch (error) {
     console.error('❌ Error reading data:', error);
-    return inMemoryData;
+    return initializeData();
   }
+}
+
+function initializeData() {
+  const data = {
+    users: [
+      {
+        username: "Mr_Fernanski",
+        password: "admin123",
+        isAdmin: true,
+        inventory: [],
+        coins: 10000,
+        joinDate: "2025-10-22T00:00:00.000Z"
+      }
+    ],
+    codes: [
+      {
+        code: "WELCOME17",
+        reward: { type: "coins", amount: 500 },
+        usedBy: []
+      },
+      {
+        code: "ALPHA2025",
+        reward: { type: "coins", amount: 1000 },
+        usedBy: []
+      }
+    ],
+    announcements: [],
+    events: [],
+    chatMessages: [],
+    aaEvents: [{ id: 'disco', name: 'Disco Mode', active: false }]
+  };
+  
+  writeData(data);
+  return data;
 }
 
 function writeData(data) {
   if (IS_VERCEL) {
-    inMemoryData = data;
-    console.log('💾 Data saved to memory (Vercel mode)');
+    global.gameData = data;
     return true;
   }
   
   try {
-    // Ensure directory exists
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    
-    // Write to temp file first
     const tempFile = DATA_FILE + '.tmp';
     fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf8');
     
-    // Verify it's valid JSON
+    // Verify
     const verify = JSON.parse(fs.readFileSync(tempFile, 'utf8'));
     
     // Atomic rename
@@ -179,23 +169,17 @@ function writeData(data) {
   } catch (error) {
     console.error('❌ Error writing data:', error);
     
-    // Clean up temp file
+    // Cleanup
     try {
       const tempFile = DATA_FILE + '.tmp';
-      if (fs.existsSync(tempFile)) {
-        fs.unlinkSync(tempFile);
-      }
+      if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
     } catch (e) {}
     
     return false;
   }
 }
 
-// Initialize data on startup
-const initialData = readData();
-console.log('🚀 Server starting with', initialData.users.length, 'users');
-
-// Rarities
+// Rarities - CLEAN VERSION
 const RARITIES = [
   { name: '17 News', chance: 45, color: '#4CAF50', coin: 100 },
   { name: '17 News Reborn', chance: 30, color: '#2196F3', coin: 250 },
@@ -204,39 +188,64 @@ const RARITIES = [
   { name: 'Mr Fernanski', chance: 2, color: '#F44336', coin: 2500 }
 ];
 
-function generateItemName(rarity) {
-  const adj = ['Ancient', 'Glowing', 'Shiny', 'Rusty', 'Cyber', 'Arcane', 'Lucky'];
-  const noun = ['Relic', 'Core', 'Shard', 'Gem', 'Module', 'Chip', 'Talisman'];
-  const a = adj[Math.floor(Math.random() * adj.length)];
-  const n = noun[Math.floor(Math.random() * noun.length)];
-  return `${a} ${n}`;
-}
-
 // Auth middleware - FIXED
 function requireAuth(req, res, next) {
-  console.log('🔐 Auth check:', req.session.user ? `User: ${req.session.user.username}` : 'No session');
+  console.log('🔐 Auth check:', {
+    hasSession: !!req.session,
+    hasUser: !!req.session?.user,
+    user: req.session?.user?.username,
+    sessionID: req.sessionID
+  });
   
-  if (!req.session || !req.session.user) {
+  if (!req.session || !req.session.user || !req.session.user.username) {
+    console.log('❌ Auth failed - no valid session');
     return res.status(401).json({ success: false, error: 'Not logged in' });
   }
+  
+  // Verify user still exists in database
+  const data = readData();
+  const user = data.users.find(u => u.username === req.session.user.username);
+  
+  if (!user) {
+    console.log('❌ Auth failed - user not found in database');
+    req.session.destroy();
+    return res.status(401).json({ success: false, error: 'User not found' });
+  }
+  
+  console.log('✅ Auth passed:', req.session.user.username);
   next();
 }
 
 function requireAdmin(req, res, next) {
-  console.log('👑 Admin check:', req.session.user);
+  console.log('👑 Admin check:', {
+    user: req.session?.user?.username,
+    isAdmin: req.session?.user?.isAdmin
+  });
   
   if (!req.session || !req.session.user) {
+    console.log('❌ Admin check failed - no session');
     return res.status(401).json({ success: false, error: 'Not logged in' });
   }
   
-  if (!req.session.user.isAdmin) {
+  // Re-verify admin status from database
+  const data = readData();
+  const user = data.users.find(u => u.username === req.session.user.username);
+  
+  if (!user) {
+    console.log('❌ Admin check failed - user not found');
+    return res.status(401).json({ success: false, error: 'User not found' });
+  }
+  
+  if (!user.isAdmin) {
+    console.log('❌ Admin check failed - not admin');
     return res.status(403).json({ success: false, error: 'Admin access required' });
   }
   
+  console.log('✅ Admin check passed');
   next();
 }
 
-// API Routes - ALL FIXED
+// API Routes
 
 app.post('/api/login', authLimiter, (req, res) => {
   try {
@@ -256,29 +265,30 @@ app.post('/api/login', authLimiter, (req, res) => {
       return res.json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Set session
+    // Set session with all user data
     req.session.user = {
       username: user.username,
       isAdmin: user.isAdmin || false
     };
     
-    // Force save session
+    // Force save
     req.session.save((err) => {
       if (err) {
-        console.error('Session save error:', err);
+        console.error('❌ Session save error:', err);
+        return res.json({ success: false, message: 'Session error' });
       }
-    });
+      
+      console.log('✅ Login successful:', username, 'SessionID:', req.sessionID);
 
-    console.log('✅ Login successful:', username);
-
-    res.json({
-      success: true,
-      user: {
-        username: user.username,
-        isAdmin: user.isAdmin || false,
-        coins: user.coins || 0,
-        inventory: user.inventory || []
-      }
+      res.json({
+        success: true,
+        user: {
+          username: user.username,
+          isAdmin: user.isAdmin || false,
+          coins: user.coins || 0,
+          inventory: user.inventory || []
+        }
+      });
     });
   } catch (error) {
     console.error('❌ Login error:', error);
@@ -331,23 +341,54 @@ app.post('/api/register', authLimiter, (req, res) => {
       isAdmin: false
     };
     
-    req.session.save();
-
-    console.log('✅ Registration successful:', username);
-
-    res.json({
-      success: true,
-      user: {
-        username: newUser.username,
-        isAdmin: false,
-        coins: 1000,
-        inventory: []
+    req.session.save((err) => {
+      if (err) {
+        console.error('❌ Session save error:', err);
+        return res.json({ success: false, message: 'Session error' });
       }
+      
+      console.log('✅ Registration successful:', username);
+
+      res.json({
+        success: true,
+        user: {
+          username: newUser.username,
+          isAdmin: false,
+          coins: 1000,
+          inventory: []
+        }
+      });
     });
   } catch (error) {
     console.error('❌ Register error:', error);
     res.json({ success: false, message: 'Server error' });
   }
+});
+
+// Check session status
+app.get('/api/check-session', (req, res) => {
+  if (!req.session || !req.session.user) {
+    return res.json({ success: false, loggedIn: false });
+  }
+  
+  const data = readData();
+  const user = data.users.find(u => u.username === req.session.user.username);
+  
+  if (!user) {
+    req.session.destroy();
+    return res.json({ success: false, loggedIn: false });
+  }
+  
+  res.json({
+    success: true,
+    loggedIn: true,
+    user: {
+      username: user.username,
+      isAdmin: user.isAdmin || false,
+      coins: user.coins || 0,
+      inventory: user.inventory || []
+    }
+  });
 });
 
 app.post('/api/spin', requireAuth, (req, res) => {
@@ -358,7 +399,6 @@ app.post('/api/spin', requireAuth, (req, res) => {
     const user = data.users.find(u => u.username === req.session.user.username);
     
     if (!user) {
-      console.log('❌ User not found in data');
       return res.json({ success: false, error: 'User not found' });
     }
 
@@ -376,9 +416,8 @@ app.post('/api/spin', requireAuth, (req, res) => {
       }
     }
 
-    const itemName = generateItemName(picked.name);
     const item = {
-      name: `${itemName} (${picked.name})`,
+      name: picked.name,
       rarity: picked.name.toLowerCase().replace(/\s+/g, '-'),
       date: new Date().toISOString()
     };
@@ -393,11 +432,11 @@ app.post('/api/spin', requireAuth, (req, res) => {
       return res.json({ success: false, error: 'Failed to save spin result' });
     }
 
-    console.log('✅ Spin successful:', picked.name);
+    console.log('✅ Spin successful:', picked.name, '+', coinReward, 'coins');
 
     res.json({
       success: true,
-      item: item.name,
+      item: picked.name,
       rarity: picked,
       coins: user.coins,
       awarded: coinReward
@@ -412,7 +451,7 @@ app.post('/api/use-code', requireAuth, (req, res) => {
   try {
     const { code } = req.body;
     
-    console.log('🎫 Code redemption attempt:', code);
+    console.log('🎫 Code redemption:', code, 'by', req.session.user.username);
     
     if (!code) {
       return res.json({ success: false, error: 'Code required' });
@@ -465,12 +504,11 @@ app.post('/api/use-code', requireAuth, (req, res) => {
   }
 });
 
-// Shop - FIXED with Potions
 app.post('/api/shop/buy', requireAuth, (req, res) => {
   try {
     const { itemName, price, rarity } = req.body;
     
-    console.log('🛒 Shop purchase:', itemName, 'for', price, 'coins');
+    console.log('🛒 Shop purchase:', itemName, 'for', price, 'coins by', req.session.user.username);
     
     if (!itemName || typeof price !== 'number') {
       return res.json({ success: false, error: 'Invalid purchase data' });
@@ -535,12 +573,11 @@ app.get('/api/data', requireAuth, (req, res) => {
   }
 });
 
-// Admin routes - FIXED
 app.post('/api/admin/announcement', requireAdmin, (req, res) => {
   try {
     const { title, content } = req.body;
     
-    console.log('📢 Admin creating announcement:', title);
+    console.log('📢 Admin creating announcement:', title, 'by', req.session.user.username);
     
     if (!title || !content) {
       return res.json({ success: false, error: 'Title and content required' });
@@ -562,7 +599,6 @@ app.post('/api/admin/announcement', requireAdmin, (req, res) => {
       return res.json({ success: false, error: 'Failed to save announcement' });
     }
 
-    // Broadcast to all connected clients
     io.emit('new_announcement', announcement);
 
     console.log('✅ Announcement created');
@@ -578,7 +614,7 @@ app.post('/api/admin/event', requireAdmin, (req, res) => {
   try {
     const { name, description, startDate, endDate } = req.body;
     
-    console.log('🎉 Admin creating event:', name);
+    console.log('🎉 Admin creating event:', name, 'by', req.session.user.username);
     
     if (!name || !startDate || !endDate) {
       return res.json({ success: false, error: 'Name, start date, and end date required' });
@@ -601,7 +637,6 @@ app.post('/api/admin/event', requireAdmin, (req, res) => {
       return res.json({ success: false, error: 'Failed to save event' });
     }
 
-    // Broadcast to all connected clients
     io.emit('new_event', event);
 
     console.log('✅ Event created');
@@ -614,24 +649,30 @@ app.post('/api/admin/event', requireAdmin, (req, res) => {
 });
 
 app.post('/api/logout', (req, res) => {
-  const username = req.session.user?.username;
+  const username = req.session?.user?.username;
   req.session.destroy((err) => {
     if (err) {
       console.error('Logout error:', err);
     }
     console.log('👋 User logged out:', username);
+    res.clearCookie('rng2.sid');
+    res.json({ success: true });
   });
-  res.json({ success: true });
 });
 
-// Socket.IO - FIXED
+// Socket.IO - FIXED with immediate updates
 io.on('connection', (socket) => {
   const session = socket.request.session;
-  console.log('🔌 Socket connected:', socket.id, session.user?.username);
+  const username = session?.user?.username;
+  
+  console.log('🔌 Socket connected:', socket.id, username || 'guest');
 
   socket.on('chat_message', (msg) => {
     try {
-      if (!msg.username || !msg.message) return;
+      if (!msg.username || !msg.message) {
+        console.log('❌ Invalid chat message');
+        return;
+      }
       
       const data = readData();
       const chatMsg = {
@@ -646,9 +687,11 @@ io.on('connection', (socket) => {
       }
       
       writeData(data);
+      
+      // Broadcast immediately to ALL clients including sender
       io.emit('chat_message', chatMsg);
       
-      console.log('💬 Chat message:', msg.username);
+      console.log('💬 Chat:', msg.username, '-', msg.message.substring(0, 30));
     } catch (error) {
       console.error('❌ Chat error:', error);
     }
@@ -658,6 +701,9 @@ io.on('connection', (socket) => {
     console.log('🔌 Socket disconnected:', socket.id);
   });
 });
+
+// Initialize data
+readData();
 
 // Start server
 const PORT = process.env.PORT || 3000;
