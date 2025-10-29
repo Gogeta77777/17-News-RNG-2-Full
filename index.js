@@ -58,13 +58,18 @@ app.use(session({
 
 // Serve static files AFTER session middleware
 app.use(express.static(__dirname, {
-  index: 'index.html',
+  index: false, // We'll handle index manually
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
   }
 }));
+
+// Explicitly serve index.html at root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // Data management
 const IS_VERCEL = process.env.VERCEL === '1';
