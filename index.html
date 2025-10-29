@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
-    <meta name="description" content="17 News RNG 2 - The ultimate RNG experience">
+    <meta name="description" content="17 News RNG 2 - The Return">
     <title>17 News RNG 2</title>
     
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
     <style>
-        /* CSS Variables */
         :root {
             --accent-primary: #00ffe7;
             --accent-secondary: #007cf0;
@@ -21,8 +20,6 @@
             --success: #27ae60;
             --warning: #f39c12;
             --error: #e74c3c;
-            
-            /* Z-Index Layers */
             --z-base: 1;
             --z-content: 100;
             --z-buttons: 500;
@@ -31,7 +28,6 @@
             --z-popup: 1000;
         }
 
-        /* Reset & Base */
         * {
             margin: 0;
             padding: 0;
@@ -82,7 +78,6 @@
             100% { transform: translate(50px, 50px); }
         }
 
-        /* Utility Classes */
         .hidden {
             display: none !important;
         }
@@ -96,12 +91,7 @@
             z-index: var(--z-content);
         }
 
-        /* Buttons - CRITICAL FIX */
-        button,
-        .btn,
-        .styled-btn,
-        input[type="button"],
-        input[type="submit"] {
+        button, .btn, .styled-btn, input[type="button"], input[type="submit"], .tab-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -122,25 +112,21 @@
             user-select: none;
         }
 
-        button:hover,
-        .btn:hover {
+        button:hover, .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 255, 247, 0.3);
         }
 
-        button:active,
-        .btn:active {
+        button:active, .btn:active {
             transform: translateY(0);
         }
 
-        button:disabled,
-        .btn:disabled {
+        button:disabled, .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
         }
 
-        /* Announcement Bar */
         .announcement-bar {
             position: fixed;
             top: 12px;
@@ -180,7 +166,6 @@
             pointer-events: auto !important;
         }
 
-        /* Auth Pages */
         .auth-container {
             display: flex;
             align-items: center;
@@ -221,7 +206,7 @@
             color: var(--text-light);
         }
 
-        .form-group input {
+        .form-group input, .form-group textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid rgba(52, 152, 219, 0.3);
@@ -232,7 +217,7 @@
             transition: border-color 0.2s ease;
         }
 
-        .form-group input:focus {
+        .form-group input:focus, .form-group textarea:focus {
             outline: none;
             border-color: var(--accent-primary);
         }
@@ -262,7 +247,6 @@
             text-decoration: underline;
         }
 
-        /* Home Page */
         .home-main {
             display: flex;
             align-items: center;
@@ -307,7 +291,6 @@
             flex-wrap: wrap;
         }
 
-        /* Update Log */
         .update-log {
             background: rgba(255, 255, 255, 0.04);
             padding: 24px;
@@ -347,7 +330,6 @@
             margin: 4px 0;
         }
 
-        /* Game Page */
         .game-header {
             background: rgba(10, 18, 25, 0.95);
             padding: 20px;
@@ -378,7 +360,157 @@
             color: white;
         }
 
-        /* Popup */
+        .game-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+        }
+
+        .spin-section {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            background: rgba(10, 18, 25, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .spin-section h2 {
+            color: var(--accent-primary);
+            margin-bottom: 20px;
+        }
+
+        #spin-btn {
+            font-size: 1.5em;
+            padding: 20px 40px;
+        }
+
+        #spin-result {
+            margin-top: 20px;
+            font-size: 1.5em;
+            min-height: 50px;
+        }
+
+        .main-content {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(10, 18, 25, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(52, 152, 219, 0.2);
+            padding: 10px 20px;
+            margin: 0;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .inventory-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .rarity-17-news { border-left-color: #4CAF50; }
+        .rarity-17-news-reborn { border-left-color: #2196F3; }
+        .rarity-delan-fernando { border-left-color: #9C27B0; }
+        .rarity-cooper-metson { border-left-color: #FF9800; }
+        .rarity-mr-fernanski { border-left-color: #F44336; }
+
+        .item-name {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .item-rarity {
+            font-size: 0.8rem;
+            text-transform: capitalize;
+        }
+
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .chat-message .username {
+            font-weight: bold;
+            color: var(--accent-secondary);
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            border-radius: 8px;
+            background: rgba(10, 18, 25, 0.8);
+            color: var(--text-light);
+        }
+
+        .shop-item, .code-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .announcement, .event {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-secondary);
+        }
+
         .popup {
             position: fixed;
             left: 50%;
@@ -406,7 +538,6 @@
             }
         }
 
-        /* Loading Spinner */
         .loading-spinner {
             display: inline-block;
             width: 16px;
@@ -422,7 +553,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .button-group {
                 flex-direction: column;
@@ -433,25 +563,23 @@
                 width: 100%;
             }
 
-            .auth-card {
-                padding: 24px;
+            .tabs {
+                overflow-x: auto;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Announcement Bar -->
     <div class="announcement-bar" id="announcement-bar">
         <span>RNG 2 - Alpha Testing</span>
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
-    <!-- Home Page -->
     <div id="home-page" class="container">
         <main class="home-main">
             <div class="welcome-card">
                 <h2>17 News RNG 2</h2>
-                <p>The ultimate RNG experience!</p>
+                <p>The Return</p>
                 <div class="button-group">
                     <button id="login-btn" class="btn">Login</button>
                     <button id="register-btn" class="btn">Register</button>
@@ -472,7 +600,6 @@
         </main>
     </div>
 
-    <!-- Login Page -->
     <div id="login-page" class="auth-container hidden">
         <div class="auth-card">
             <h1>Login</h1>
@@ -494,7 +621,6 @@
         </div>
     </div>
 
-    <!-- Register Page -->
     <div id="register-page" class="auth-container hidden">
         <div class="auth-card">
             <h1>Register</h1>
@@ -516,7 +642,6 @@
         </div>
     </div>
 
-    <!-- Game Page -->
     <div id="game-page" class="hidden">
         <div class="container">
             <header class="game-header">
@@ -524,40 +649,140 @@
                 <div class="user-info">
                     <span>Welcome, <strong id="user-name">Player</strong></span>
                     <span class="coins">Coins: <span id="coin-count">0</span></span>
+                    <button id="admin-btn" class="btn hidden">Admin Panel</button>
                     <button id="logout-btn" class="btn">Logout</button>
                 </div>
             </header>
-            <div style="text-align: center; padding: 40px;">
-                <h2>Game content goes here</h2>
-                <p>Connected and ready to play!</p>
+            
+            <div class="game-content">
+                <div class="spin-section">
+                    <h2>🎰 Spin for Items</h2>
+                    <button id="spin-btn" class="btn">Spin Now!</button>
+                    <div id="spin-result"></div>
+                </div>
+
+                <div class="main-content">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="inventory">Inventory</button>
+                        <button class="tab-btn" data-tab="chat">Chat</button>
+                        <button class="tab-btn" data-tab="codes">Codes</button>
+                        <button class="tab-btn" data-tab="shop">Shop</button>
+                        <button class="tab-btn" data-tab="announcements">Announcements</button>
+                        <button class="tab-btn" data-tab="events">Events</button>
+                    </div>
+
+                    <div class="tab-pane active" id="inventory-tab">
+                        <h2>Your Inventory</h2>
+                        <div id="inventory-grid" class="inventory-grid">
+                            <p>Your inventory is empty. Spin to get items!</p>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="chat-tab">
+                        <h2>Global Chat</h2>
+                        <div id="chat-messages" class="chat-messages"></div>
+                        <div class="chat-input">
+                            <input type="text" id="chat-input" placeholder="Type your message...">
+                            <button id="send-btn" class="btn">Send</button>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="codes-tab">
+                        <h2>Redeem Codes</h2>
+                        <div class="code-section">
+                            <input type="text" id="code-input" placeholder="Enter code here" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid rgba(52, 152, 219, 0.3); border-radius: 8px; background: rgba(10, 18, 25, 0.8); color: #e6f7ff;">
+                            <button id="redeem-btn" class="btn">Redeem Code</button>
+                            <div id="code-result" style="margin-top: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="shop-tab">
+                        <h2>Shop</h2>
+                        <div id="shop-list"></div>
+                    </div>
+
+                    <div class="tab-pane" id="announcements-tab">
+                        <h2>Announcements</h2>
+                        <div id="announcements-list"></div>
+                    </div>
+
+                    <div class="tab-pane" id="events-tab">
+                        <h2>Events</h2>
+                        <div id="events-list"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <div id="admin-panel" class="container hidden">
+        <header class="game-header">
+            <h1>Admin Panel</h1>
+            <div class="user-info">
+                <button id="back-to-game" class="btn">Back to Game</button>
+                <button id="admin-logout" class="btn">Logout</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <h2>Create Announcement</h2>
+            <form id="announcement-form">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="announcement-title" required>
+                </div>
+                <div class="form-group">
+                    <label>Content</label>
+                    <textarea id="announcement-content" required style="min-height: 100px;"></textarea>
+                </div>
+                <button type="submit" class="btn">Publish Announcement</button>
+            </form>
+
+            <h2 style="margin-top: 30px;">Create Event</h2>
+            <form id="event-form">
+                <div class="form-group">
+                    <label>Event Name</label>
+                    <input type="text" id="event-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="event-description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Start Date</label>
+                    <input type="datetime-local" id="event-start" required>
+                </div>
+                <div class="form-group">
+                    <label>End Date</label>
+                    <input type="datetime-local" id="event-end" required>
+                </div>
+                <button type="submit" class="btn">Create Event</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        // CRITICAL FIX: Ensure all elements load properly
-        console.log('Script loading...');
+        console.log('🎮 17 News RNG 2 initializing...');
 
-        // State
         let currentUser = null;
+        let socket = null;
 
-        // Utility Functions
         function showPage(pageName) {
             console.log('Switching to page:', pageName);
-            const pages = ['home-page', 'login-page', 'register-page', 'game-page'];
+            const pages = ['home-page', 'login-page', 'register-page', 'game-page', 'admin-panel'];
             pages.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
-            const targetPage = document.getElementById(pageName + '-page');
+            const targetPage = document.getElementById(pageName + '-page') || document.getElementById(pageName);
             if (targetPage) {
                 targetPage.classList.remove('hidden');
-                console.log('Page switched to:', pageName);
+                console.log('✅ Page switched to:', pageName);
             }
         }
 
         function showPopup(message, color = '#27ae60') {
-            console.log('Showing popup:', message);
             const popup = document.createElement('div');
             popup.className = 'popup';
             popup.style.background = color;
@@ -566,15 +791,14 @@
             setTimeout(() => popup.remove(), 2000);
         }
 
-        function setLoading(button, isLoading) {
+        function setLoading(button, isLoading, text = 'Loading...') {
             if (!button) return;
             button.disabled = isLoading;
             if (isLoading) {
-                button.innerHTML = '<span class="loading-spinner"></span> Loading...';
+                button.innerHTML = `<span class="loading-spinner"></span> ${text}`;
             }
         }
 
-        // API Handler
         async function handleAPI(url, options = {}) {
             try {
                 const res = await fetch(url, {
@@ -588,10 +812,8 @@
             }
         }
 
-        // Login Handler
         async function handleLogin(e) {
             e.preventDefault();
-            console.log('Login form submitted');
             const button = e.target.querySelector('button[type="submit"]');
             const errorDiv = document.getElementById('login-error');
             const username = document.getElementById('login-username').value.trim();
@@ -604,7 +826,7 @@
             }
 
             try {
-                setLoading(button, true);
+                setLoading(button, true, 'Logging in...');
                 errorDiv.classList.add('hidden');
 
                 const data = await handleAPI('/api/login', {
@@ -613,13 +835,13 @@
                 });
 
                 if (data.success) {
-                    currentUser = data.user || { username, coins: 0 };
-                    document.getElementById('user-name').textContent = currentUser.username;
-                    document.getElementById('coin-count').textContent = currentUser.coins || 0;
+                    currentUser = data.user;
+                    loadGameData(data);
                     showPopup('Login successful!', '#27ae60');
                     showPage('game');
+                    initSocket();
                 } else {
-                    throw new Error(data.message || data.error || 'Login failed');
+                    throw new Error(data.message || 'Login failed');
                 }
             } catch (err) {
                 errorDiv.textContent = err.message;
@@ -631,10 +853,8 @@
             }
         }
 
-        // Register Handler
         async function handleRegister(e) {
             e.preventDefault();
-            console.log('Register form submitted');
             const button = e.target.querySelector('button[type="submit"]');
             const errorDiv = document.getElementById('register-error');
             const username = document.getElementById('register-username').value.trim();
@@ -647,7 +867,7 @@
             }
 
             try {
-                setLoading(button, true);
+                setLoading(button, true, 'Registering...');
                 errorDiv.classList.add('hidden');
 
                 const data = await handleAPI('/api/register', {
@@ -656,13 +876,13 @@
                 });
 
                 if (data.success) {
-                    currentUser = data.user || { username, coins: 0 };
-                    document.getElementById('user-name').textContent = currentUser.username;
-                    document.getElementById('coin-count').textContent = currentUser.coins || 0;
+                    currentUser = data.user;
+                    loadGameData(data);
                     showPopup('Registration successful!', '#27ae60');
                     showPage('game');
+                    initSocket();
                 } else {
-                    throw new Error(data.message || data.error || 'Registration failed');
+                    throw new Error(data.message || 'Registration failed');
                 }
             } catch (err) {
                 errorDiv.textContent = err.message;
@@ -674,19 +894,349 @@
             }
         }
 
-        // Logout Handler
-        function handleLogout() {
-            console.log('Logging out');
-            currentUser = null;
-            showPopup('Logged out', '#f39c12');
-            showPage('home');
+        function loadGameData(data) {
+            if (!data.user) return;
+            
+            currentUser = data.user;
+            document.getElementById('user-name').textContent = currentUser.username;
+            document.getElementById('coin-count').textContent = currentUser.coins || 0;
+
+            if (currentUser.isAdmin) {
+                document.getElementById('admin-btn').classList.remove('hidden');
+            }
+
+            const inventory = currentUser.inventory || [];
+            const inventoryGrid = document.getElementById('inventory-grid');
+            inventoryGrid.innerHTML = '';
+
+            if (inventory.length === 0) {
+                inventoryGrid.innerHTML = '<p style="text-align: center; color: #bdc3c7; padding: 20px;">Your inventory is empty. Spin to get items!</p>';
+            } else {
+                inventory.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    const rarityClass = item.rarity.toLowerCase().replace(/\s+/g, '-');
+                    itemEl.className = `inventory-item rarity-${rarityClass}`;
+                    itemEl.innerHTML = `
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-rarity">${item.rarity}</span>
+                        <small style="display: block; margin-top: 5px; opacity: 0.7;">${new Date(item.date).toLocaleDateString()}</small>
+                    `;
+                    inventoryGrid.appendChild(itemEl);
+                });
+            }
+
+            if (data.announcements) {
+                const announcementsList = document.getElementById('announcements-list');
+                announcementsList.innerHTML = '';
+                if (data.announcements.length === 0) {
+                    announcementsList.innerHTML = '<p>No announcements yet.</p>';
+                } else {
+                    data.announcements.forEach(ann => {
+                        const annEl = document.createElement('div');
+                        annEl.className = 'announcement';
+                        annEl.innerHTML = `
+                            <h3>${ann.title}</h3>
+                            <p>${ann.content}</p>
+                            <small>By ${ann.author} on ${new Date(ann.date).toLocaleString()}</small>
+                        `;
+                        announcementsList.appendChild(annEl);
+                    });
+                }
+            }
+
+            if (data.events) {
+                const eventsList = document.getElementById('events-list');
+                eventsList.innerHTML = '';
+                if (data.events.length === 0) {
+                    eventsList.innerHTML = '<p>No events yet.</p>';
+                } else {
+                    data.events.forEach(evt => {
+                        const evtEl = document.createElement('div');
+                        evtEl.className = 'event';
+                        evtEl.innerHTML = `
+                            <h3>${evt.name}</h3>
+                            <p>${evt.description}</p>
+                            <small>${new Date(evt.startDate).toLocaleString()} - ${new Date(evt.endDate).toLocaleString()}</small>
+                        `;
+                        eventsList.appendChild(evtEl);
+                    });
+                }
+            }
+
+            if (data.chatMessages) {
+                const chatMessages = document.getElementById('chat-messages');
+                chatMessages.innerHTML = '';
+                data.chatMessages.forEach(msg => {
+                    const msgEl = document.createElement('div');
+                    msgEl.className = 'chat-message';
+                    msgEl.innerHTML = `
+                        <span class="username">${msg.username}:</span>
+                        <span>${msg.message}</span>
+                        <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
+                    `;
+                    chatMessages.appendChild(msgEl);
+                });
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
         }
 
-        // Initialize App - CRITICAL FIX
-        function initializeApp() {
-            console.log('Initializing app...');
+        function initSocket() {
+            if (socket) return;
+            
+            socket = io();
+            
+            socket.on('chat_message', (data) => {
+                const chatMessages = document.getElementById('chat-messages');
+                const msgEl = document.createElement('div');
+                msgEl.className = 'chat-message';
+                msgEl.innerHTML = `
+                    <span class="username">${data.username}:</span>
+                    <span>${data.message}</span>
+                    <br><small style="opacity: 0.7;">${new Date(data.timestamp).toLocaleTimeString()}</small>
+                `;
+                chatMessages.appendChild(msgEl);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
 
-            // Get all elements
+            socket.on('new_announcement', (data) => {
+                showPopup('New announcement: ' + data.title, '#f39c12');
+                refreshGameData();
+            });
+
+            socket.on('new_event', (data) => {
+                showPopup('New event: ' + data.name, '#9c27b0');
+                refreshGameData();
+            });
+        }
+
+        async function refreshGameData() {
+            try {
+                const data = await handleAPI('/api/data');
+                if (data.success) {
+                    loadGameData(data);
+                }
+            } catch (err) {
+                console.error('Failed to refresh data:', err);
+            }
+        }
+
+        async function handleSpin() {
+            const button = document.getElementById('spin-btn');
+            const result = document.getElementById('spin-result');
+            
+            try {
+                setLoading(button, true, 'Spinning...');
+                result.innerHTML = '';
+
+                const data = await handleAPI('/api/spin', { method: 'POST' });
+
+                if (data.success) {
+                    document.getElementById('coin-count').textContent = data.coins;
+                    
+                    const rarityColor = data.rarity.color || '#9c27b0';
+                    const awardText = data.awarded > 0 ? `<br><span style="color: ${rarityColor};">+${data.awarded} coins</span>` : '';
+                    
+                    result.innerHTML = `
+                        <div style="animation: fadeIn 0.5s;">
+                            <strong style="color: ${rarityColor}; font-size: 1.3em;">${data.item}</strong>
+                            <br><span style="color: #bcd;">(${data.rarity.name})</span>
+                            ${awardText}
+                        </div>
+                    `;
+                    
+                    showPopup(`You got ${data.rarity.name}!`, rarityColor);
+                    
+                    await refreshGameData();
+                } else {
+                    result.innerHTML = `<span style="color: #e74c3c;">${data.error}</span>`;
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                result.innerHTML = `<span style="color: #e74c3c;">Error spinning</span>`;
+                showPopup('Error spinning', '#e74c3c');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = 'Spin Now!';
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (message && socket && currentUser) {
+                socket.emit('chat_message', {
+                    username: currentUser.username,
+                    message: message
+                });
+                input.value = '';
+            }
+        }
+
+        async function redeemCode() {
+            const input = document.getElementById('code-input');
+            const resultDiv = document.getElementById('code-result');
+            const code = input.value.trim();
+
+            if (!code) {
+                resultDiv.innerHTML = '<span style="color: #e74c3c;">Please enter a code</span>';
+                return;
+            }
+
+            try {
+                const data = await handleAPI('/api/use-code', {
+                    method: 'POST',
+                    body: JSON.stringify({ code })
+                });
+
+                if (data.success) {
+                    resultDiv.innerHTML = '<span style="color: #27ae60;">Code redeemed successfully!</span>';
+                    input.value = '';
+                    showPopup('Code redeemed!', '#27ae60');
+                    await refreshGameData();
+                } else {
+                    resultDiv.innerHTML = `<span style="color: #e74c3c;">${data.error}</span>`;
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                resultDiv.innerHTML = '<span style="color: #e74c3c;">Error redeeming code</span>';
+            }
+        }
+
+        function initShop() {
+            const shopList = document.getElementById('shop-list');
+            const items = [
+                { name: 'Common Crate', price: 200, rarity: 'common' },
+                { name: 'Rare Crate', price: 1200, rarity: 'rare' },
+                { name: 'Spin Token', price: 500, rarity: 'uncommon' }
+            ];
+
+            shopList.innerHTML = '';
+            items.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'shop-item';
+                itemEl.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${item.name}</strong>
+                            <div style="color: #bdc3c7; font-size: 0.9rem;">${item.price} coins</div>
+                        </div>
+                        <button class="btn buy-btn" data-name="${item.name}" data-price="${item.price}" data-rarity="${item.rarity}">Buy</button>
+                    </div>
+                `;
+                shopList.appendChild(itemEl);
+            });
+
+            shopList.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.buy-btn');
+                if (!btn) return;
+
+                const itemName = btn.dataset.name;
+                const price = parseInt(btn.dataset.price);
+                const rarity = btn.dataset.rarity;
+
+                btn.disabled = true;
+                btn.textContent = 'Buying...';
+
+                try {
+                    const data = await handleAPI('/api/shop/buy', {
+                        method: 'POST',
+                        body: JSON.stringify({ itemName, price, rarity })
+                    });
+
+                    if (data.success) {
+                        showPopup('Purchase successful!', '#27ae60');
+                        document.getElementById('coin-count').textContent = data.coins;
+                        await refreshGameData();
+                    } else {
+                        showPopup(data.error, '#e74c3c');
+                    }
+                } catch (err) {
+                    showPopup('Purchase failed', '#e74c3c');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Buy';
+                }
+            });
+        }
+
+        async function handleAdminAnnouncement(e) {
+            e.preventDefault();
+            const button = e.target.querySelector('button[type="submit"]');
+            const title = document.getElementById('announcement-title').value;
+            const content = document.getElementById('announcement-content').value;
+
+            try {
+                setLoading(button, true, 'Publishing...');
+
+                const data = await handleAPI('/api/admin/announcement', {
+                    method: 'POST',
+                    body: JSON.stringify({ title, content })
+                });
+
+                if (data.success) {
+                    showPopup('Announcement published!', '#27ae60');
+                    e.target.reset();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to publish', '#e74c3c');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = 'Publish Announcement';
+            }
+        }
+
+        async function handleAdminEvent(e) {
+            e.preventDefault();
+            const button = e.target.querySelector('button[type="submit"]');
+            const name = document.getElementById('event-name').value;
+            const description = document.getElementById('event-description').value;
+            const startDate = document.getElementById('event-start').value;
+            const endDate = document.getElementById('event-end').value;
+
+            try {
+                setLoading(button, true, 'Creating...');
+
+                const data = await handleAPI('/api/admin/event', {
+                    method: 'POST',
+                    body: JSON.stringify({ name, description, startDate, endDate })
+                });
+
+                if (data.success) {
+                    showPopup('Event created!', '#27ae60');
+                    e.target.reset();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to create event', '#e74c3c');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = 'Create Event';
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await handleAPI('/api/logout', { method: 'POST' });
+                currentUser = null;
+                if (socket) {
+                    socket.disconnect();
+                    socket = null;
+                }
+                showPopup('Logged out', '#f39c12');
+                showPage('home');
+            } catch (err) {
+                console.error('Logout error:', err);
+                showPage('home');
+            }
+        }
+
+        function initializeApp() {
+            console.log('🚀 Initializing app...');
+
             const loginBtn = document.getElementById('login-btn');
             const registerBtn = document.getElementById('register-btn');
             const showRegisterLink = document.getElementById('show-register');
@@ -694,81 +1244,72 @@
             const loginForm = document.getElementById('login-form');
             const registerForm = document.getElementById('register-form');
             const logoutBtn = document.getElementById('logout-btn');
+            const adminLogoutBtn = document.getElementById('admin-logout');
+            const adminBtn = document.getElementById('admin-btn');
+            const backToGameBtn = document.getElementById('back-to-game');
+            const spinBtn = document.getElementById('spin-btn');
+            const sendBtn = document.getElementById('send-btn');
+            const chatInput = document.getElementById('chat-input');
+            const redeemBtn = document.getElementById('redeem-btn');
             const announcementBar = document.getElementById('announcement-bar');
-            const dismissBtn = announcementBar ? announcementBar.querySelector('.dismiss-btn') : null;
+            const dismissBtn = announcementBar?.querySelector('.dismiss-btn');
+            const announcementForm = document.getElementById('announcement-form');
+            const eventForm = document.getElementById('event-form');
 
-            // Navigation - Direct click handlers
             if (loginBtn) {
-                loginBtn.onclick = function(e) {
+                loginBtn.onclick = (e) => {
                     e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Login button clicked!');
                     showPage('login');
                 };
-                console.log('Login button handler attached');
             }
 
             if (registerBtn) {
-                registerBtn.onclick = function(e) {
+                registerBtn.onclick = (e) => {
                     e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Register button clicked!');
                     showPage('register');
                 };
-                console.log('Register button handler attached');
             }
 
             if (showRegisterLink) {
-                showRegisterLink.onclick = function(e) {
+                showRegisterLink.onclick = (e) => {
                     e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Show register link clicked!');
                     showPage('register');
                 };
             }
 
             if (showLoginLink) {
-                showLoginLink.onclick = function(e) {
+                showLoginLink.onclick = (e) => {
                     e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Show login link clicked!');
                     showPage('login');
                 };
             }
 
-            // Forms
-            if (loginForm) {
-                loginForm.addEventListener('submit', handleLogin);
-                console.log('Login form handler attached');
+            if (loginForm) loginForm.addEventListener('submit', handleLogin);
+            if (registerForm) registerForm.addEventListener('submit', handleRegister);
+            if (logoutBtn) logoutBtn.onclick = handleLogout;
+            if (adminLogoutBtn) adminLogoutBtn.onclick = handleLogout;
+            if (adminBtn) adminBtn.onclick = () => showPage('admin-panel');
+            if (backToGameBtn) backToGameBtn.onclick = () => showPage('game');
+            if (spinBtn) spinBtn.onclick = handleSpin;
+            if (sendBtn) sendBtn.onclick = sendMessage;
+            if (chatInput) {
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') sendMessage();
+                });
             }
+            if (redeemBtn) redeemBtn.onclick = redeemCode;
+            if (announcementForm) announcementForm.addEventListener('submit', handleAdminAnnouncement);
+            if (eventForm) eventForm.addEventListener('submit', handleAdminEvent);
 
-            if (registerForm) {
-                registerForm.addEventListener('submit', handleRegister);
-                console.log('Register form handler attached');
-            }
-
-            if (logoutBtn) {
-                logoutBtn.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleLogout();
-                };
-            }
-
-            // Announcement Bar
             if (dismissBtn && announcementBar) {
-                dismissBtn.onclick = function(e) {
+                dismissBtn.onclick = (e) => {
                     e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Dismiss button clicked!');
                     announcementBar.classList.add('hide');
                     try {
                         localStorage.setItem('announcement-dismissed', '1');
                     } catch (e) {}
                 };
-                console.log('Dismiss button handler attached');
 
-                // Check if dismissed
                 try {
                     if (localStorage.getItem('announcement-dismissed') === '1') {
                         announcementBar.classList.add('hide');
@@ -776,17 +1317,25 @@
                 } catch (e) {}
             }
 
-            // Start on home page
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                    btn.classList.add('active');
+                    const tabId = btn.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                };
+            });
+
+            initShop();
             showPage('home');
 
-            console.log('App initialized successfully!');
+            console.log('✅ App initialized successfully!');
         }
 
-        // Wait for DOM to be fully loaded
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeApp);
         } else {
-            // DOM already loaded
             initializeApp();
         }
     </script>
