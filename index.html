@@ -801,13 +801,17 @@
 
         async function handleAPI(url, options = {}) {
             try {
+                console.log('🌐 API Request:', url, options.method || 'GET');
                 const res = await fetch(url, {
                     ...options,
+                    credentials: 'same-origin', // CRITICAL: Include session cookies
                     headers: { 'Content-Type': 'application/json', ...options.headers }
                 });
-                return await res.json();
+                const data = await res.json();
+                console.log('📦 API Response:', url, data);
+                return data;
             } catch (err) {
-                console.error('API Error:', err);
+                console.error('❌ API Error:', url, err);
                 throw err;
             }
         }
@@ -1106,9 +1110,11 @@
         function initShop() {
             const shopList = document.getElementById('shop-list');
             const items = [
-                { name: 'Common Crate', price: 200, rarity: 'common' },
-                { name: 'Rare Crate', price: 1200, rarity: 'rare' },
-                { name: 'Spin Token', price: 500, rarity: 'uncommon' }
+                { name: 'Health Potion', price: 150, rarity: 'common', description: 'Restores vitality' },
+                { name: 'Mana Potion', price: 200, rarity: 'common', description: 'Restores energy' },
+                { name: 'Speed Potion', price: 500, rarity: 'uncommon', description: 'Increases speed' },
+                { name: 'Luck Potion', price: 800, rarity: 'rare', description: 'Improves luck' },
+                { name: 'Divine Elixir', price: 2000, rarity: 'legendary', description: 'Ultimate power' }
             ];
 
             shopList.innerHTML = '';
@@ -1118,8 +1124,9 @@
                 itemEl.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <strong>${item.name}</strong>
-                            <div style="color: #bdc3c7; font-size: 0.9rem;">${item.price} coins</div>
+                            <strong style="color: var(--accent-primary);">${item.name}</strong>
+                            <div style="color: #bdc3c7; font-size: 0.85rem;">${item.description}</div>
+                            <div style="color: var(--warning); font-size: 0.9rem; margin-top: 4px;">${item.price} coins</div>
                         </div>
                         <button class="btn buy-btn" data-name="${item.name}" data-price="${item.price}" data-rarity="${item.rarity}">Buy</button>
                     </div>
