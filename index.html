@@ -1,302 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
     <meta name="description" content="17 News RNG 2 - The ultimate RNG experience">
-    <meta name="author" content="17 News">
-    
     <title>17 News RNG 2</title>
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
-    <!-- Core Styles -->
     <style>
-        /*******************************
-         * Z-Index & Interaction System
-         *******************************/
-        
-        /* Interactive Elements */
-        button, .btn, input[type="button"], input[type="submit"], .clickable {
-            position: relative !important;
-            z-index: 1001 !important;
-            pointer-events: auto !important;
-        }
-        
-        /* System Components */
-        .announcement-bar {
-            z-index: 1002 !important;
-            pointer-events: auto !important;
-            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)) !important;
-        }
-        
-        /* Visual Overlays */
-        .flash-overlay, .disco-overlay {
-            z-index: 1000 !important;
-            pointer-events: none !important;
-        }
-        
-        /*******************************
-         * Modern Theme System 2025
-         *******************************/
-        
-        /* Theme Variables */
+        /* CSS Variables */
         :root {
-            /* Core Colors */
             --accent-primary: #00ffe7;
             --accent-secondary: #007cf0;
-            --accent-tertiary: #7928ca;
             --bg-dark: #0a1219;
-            --bg-darker: #061017;
-            --bg-darkest: #030a0f;
             --text-light: #e6f7ff;
             --text-dark: #08121a;
-            
-            /* Functional Colors */
             --success: #27ae60;
             --warning: #f39c12;
             --error: #e74c3c;
-            --info: #3498db;
             
-            /* Z-Index System */
+            /* Z-Index Layers */
             --z-base: 1;
             --z-content: 100;
-            --z-overlay: 200;
-            --z-popup: 300;
-            --z-banner: 400;
-            
-            /* Animation Timing */
-            --transition-fast: 0.1s ease;
-            --transition-normal: 0.2s ease;
-            --transition-slow: 0.3s ease;
+            --z-buttons: 500;
+            --z-overlay: 800;
+            --z-banner: 900;
+            --z-popup: 1000;
         }
 
-        /* Cleanup duplicate styles */
-        button.styled-btn,
-        .btn.styled-btn {
-            /* Override and merge duplicate button styles */
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: var(--text-dark);
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            position: relative;
-            z-index: var(--z-content);
-            transition: transform var(--transition-fast), box-shadow var(--transition-normal);
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        /* Announcement Bar */
-            /* Announcement Bar */
-            .announcement-bar {
-                position: fixed;
-                top: 12px;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 10px 18px;
-                background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
-                color: var(--text-dark);
-                border-radius: 8px;
-                box-shadow: var(--shadow-glow);
-                font-weight: 700;
-                z-index: var(--z-banner);
-                pointer-events: auto;
-                min-width: 220px;
-                max-width: calc(100% - 32px);
-                opacity: 1;
-                transition: opacity 0.3s ease, transform 0.2s ease;
-            }
-        .announcement-bar.hide {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        #global-banner {
-            position: fixed;
-            top: 64px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: none;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 18px;
-            background: var(--gradient-alert);
-            color: var(--text-dark);
-            border-radius: 8px;
-            box-shadow: var(--shadow-glow);
-            font-weight: 700;
-            z-index: 2999;
-            pointer-events: auto;
-            min-width: 220px;
-            max-width: calc(100% - 32px);
-            opacity: 0;
-            transition: opacity 0.2s, transform 0.2s;
-        }
-
-        #global-banner.visible {
-            display: flex;
-            opacity: 1;
-            transform: translateX(-50%) scale(1.02);
-        }
-
-        .dismiss-btn {
-            background: transparent;
-            border: none;
-            color: inherit;
-            font-size: 1.3em;
-            line-height: 1;
-            cursor: pointer;
-            border-radius: 4px;
-            margin-left: 8px;
-            opacity: 0.7;
-            transition: opacity 0.15s, background 0.15s;
-            z-index: 1;
-        }
-
-        .dismiss-btn:hover, 
-        .dismiss-btn:focus-visible {
-            opacity: 1;
-            background: rgba(0,0,0,0.08);
-        }        .announcement-bar .dismiss-btn {
-            margin-left: 8px;
-            background: transparent;
-            border: none;
-            color: inherit;
-            font-size: 1.2rem;
-            line-height: 1;
-            cursor: pointer;
-            padding: 6px;
-            border-radius: 6px;
-        }
-        .announcement-bar .dismiss-btn:focus { outline: 2px solid rgba(0,0,0,0.08); }
-
-        /* Global banner used for admin broadcasts (appears below announcement-bar) */
-        #global-banner {
-            position: fixed;
-            top: 64px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: none;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 16px;
-            border-radius: 10px;
-            color: #08121a;
-            background: linear-gradient(90deg,#f1c40f,#f39c12);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.45);
-            z-index: 10002;
-            max-width: calc(100% - 48px);
-            pointer-events: auto;
-            font-weight: 800;
-        }
-
-        #global-banner.visible { display: flex; animation: fadeIn 0.28s ease both; }
-
-        /* Interactive Elements Base */
-        button,
-        .btn,
-        input[type="button"],
-        input[type="submit"] {
-            position: relative;
-            z-index: 200;
-            cursor: pointer;
-            border: none;
-            font-family: inherit;
-            -webkit-tap-highlight-color: transparent;
-            transform: translateZ(0);
-            pointer-events: auto !important;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        /*******************************
-         * Button Styles
-         *******************************/
-        
-        /* Primary styled buttons used across the UI */
-        .styled-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--gradient-accent);
-            color: var(--text-dark);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            margin: 0 6px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            position: relative;
-            z-index: var(--z-content);
-            overflow: hidden;
-            box-shadow: var(--shadow-glow);
-            transition: transform var(--transition-instant), 
-                      box-shadow var(--transition-fast),
-                      filter var(--transition-fast);
-            backface-visibility: hidden;
-            transform: translate3d(0,0,0);
-        }
-        .styled-btn:hover, .styled-btn:focus {
-            transform: translateY(-2px) scale(1.03);
-            color: #fff;
-            filter: saturate(1.05) brightness(1.02);
-        }
-        button::before, .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.2),
-                transparent
-            );
-            transition: 0.5s;
-        }
-        button:hover::before, .btn:hover::before {
-            left: 100%;
-        }
-        button:hover, .btn:hover,
-        button:focus-visible, .btn:focus-visible {
-            background: linear-gradient(135deg, #3498db 0%, #00fff7 100%);
-            color: #fff;
-            box-shadow: 0 0 30px rgba(0, 255, 247, 0.4),
-                       0 0 60px rgba(52, 152, 219, 0.2),
-                       inset 0 0 20px rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-            outline: none;
-            position: relative;
-            z-index: var(--z-content);
-        }
-        
-        /* Active state for better touch feedback */
-        button:active, .btn:active {
-            transform: translateY(1px);
-            transition: transform 0.1s;
-        }
-        button:disabled, .btn:disabled {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: #95a5a6;
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none;
-        }
-        /* Fix for main-content and game-content to not overflow */
-        .main-content, .game-content {
-            overflow: auto;
-        }
-        /* Cybernetic Animated Background */
         body {
             font-family: 'Orbitron', 'Share Tech Mono', monospace;
             background: linear-gradient(135deg, #0a1219 0%, #1c3040 100%);
@@ -305,6 +46,7 @@
             overflow-x: hidden;
             position: relative;
         }
+
         body::before {
             content: '';
             position: fixed;
@@ -318,208 +60,179 @@
             pointer-events: none;
             z-index: 1;
         }
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233498db' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 2;
-            opacity: 0.5;
-        }
 
-        /*******************************
-         * Animations & Transitions
-         *******************************/
-        
-        /* Fade In - Used for content appearing */
-        @keyframes fadeIn {
-            from { 
-                opacity: 0; 
-                transform: translateY(8px); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translateY(0); 
-            }
-        }
-        
-        /* Slide In - Used for notifications/banners */
-        @keyframes slideIn {
-            from { 
-                opacity: 0; 
-                transform: translate3d(-50%, -20px, 0); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translate3d(-50%, 0, 0); 
-            }
-        }
-        
-        /*******************************
-         * Utility Classes & Helpers
-         *******************************/
-        
-        /* Visibility Control */
-        .hidden { 
+        /* Utility Classes */
+        .hidden {
             display: none !important;
-            pointer-events: none !important;
-        }
-        
-        /* Animation Classes */
-        .fade-in { 
-            animation: fadeIn 0.3s var(--transition-normal) both;
-            backface-visibility: hidden;
-            transform: translate3d(0,0,0);
-        }
-        
-        /* Performance & Rendering */
-        * {
-            backface-visibility: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* All CSS is now inside the main <style> block above. Removed stray raw CSS. */
-
-        .auth-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            width: 420px;
-            box-shadow: 0 20px 50px rgba(2,8,23,0.8),
-                       inset 0 0 0 1px rgba(255,255,255,0.1);
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
             position: relative;
-            overflow: hidden;
-            animation: cardFloat 6s ease-in-out infinite;
-        }
-        .auth-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 200%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.1),
-                transparent
-            );
-            transform: rotate(45deg);
-            animation: cardShine 8s ease-in-out infinite;
-        }
-        @keyframes cardFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        @keyframes cardShine {
-            0% { left: -100%; }
-            20%, 100% { left: 100%; }
+            z-index: var(--z-content);
         }
 
+        /* Buttons - CRITICAL FIX */
+        button,
+        .btn,
+        .styled-btn,
+        input[type="button"],
+        input[type="submit"] {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--text-dark);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            margin: 6px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            position: relative;
+            z-index: var(--z-buttons) !important;
+            pointer-events: auto !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-family: inherit;
+            user-select: none;
+        }
+
+        button:hover,
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 247, 0.3);
+        }
+
+        button:active,
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        button:disabled,
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Announcement Bar */
+        .announcement-bar {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+            color: var(--text-dark);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            font-weight: 700;
+            z-index: var(--z-banner);
+            pointer-events: auto;
+            min-width: 220px;
+            max-width: calc(100% - 32px);
+            transition: opacity 0.3s ease;
+        }
+
+        .announcement-bar.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .dismiss-btn {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-size: 1.3em;
+            line-height: 1;
+            cursor: pointer;
+            padding: 4px 8px;
+            margin: 0;
+            z-index: var(--z-banner);
+            pointer-events: auto !important;
+        }
+
+        /* Auth Pages */
         .auth-container {
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 70vh;
             padding: 20px;
+            position: relative;
+            z-index: var(--z-content);
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 50px rgba(2, 8, 23, 0.8);
+            position: relative;
+            z-index: var(--z-content);
         }
 
         .auth-card h1 {
             text-align: center;
-            margin-bottom: 18px;
-            color: #00fff7;
+            margin-bottom: 24px;
+            color: var(--accent-primary);
             letter-spacing: 1px;
-            text-shadow: 0 0 8px rgba(0,255,247,0.25);
-            /* Auth inputs styling */
-            .auth-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); color: #e6f7ff; box-sizing: border-box; }
         }
 
-        /*******************************
-         * Form Elements & Controls
-         *******************************/
-        
-        /* Form Groups - Standard input containers */
         .form-group {
             margin-bottom: 20px;
         }
 
-        /* Form Labels */
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 600;
             color: var(--text-light);
         }
 
-        /* Form Inputs & Textareas */
-        .form-group input,
-        .form-group textarea {
+        .form-group input {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             border: 2px solid rgba(52, 152, 219, 0.3);
             border-radius: 8px;
             background: rgba(10, 18, 25, 0.8);
-            color: #00fff7;
-            font-family: 'Share Tech Mono', monospace;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 20px rgba(0, 255, 247, 0.1);
-            outline: none;
-        }
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #00fff7;
-            box-shadow: 0 0 30px rgba(0, 255, 247, 0.2);
-            background: rgba(10, 18, 25, 0.9);
-            color: #2c3e50;
-            font-size: 16px;
-            transition: box-shadow 0.18s ease, transform 0.08s ease;
+            color: var(--text-light);
+            font-family: inherit;
+            transition: border-color 0.2s ease;
         }
 
-        .form-group input:focus, .form-group textarea:focus {
+        .form-group input:focus {
             outline: none;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0,255,247,0.06), 0 0 8px rgba(52,152,219,0.08) inset;
-        }
-
-        .form-group textarea {
-            height: 120px;
-            resize: vertical;
+            border-color: var(--accent-primary);
         }
 
         .error-message {
-            background: linear-gradient(90deg,#e74c3c,#c0392b);
+            background: var(--error);
             color: white;
-            padding: 10px;
+            padding: 12px;
             border-radius: 6px;
-            margin-bottom: 14px;
-            text-align: center;
-            box-shadow: 0 4px 18px rgba(231,76,60,0.12);
-        }
-
-        .success-message {
-            background: #27ae60;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             text-align: center;
         }
 
         .auth-link {
             text-align: center;
-            margin-top: 14px;
+            margin-top: 16px;
             color: #bcd;
         }
 
         .auth-link a {
-            color: #3498db;
+            color: var(--accent-secondary);
             text-decoration: none;
             cursor: pointer;
         }
@@ -528,36 +241,65 @@
             text-decoration: underline;
         }
 
-        /*******************************
-         * Game Layout & Structure
-         *******************************/
-        
-        /* Main game page container */
-        #game-page {
-            min-height: 100vh;
+        /* Home Page */
+        .home-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            min-height: 70vh;
         }
 
-        /* Game header with navigation and user info */
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 36px;
+            border-radius: 14px;
+            text-align: center;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: var(--z-content);
+        }
+
+        .welcome-card:hover {
+            transform: translateY(-6px);
+        }
+
+        .welcome-card h2 {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            color: var(--accent-primary);
+        }
+
+        .welcome-card p {
+            color: #bcd;
+            margin-bottom: 24px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Game Page */
         .game-header {
             background: rgba(10, 18, 25, 0.95);
-            padding: 25px;
+            padding: 20px;
             border-radius: 15px;
             margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3),
-                       inset 0 0 0 1px rgba(52, 152, 219, 0.2);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 20px;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
             z-index: var(--z-content);
-            transition: all 0.3s ease;
-        }
-        .game-header:hover {
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4),
-                       inset 0 0 0 1px rgba(0, 255, 247, 0.3);
         }
 
         .user-info {
@@ -572,181 +314,10 @@
             padding: 8px 16px;
             border-radius: 8px;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3),
-                       inset 0 0 0 1px rgba(255, 255, 255, 0.2);
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            animation: coinPulse 2s ease-in-out infinite;
-        }
-        @keyframes coinPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            color: white;
         }
 
-        .game-content {
-            /* Use a centered column layout so inventory, shop, announcements, etc. sit
-               centered below the header. This keeps the header at the top and places
-               page content in the middle horizontally. */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            width: 100%;
-        }
-
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .game-section {
-            background: rgba(10, 18, 25, 0.9);
-            padding: 25px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3),
-                       inset 0 0 0 1px rgba(52, 152, 219, 0.2);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        .game-section:hover {
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4),
-                       inset 0 0 0 1px rgba(0, 255, 247, 0.3);
-        }
-        .game-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, 
-                transparent,
-                rgba(0, 255, 247, 0.2),
-                transparent
-            );
-        }
-
-        .game-section h2 {
-            color: #00fff7;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(0, 255, 247, 0.3);
-            position: relative;
-            display: inline-block;
-        }
-        .game-section h2::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: -8px;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg,
-                transparent,
-                #00fff7,
-                transparent
-            );
-        }
-        
-        /* Inventory Items */
-        .inventory-item {
-            background: rgba(52, 152, 219, 0.1);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(52, 152, 219, 0.2);
-        }
-        .inventory-item:hover {
-            transform: translateX(5px);
-            background: rgba(52, 152, 219, 0.15);
-            border-color: rgba(0, 255, 247, 0.3);
-        }
-        .inventory-item .item-name {
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-        .inventory-item .item-date {
-            font-size: 0.8rem;
-            opacity: 0.7;
-        }
-
-        #code-input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: none;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #2c3e50;
-        }
-
-        .main-content {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-            padding-bottom: 10px;
-        }
-
-        /* Home / Welcome card */
-        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 24px; }
-        .home-main { display:flex; align-items:center; justify-content:center; gap:40px; flex-wrap:wrap; min-height:70vh; }
-    .welcome-card { background: rgba(255,255,255,0.04); padding: 36px; border-radius: 14px; text-align:center; width: 420px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); transform: translateY(0); transition: transform 0.18s ease, box-shadow 0.18s ease; }
-    .welcome-card:hover { transform: translateY(-6px); box-shadow: 0 18px 42px rgba(0,0,0,0.5); }
-    /* Make interactive elements sit above transient overlays (which use z-index:9999) */
-    .welcome-card,
-    .auth-container,
-    .auth-card,
-    .button-group,
-    button,
-    .btn {
-        position: relative;
-        z-index: 10001;
-        pointer-events: auto;
-    }
-
-    /* Ensure announcements remain above content but allow interaction */
-    .announcement-bar, #global-banner { z-index: 10002; pointer-events: auto; }
-        .welcome-card h2 { font-size: 2rem; margin-bottom: 6px; color: #00fff7; }
-        .welcome-card p { color: #bcd; margin-bottom: 18px; }
-        .button-group { display:flex; gap:14px; justify-content:center; }
-        .btn-full { width: 100%; }
-
-        /* Loading spinner */
-        .loading-spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-top-color: rgba(255,255,255,0.9);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /*******************************
-         * Notifications & Popups
-         *******************************/
-        
-        /* Popup Base */
+        /* Popup */
         .popup {
             position: fixed;
             left: 50%;
@@ -754,423 +325,121 @@
             bottom: 24px;
             padding: 16px 28px;
             border-radius: 12px;
-            color: var(--text-light);
-            background: rgba(var(--bg-dark), 0.9);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5),
-                       inset 0 0 0 1px rgba(var(--accent-primary), 0.3),
-                       0 0 20px rgba(var(--accent-primary), 0.2);
+            color: white;
+            background: rgba(0, 0, 0, 0.9);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             z-index: var(--z-popup);
             font-weight: 700;
-            backdrop-filter: blur(10px);
-            animation: popupIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 0.9rem;
+            animation: popupIn 0.3s ease;
+            pointer-events: none;
         }
 
-        /* Popup Animation */
-        @keyframes popupIn { 
-            from { 
-                opacity: 0; 
-                transform: translate(-50%, 10px); 
-            } 
-            to { 
-                opacity: 1; 
-                transform: translate(-50%, 0); 
-            } 
-        }
-
-        /*******************************
-         * Custom Scrollbar Styling
-         *******************************/
-        
-        /* Scrollbar Base */
-        ::-webkit-scrollbar {
-            width: 12px;
-            height: 12px;
-        }
-
-        /* Scrollbar Thumb */
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
-            border-radius: 6px;
-            border: 3px solid var(--bg-dark);
-            box-shadow: inset 0 0 6px rgba(0, 255, 247, 0.2);
-        }
-
-        /* Scrollbar Track */
-        ::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.02);
-            border-radius: 6px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
-        }
-
-        /* Scrollbar Corner */
-        ::-webkit-scrollbar-corner {
-            background: transparent;
-        }        .tab-btn {
-            background: none;
-            border: none;
-            color: #ecf0f1;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-        }
-
-        .tab-btn.active {
-            background: #3498db;
-        }
-
-        .tab-pane {
-            display: none;
-        }
-
-        .tab-pane.active {
-            display: block;
-        }
-
-        /* Inventory */
-        .inventory-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .inventory-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid;
-        }
-
-        .rarity-common { border-left-color: #9e9e9e; }
-        .rarity-uncommon { border-left-color: #4caf50; }
-        .rarity-rare { border-left-color: #2196f3; }
-        .rarity-epic { border-left-color: #9c27b0; }
-        .rarity-legendary { border-left-color: #ff9800; }
-        .rarity-mythic { border-left-color: #f44336; }
-        .rarity-divine { border-left-color: #e91e63; }
-
-        .item-name {
-            font-weight: bold;
-            display: block;
-        }
-
-        .item-rarity {
-            font-size: 0.8rem;
-            text-transform: capitalize;
-        }
-
-        .empty-inventory {
-            text-align: center;
-            padding: 40px;
-            color: #bdc3c7;
-        }
-
-        /* Chat */
-        .chat-messages {
-            height: 400px;
-            overflow-y: auto;
-            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.12));
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 15px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
-        }
-
-        .chat-message {
-            margin-bottom: 10px;
-            padding: 10px 12px;
-            background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-            border-radius: 8px;
-            display:flex; gap:8px; align-items:center; justify-content:space-between;
-        }
-
-        .chat-message.system {
-            background: linear-gradient(90deg,#2c3e50,#34495e);
-            color: #fff;
-            border-left: 4px solid #f1c40f;
-            font-weight: 700;
-        }
-
-        .chat-message .username {
-            font-weight: bold;
-            color: #3498db;
-        }
-
-        .chat-message .message { flex:1; margin-left:8px; color:#e6f7ff }
-
-        .chat-message .timestamp {
-            font-size: 0.8rem;
-            color: #bdc3c7;
-        }
-
-        .chat-input {
-            display: flex;
-            gap: 10px;
-        }
-
-        .chat-input input {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #2c3e50;
-        }
-
-        /* Announcements & Events */
-        .announcements-list,
-        .events-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .announcement,
-        .event {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #3498db;
-        }
-
-        .event.active {
-            border-left-color: #27ae60;
-        }
-
-        .announcement h3,
-        .event h3 {
-            color: #3498db;
-            margin-bottom: 10px;
-        }
-
-        .announcement small,
-        .event small {
-            color: #bdc3c7;
-            font-size: 0.8rem;
-        }
-
-        /* Settings */
-        .settings-option {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .settings-option:last-child {
-            border-bottom: none;
-        }
-
-        /* Admin Page */
-        .admin-section {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 25px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            margin-bottom: 20px;
-        }
-
-        .admin-section h2 {
-            color: #3498db;
-            margin-bottom: 20px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-            padding-bottom: 10px;
-        }
-
-        .codes-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .code {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-        }
-
-        .code h3 {
-            color: #3498db;
-            margin-bottom: 5px;
-        }
-
-        /*******************************
-         * Responsive Design
-         *******************************/
-        
-        /* Tablet & Mobile Adjustments */
-        @media (max-width: 768px) {
-            /* Layout Adjustments */
-            .game-content {
-                grid-template-columns: 1fr;
-                padding: 10px;
+        @keyframes popupIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 10px);
             }
-            
-            /* Button & Navigation */
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
             .button-group {
                 flex-direction: column;
-                align-items: center;
-                gap: 10px;
-            }
-            
-            /* User Interface */
-            .user-info {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-            
-            /* Tab Navigation */
-            .tabs {
-                flex-wrap: wrap;
-                gap: 8px;
+                width: 100%;
             }
 
-            /* Form Adjustments */
-            .form-group input,
-            .form-group textarea {
-                font-size: 16px; /* Prevents zoom on iOS */
-                padding: 12px;
+            .button-group button {
+                width: 100%;
             }
-        }
-        /* Ensure interactive elements are always clickable and sit above transient overlays */
-        button, .btn, input[type="button"], input[type="submit"], .tab-btn {
-            pointer-events: auto !important;
-            z-index: 10001 !important;
-            position: relative !important;
-        }
 
-        /* Prevent any transient overlays from blocking clicks */
-        .popup, .flash-overlay, .disco-overlay, .announcement-overlay, .event-overlay {
-            pointer-events: none !important;
-            z-index: var(--z-overlay) !important;
-        }
-        
-        /* Ensure clickable elements stay interactive */
-        .clickable, button, .btn, input[type="button"], input[type="submit"], a[href], [role="button"],
-        .auth-card, .welcome-card, .tab-btn, .form-group, .inventory-item, .chat-input {
-            pointer-events: auto !important;
-            position: relative;
-            z-index: var(--z-content);
-        }
-        
-        /* Keep announcements above content but below max z-index */
-        .announcement-bar, #global-banner {
-            z-index: var(--z-banner);
-            pointer-events: auto;
+            .auth-card {
+                padding: 24px;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="global-banner" aria-live="polite" role="status"></div>
-    <!-- Home Page -->
     <!-- Announcement Bar -->
     <div class="announcement-bar" id="announcement-bar">
         <span>RNG 2 - Alpha Testing</span>
-        <button class="dismiss-btn" aria-label="Dismiss announcement">×</button>
+        <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
-    
-    <script>
-        // Initialize announcement bar
-        document.addEventListener('DOMContentLoaded', function() {
-            const bar = document.querySelector('.announcement-bar');
-            const dismissBtn = bar?.querySelector('.dismiss-btn');
-            
-            // Check if previously dismissed
-            try {
-                if (localStorage.getItem('announcement-dismissed-v1') === '1') {
-                    bar?.classList.add('hide');
-                }
-            } catch (e) { /* ignore */ }
-            
-            // Set up dismiss handler
-            if (dismissBtn && bar) {
-                dismissBtn.addEventListener('click', () => {
-                    bar.classList.add('hide');
-                    try {
-                        localStorage.setItem('announcement-dismissed-v1', '1');
-                    } catch (e) { /* ignore */ }
-                });
-            }
-        });
-    </script>
 
+    <!-- Home Page -->
     <div id="home-page" class="container">
         <main class="home-main">
             <div class="welcome-card">
                 <h2>17 News RNG 2</h2>
                 <p>The ultimate RNG experience!</p>
                 <div class="button-group">
-                    <button onclick="showLoginPage()" id="login-btn" class="btn styled-btn">Login</button>
-                    <button onclick="showRegisterPage()" id="register-btn" class="btn styled-btn">Register</button>
+                    <button id="login-btn" class="btn">Login</button>
+                    <button id="register-btn" class="btn">Register</button>
                 </div>
             </div>
-            <div class="update-log">
-                <h3>📰 Latest Updates</h3>
-                <div class="log-entries">
-                    <div class="log-entry">
-                        <span class="date">Oct 23, 2025</span>
-                        <p>🎮 Alpha Testing Phase Begins</p>
-                    </div>
-                    <div class="log-entry">
-                        <span class="date">Oct 22, 2025</span>
-                        <p>✨ New Rarities Added:</p>
-                        <ul>
-                            <li>17 News</li>
-                            <li>17 News Reborn</li>
-                            <li>Delan Fernando</li>
-                            <li>Cooper Metson</li>
-                            <li>Mr Fernanski (Rarest!)</li>
-                        </ul>
-                    </div>
-                </div>
-                </div>
         </main>
     </div>
 
     <!-- Login Page -->
     <div id="login-page" class="auth-container hidden">
         <div class="auth-card">
-            <h1>Login to 17 News RNG 2</h1>
+            <h1>Login</h1>
             <div id="login-error" class="error-message hidden"></div>
+            <form id="login-form">
                 <div class="form-group">
                     <label for="login-username">Username</label>
-                    <input type="text" id="login-username" class="auth-input" required>
+                    <input type="text" id="login-username" required>
                 </div>
-                
                 <div class="form-group">
                     <label for="login-password">Password</label>
-                    <input type="password" id="login-password" class="auth-input" required onkeypress="if(event.key === 'Enter') login()">
+                    <input type="password" id="login-password" required>
                 </div>
-                
-                <button onclick="login(); return false;" type="submit" class="btn styled-btn">
-    <span class="btn-content">Login</span>
-    <div class="loading-spinner" style="display: none;"></div>
-</button>            <p class="auth-link">Don't have an account? <a href="#" onclick="showRegisterPage()">Register here</a></p>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <p class="auth-link">
+                Don't have an account? <a href="#" id="show-register">Register</a>
+            </p>
         </div>
     </div>
 
     <!-- Register Page -->
     <div id="register-page" class="auth-container hidden">
         <div class="auth-card">
-            <h1>Register for 17 News RNG 2</h1>
+            <h1>Register</h1>
             <div id="register-error" class="error-message hidden"></div>
+            <form id="register-form">
                 <div class="form-group">
                     <label for="register-username">Username</label>
-                    <input type="text" id="register-username" class="auth-input" required>
+                    <input type="text" id="register-username" required>
                 </div>
-                
                 <div class="form-group">
                     <label for="register-password">Password</label>
-                    <input type="password" id="register-password" class="auth-input" required onkeypress="if(event.key === 'Enter') register()">
+                    <input type="password" id="register-password" required>
                 </div>
-                
-                <button onclick="register(); return false;" type="button" class="btn styled-btn">Register</button>            <p class="auth-link">Already have an account? <a href="#" onclick="showLoginPage()">Login here</a></p>
+                <button type="submit" class="btn">Register</button>
+            </form>
+            <p class="auth-link">
+                Already have an account? <a href="#" id="show-login">Login</a>
+            </p>
         </div>
     </div>
 
@@ -1180,1803 +449,195 @@
             <header class="game-header">
                 <h1>17 News RNG 2</h1>
                 <div class="user-info">
-                    <span>Welcome, <strong id="user-name"></strong></span>
+                    <span>Welcome, <strong id="user-name">Player</strong></span>
                     <span class="coins">Coins: <span id="coin-count">0</span></span>
-                    <button id="admin-btn" class="btn btn-admin hidden">Admin Panel</button>
-                    <button id="logout-btn" class="btn btn-logout">Logout</button>
+                    <button id="logout-btn" class="btn">Logout</button>
                 </div>
             </header>
-            
-            <div class="game-content">
-                    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <div id="spin-section" style="width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 2em;">
-                        <h2 style="margin-bottom: 0.5em;">Spin for Items</h2>
-                        <button id="spin-btn" class="btn btn-spin" style="font-size: 1.5em; padding: 1em 2em; margin-bottom: 1em;">Spin Now!</button>
-                        <div id="spin-result" style="font-size: 2em; font-weight: bold; margin-bottom: 1em; text-align: center;"></div>
-                    </div>
-                    <!-- Removed separate code/shop blocks; moved into inventory tab for consistent layout -->
-                    <div class="main-content" style="width: 100%; max-width: 900px; margin: 0 auto;">
-                        <div style="display:flex; align-items:center; gap:12px; justify-content:space-between;">
-                            <div class="tabs">
-                                <button class="tab-btn active" data-tab="inventory">Inventory</button>
-                                <button class="tab-btn" data-tab="chat">Chat</button>
-                                <button class="tab-btn" data-tab="announcements">Announcements</button>
-                                <button class="tab-btn" data-tab="events">Events</button>
-                                <button class="tab-btn" data-tab="settings">Settings</button>
-                            </div>
-                            <div style="display:flex; gap:8px;">
-                                <button id="open-codes" class="btn">Codes</button>
-                                <button id="open-shop" class="btn">Shop</button>
-                            </div>
-                        </div>
-                        <div class="tab-content">
-                            <div id="inventory-tab" class="tab-pane active">
-                                <h2>Your Inventory</h2>
-                                <div id="inventory-grid" class="inventory-grid">
-                                    <!-- Inventory items will be populated here -->
-                                </div>
-
-                                <!-- Put Redeem Codes and Shop into the inventory area -->
-                                <div style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-                                    <div style="flex:1; min-width:260px;">
-                                        <h3>Redeem Codes</h3>
-                                        <div style="display:flex; gap:8px; align-items:center;">
-                                            <input id="code-input-tab" type="text" placeholder="Enter code" style="flex:1; padding:8px; border-radius:6px;">
-                                            <button id="redeem-btn-tab" class="btn">Redeem</button>
-                                        </div>
-                                        <div id="code-result-tab" style="margin-top:8px;"></div>
-                                    </div>
-
-                                    <div style="width:360px; min-width:260px;">
-                                        <h3>Shop</h3>
-                                        <div id="shop-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="chat-tab" class="tab-pane">
-                                <h2>Global Chat</h2>
-                                <div id="chat-messages" class="chat-messages"></div>
-                                <div class="chat-input">
-                                    <input type="text" id="chat-input" placeholder="Type your message...">
-                                    <button id="send-btn">Send</button>
-                                </div>
-                            </div>
-                            <div id="announcements-tab" class="tab-pane">
-                                <h2>Announcements</h2>
-                                <div id="announcements-list" class="announcements-list">
-                                    <!-- Announcements will be populated here -->
-                                </div>
-                            </div>
-                            <div id="events-tab" class="tab-pane">
-                                <h2>Events</h2>
-                                <div id="events-list" class="events-list">
-                                    <!-- Events will be populated here -->
-                                </div>
-                            </div>
-                            <div id="settings-tab" class="tab-pane">
-                                <h2>Settings</h2>
-                                <div class="settings-option">
-                                    <label for="sound-toggle">Sound Effects</label>
-                                    <input type="checkbox" id="sound-toggle">
-                                </div>
-                                <div class="settings-option">
-                                    <label for="theme-toggle">Dark Theme</label>
-                                    <input type="checkbox" id="theme-toggle">
-                                </div>
-                                <div style="margin-top:12px; color:#bdc3c7; font-size:0.9rem;">Settings are saved locally.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div style="text-align: center; padding: 40px;">
+                <h2>Game content goes here</h2>
+                <p>Connected and ready to play!</p>
             </div>
         </div>
     </div>
 
-    <!-- Admin Panel -->
-    <div id="admin-panel" class="container hidden">
-        <header class="game-header">
-            <h1>Admin Panel - 17 News RNG 2</h1>
-            <div class="user-info">
-                <button id="back-to-game" class="btn btn-primary">Back to Game</button>
-                <button id="admin-logout" class="btn btn-logout">Logout</button>
-            </div>
-        </header>
-        
-        <div class="admin-content">
-            <div class="admin-section">
-                <h2>Create Announcement</h2>
-                <form id="announcement-form">
-                    <div class="form-group">
-                        <label for="announcement-title">Title</label>
-                        <input type="text" id="announcement-title" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="announcement-content">Content</label>
-                        <textarea id="announcement-content" required></textarea>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Publish Announcement</button>
-                </form>
-            </div>
-            
-            <div class="admin-section">
-                <h2>Create Event</h2>
-                <form id="event-form">
-                    <div class="form-group">
-                        <label for="event-name">Event Name</label>
-                        <input type="text" id="event-name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="event-description">Description</label>
-                        <textarea id="event-description" required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="event-start">Start Date</label>
-                        <input type="datetime-local" id="event-start" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="event-end">End Date</label>
-                        <input type="datetime-local" id="event-end" required>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Create Event</button>
-                </form>
-            </div>
-            
-            <div class="admin-section">
-                <h2>Active Announcements & Events</h2>
-                <p>Use the controls below to broadcast global messages and trigger events. Announcements will also appear in chat as system messages.</p>
-                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
-                    <button id="broadcast-last-announcement" class="btn">Broadcast Latest Announcement</button>
-                    <button id="list-active-events" class="btn">List Active Events</button>
-                    <button id="apply-all-active-events" class="btn">Apply All Active Events</button>
-                    <button id="aa-disco-start" class="btn">Start Disco (AA Event)</button>
-                    <button id="aa-disco-stop" class="btn">Stop Disco (AA Event)</button>
-                </div>
-                <div id="admin-events" style="margin-top:16px;" class="events-list"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Application Scripts -->
     <script>
-        // Global state and error handling
-        const state = {
-            currentUser: null,
-            isLoading: false
-        };
+        // State
+        let currentUser = null;
 
-        // Utility functions
-        const $ = selector => document.querySelector(selector);
-        const $$ = selector => document.querySelectorAll(selector);
-
-        function setLoading(button, isLoading) {
-            if (!button) return;
-            button.disabled = isLoading;
-            button.classList.toggle('loading', isLoading);
-            const spinner = button.querySelector('.loading-spinner');
-            const content = button.querySelector('.btn-content');
-            if (spinner) spinner.style.display = isLoading ? 'block' : 'none';
-            if (content) content.style.opacity = isLoading ? '0' : '1';
-        }
-
-        async function handleAPIRequest(url, options = {}) {
-            try {
-                const res = await fetch(url, {
-                    ...options,
-                    headers: { 'Content-Type': 'application/json', ...options.headers }
-                });
-                const data = await res.json();
-                if (!data.success) throw new Error(data.message || 'Operation failed');
-                return data;
-            } catch (err) {
-                console.error(`API Error (${url}):`, err);
-                throw err;
-            }
-        }
-
-        // Modern navigation
+        // Utility Functions
         function showPage(pageName) {
-            $$('.page').forEach(page => page.classList.add('hidden'));
-            $(`#${pageName}-page`)?.classList.remove('hidden');
-            const focusTarget = $(`#${pageName}-page [data-autofocus]`);
-            if (focusTarget) focusTarget.focus();
-        }
-        function showLoginPage() {
-            const pages = ['home-page', 'register-page', 'game-page', 'admin-panel'];
-            pages.forEach(page => document.getElementById(page)?.classList.add('hidden'));
-            document.getElementById('login-page').classList.remove('hidden');
-            const loginInput = document.getElementById('login-username');
-            if (loginInput) {
-                loginInput.focus();
-                loginInput.select();
-            }
+            ['home-page', 'login-page', 'register-page', 'game-page'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(pageName + '-page').classList.remove('hidden');
         }
 
-        function showRegisterPage() {
-            const pages = ['home-page', 'login-page', 'game-page', 'admin-panel'];
-            pages.forEach(page => document.getElementById(page)?.classList.add('hidden'));
-            document.getElementById('register-page').classList.remove('hidden');
-            const registerInput = document.getElementById('register-username');
-            if (registerInput) {
-                registerInput.focus();
-                registerInput.select();
-            }
-        }
-
-        function showHomePage() {
-            const pages = ['login-page', 'register-page', 'game-page', 'admin-panel'];
-            pages.forEach(page => document.getElementById(page)?.classList.add('hidden'));
-            document.getElementById('home-page').classList.remove('hidden');
-        }
-
-        async function handleLogin(e) {
-            if (e) e.preventDefault();
-            
-            const errorDiv = $('#login-error');
-            const button = $('#login-form button[type="submit"]');
-            const username = $('#login-username')?.value?.trim();
-            const password = $('#login-password')?.value;
-            
-            if (!username || !password) {
-                errorDiv.textContent = 'Please enter both username and password';
-                errorDiv.classList.remove('hidden');
-                return;
-            }
-            
-            try {
-                setLoading(button, true);
-                errorDiv?.classList.add('hidden');
-                
-                const loginData = await handleAPIRequest('/api/login', {
-                    method: 'POST',
-                    body: JSON.stringify({ username, password })
-                });
-                
-                const userData = await handleAPIRequest('/api/data');
-                currentUser = userData.user;
-                loadGameData(userData);
-                
-                if (currentUser?.isAdmin) {
-                    $('#admin-btn')?.classList.remove('hidden');
-                }
-                
-                showPopup('Login successful!', '#27ae60');
-                showPage('game');
-            } catch (err) {
-                errorDiv.textContent = err.message || 'An error occurred. Please try again.';
-                errorDiv.classList.remove('hidden');
-                showPopup('Login failed', '#e74c3c');
-            } finally {
-                setLoading(button, false);
-            }
-        }
-
-        async function handleRegister(e) {
-            if (e) e.preventDefault();
-            
-            const errorDiv = $('#register-error');
-            const button = $('#register-form button[type="submit"]');
-            const username = $('#register-username')?.value?.trim();
-            const password = $('#register-password')?.value;
-            
-            if (!username || !password) {
-                errorDiv.textContent = 'Please enter both username and password';
-                errorDiv.classList.remove('hidden');
-                return;
-            }
-            
-            try {
-                setLoading(button, true);
-                errorDiv?.classList.add('hidden');
-                
-                const registerData = await handleAPIRequest('/api/register', {
-                    method: 'POST',
-                    body: JSON.stringify({ username, password })
-                });
-                
-                const userData = await handleAPIRequest('/api/data');
-                currentUser = userData.user;
-                loadGameData(userData);
-                
-                showPopup('Registration successful!', '#27ae60');
-                showPage('game');
-            } catch (err) {
-                errorDiv.textContent = err.message || 'An error occurred. Please try again.';
-                errorDiv.classList.remove('hidden');
-                showPopup('Registration failed', '#e74c3c');
-            } finally {
-                setLoading(button, false);
-            }
-        }
-
-        // Add keyboard event listeners are wired in the main DOMContentLoaded below
-        // Page navigation functions
-        function showLoginPage() {
-            document.getElementById('home-page').classList.add('hidden');
-            document.getElementById('register-page').classList.add('hidden');
-            document.getElementById('login-page').classList.remove('hidden');
-        }
-
-        function showRegisterPage() {
-            document.getElementById('home-page').classList.add('hidden');
-            document.getElementById('login-page').classList.add('hidden');
-            document.getElementById('register-page').classList.remove('hidden');
-        }
-
-        function showHomePage() {
-            document.getElementById('login-page').classList.add('hidden');
-            document.getElementById('register-page').classList.add('hidden');
-            document.getElementById('home-page').classList.remove('hidden');
-        }
-
-        // Clean up any stuck overlays
-        function cleanupOverlays() {
-            document.querySelectorAll('[data-transient="1"]').forEach(el => el.remove());
-            document.querySelectorAll('.popup, .flash-overlay, .disco-overlay').forEach(el => el.remove());
-        }
-
-        // Handle any click outside of interactive elements
-        document.addEventListener('click', (e) => {
-            if (e.target === document.body || e.target === document.documentElement) {
-                cleanupOverlays();
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-    // Setup forms
-    $('#login-form')?.addEventListener('submit', handleLogin);
-    $('#register-form')?.addEventListener('submit', handleRegister);
-    
-    // Setup navigation
-    $('#login-btn')?.addEventListener('click', () => showPage('login'));
-    $('#register-btn')?.addEventListener('click', () => showPage('register'));
-    
-    // Setup dismissible elements
-    $$('.dismiss-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.target.closest('.dismissible')?.classList.add('hide');
-        });
-    });
-    
-    // Start on home page
-    showPage('home');
-});
-        // Page load handler
-        document.addEventListener('DOMContentLoaded', () => {
-            cleanupOverlays(); // Clean up any overlays on page load
-            showHomePage();
-            const btnShowLogin = document.getElementById('show-login') || document.getElementById('login-btn');
-            const btnShowRegister = document.getElementById('show-register') || document.getElementById('register-btn');
-            if (btnShowLogin) btnShowLogin.addEventListener('click', showLoginPage);
-            if (btnShowRegister) btnShowRegister.addEventListener('click', showRegisterPage);
-            // Wire up form submissions
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            if (loginForm) {
-                loginForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const username = document.getElementById('login-username').value.trim();
-                    const password = document.getElementById('login-password').value;
-                    const res = await fetch('/api/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        // After login we request the full data set to ensure client-side state is complete
-                        showPopup('Login successful!');
-                        await checkLoginStatus();
-                        if (currentUser && currentUser.isAdmin) {
-                            const adminBtn = document.getElementById('admin-btn'); if (adminBtn) adminBtn.classList.remove('hidden');
-                        }
-                        showPage('game');
-                    } else {
-                        const el = document.getElementById('login-error');
-                        el.textContent = data.message || 'Login failed';
-                        el.classList.remove('hidden');
-                    }
-                });
-            }
-
-            // Keyboard Enter shortcuts
-            const loginPass = document.getElementById('login-password');
-            if (loginPass) loginPass.addEventListener('keypress', (e) => { if (e.key === 'Enter') login(); });
-            const registerPass = document.getElementById('register-password');
-            if (registerPass) registerPass.addEventListener('keypress', (e) => { if (e.key === 'Enter') register(); });
-
-            if (registerForm) {
-                registerForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const username = document.getElementById('register-username').value.trim();
-                    const password = document.getElementById('register-password').value;
-                    const res = await fetch('/api/register', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        showPopup('Registered and logged in', '#27ae60');
-                        await checkLoginStatus();
-                        showPage('game');
-                    } else {
-                        const el = document.getElementById('register-error');
-                        el.textContent = data.message || 'Register failed';
-                        el.classList.remove('hidden');
-                    }
-                });
-            }
-        });
-        
-        // Utility: Show popup message
         function showPopup(message, color = '#27ae60') {
             const popup = document.createElement('div');
             popup.className = 'popup';
             popup.style.background = color;
             popup.textContent = message;
             document.body.appendChild(popup);
-            setTimeout(() => popup.remove(), 1200);
-        }
-        // Debug log panel removed
-        // Global variables
-        let currentUser = null;
-        let socket = null;
-
-        // Page elements
-        const pages = {
-            home: document.getElementById('home-page'),
-            login: document.getElementById('login-page'),
-            register: document.getElementById('register-page'),
-            game: document.getElementById('game-page'),
-            admin: document.getElementById('admin-panel')
-        };
-
-        // Navigation functions
-        function showPage(pageName) {
-            Object.values(pages).forEach(page => {
-                page.classList.add('hidden');
-                page.classList.remove('active');
-            });
-            pages[pageName].classList.remove('hidden');
-            pages[pageName].classList.add('active');
-            pages[pageName].classList.add('fade-in');
-            setTimeout(() => pages[pageName].classList.remove('fade-in'), 700);
+            setTimeout(() => popup.remove(), 2000);
         }
 
-        // Check if user is already logged in
-        async function checkLoginStatus() {
-            try {
-                const response = await fetch('/api/data');
-                const data = await response.json();
-                
-                if (data.success) {
-                    currentUser = data.user;
-                    loadGameData(data);
-                    if (currentUser.isAdmin) {
-                        document.getElementById('admin-btn').classList.remove('hidden');
-                    }
-                    // If AA Events include disco active, trigger visuals
-                    if (data.aaEvents && data.aaEvents.find(a => a.id === 'disco' && a.active)) {
-                        startDisco();
-                    } else {
-                        stopDisco();
-                    }
-                    showPage('game');
-                } else {
-                    showPage('home');
-                }
-            } catch (error) {
-                showPage('home');
+        function setLoading(button, isLoading) {
+            if (!button) return;
+            button.disabled = isLoading;
+            if (isLoading) {
+                button.innerHTML = '<span class="loading-spinner"></span> Loading...';
             }
         }
 
-        // Load game data (tolerant to partial input)
-        function loadGameData(data) {
-            // Prefer using currentUser (keeps session state) but allow fallback to data.user
-            const user = currentUser || (data && data.user) || { username: 'Guest', coins: 0, inventory: [] };
-            currentUser = user;
-
-            document.getElementById('user-name').textContent = user.username;
-            document.getElementById('coin-count').textContent = user.coins || 0;
-
-            // Load inventory safely
-            const inventoryGrid = document.getElementById('inventory-grid');
-            inventoryGrid.innerHTML = '';
-
-            const inventory = user.inventory || [];
-            if (inventory.length === 0) {
-                inventoryGrid.innerHTML = '<p class="empty-inventory">Your inventory is empty. Spin to get items!</p>';
-            } else {
-                inventory.forEach(item => {
-                    const itemElement = document.createElement('div');
-                    itemElement.className = `inventory-item rarity-${item.rarity}`;
-                    itemElement.innerHTML = `
-                        <span class="item-name">${item.name}</span>
-                        <span class="item-rarity">${item.rarity}</span>
-                    `;
-                    inventoryGrid.appendChild(itemElement);
+        // API Handler
+        async function handleAPI(url, options = {}) {
+            try {
+                const res = await fetch(url, {
+                    ...options,
+                    headers: { 'Content-Type': 'application/json', ...options.headers }
                 });
-            }
-
-            // Safe lists (announcements, events, chat)
-            const announcements = (data && data.announcements) || [];
-            const events = (data && data.events) || [];
-            const chatMsgs = (data && data.chatMessages) || [];
-
-            // Load announcements
-            const announcementsList = document.getElementById('announcements-list');
-            announcementsList.innerHTML = '';
-            if (announcements.length === 0) {
-                announcementsList.innerHTML = '<p>No announcements yet.</p>';
-            } else {
-                announcements.forEach(announcement => {
-                    const announcementElement = document.createElement('div');
-                    announcementElement.className = 'announcement';
-                    announcementElement.innerHTML = `
-                        <h3>${announcement.title}</h3>
-                        <p>${announcement.content}</p>
-                        <small>By ${announcement.author} on ${new Date(announcement.date).toLocaleDateString()}</small>
-                    `;
-                    announcementsList.appendChild(announcementElement);
-                });
-            }
-
-            // Load events
-            const eventsList = document.getElementById('events-list');
-            eventsList.innerHTML = '';
-            if (events.length === 0) {
-                eventsList.innerHTML = '<p>No events yet.</p>';
-            } else {
-                events.forEach(event => {
-                    const eventElement = document.createElement('div');
-                    eventElement.className = `event ${event.active ? 'active' : ''}`;
-                    eventElement.innerHTML = `
-                        <h3>${event.name}</h3>
-                        <p>${event.description}</p>
-                        <small>
-                            ${new Date(event.startDate).toLocaleDateString()} - 
-                            ${new Date(event.endDate).toLocaleDateString()}
-                            ${event.active ? '(Active)' : '(Ended)'}
-                        </small>
-                    `;
-                    eventsList.appendChild(eventElement);
-                });
-            }
-
-            // Load chat messages
-            const chatMessages = document.getElementById('chat-messages');
-            chatMessages.innerHTML = '';
-            if (chatMsgs && chatMsgs.length > 0) {
-                chatMsgs.forEach(message => {
-                    const messageElement = document.createElement('div');
-                    messageElement.className = 'chat-message';
-                    messageElement.innerHTML = `
-                        <span class="username">${message.username}:</span>
-                        <span class="message">${message.message}</span>
-                        <br>
-                        <small class="timestamp">${new Date(message.timestamp).toLocaleTimeString()}</small>
-                    `;
-                    chatMessages.appendChild(messageElement);
-                });
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            // Initialize or reinitialize socket connection for chat
-            try {
-                if (socket) {
-                    socket.disconnect();
-                }
-            } catch (e) {
-                console.warn('Socket disconnect error', e);
-            }
-            socket = io();
-
-            // Chat functionality
-            socket.on('chat_message', (data) => {
-                const chatMessages = document.getElementById('chat-messages');
-                const messageElement = document.createElement('div');
-                messageElement.className = 'chat-message';
-                messageElement.innerHTML = `
-                    <div style="display:flex;align-items:center;gap:8px;"><span class="username">${data.username}</span><span class="timestamp">${new Date(data.timestamp).toLocaleTimeString()}</span></div>
-                    <div class="message">${data.message}</div>
-                `;
-                chatMessages.appendChild(messageElement);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-
-            // Handle announcements from admin (show banner + chat system message)
-            socket.on('new_announcement', (data) => {
-                const banner = document.getElementById('global-banner');
-                // include a dismiss button so users can manually close the broadcast
-                banner.innerHTML = `<span>${data.title}: ${data.content}</span><button class="dismiss-btn" aria-label="Dismiss announcement">&times;</button>`;
-                banner.classList.add('visible');
-                const hideBanner = () => { banner.classList.remove('visible'); };
-                const dismissBtn = banner.querySelector('.dismiss-btn');
-                if (dismissBtn) dismissBtn.addEventListener('click', hideBanner, { once: true });
-                setTimeout(hideBanner, 6000);
-
-                // Push a system chat message
-                const chatMessages = document.getElementById('chat-messages');
-                const messageElement = document.createElement('div');
-                messageElement.className = 'chat-message system';
-                messageElement.innerHTML = `<div>${data.title} — ${data.content}</div><small>${data.author || 'Admin'}</small>`;
-                chatMessages.appendChild(messageElement);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                if (Notification.permission === 'granted') {
-                    new Notification('Announcement', { body: `${data.title}: ${data.content}` });
-                }
-                // Refresh announcement list
-                checkLoginStatus();
-            });
-
-            // AA event handling (disco)
-            socket.on('aa_event', (evt) => {
-                if (evt.id === 'disco') {
-                    if (evt.active) startDisco(); else stopDisco();
-                    showPopup(`${evt.name} ${evt.active ? 'started' : 'stopped'}`, '#f1c40f');
-                }
-            });
-
-            socket.on('new_event', (data) => {
-                // Transient visual effect
-                const flash = document.createElement('div');
-                flash.dataset.transient = '1';
-                flash.style.cssText = `
-                    position: fixed;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                    height: 100%;
-                    z-index: var(--z-overlay);
-                    pointer-events: none;
-                    background: radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 40%);
-                `;
-                document.body.appendChild(flash);
-                setTimeout(() => flash.remove(), 600);
-
-                // System message in chat
-                const chatMessages = document.getElementById('chat-messages');
-                if (chatMessages) {
-                    const messageElement = document.createElement('div');
-                    messageElement.className = 'chat-message system';
-                    messageElement.innerHTML = `
-                        <div style="color:var(--warning);">Event: ${data.name} — ${data.description}</div>
-                        <small>Event activated</small>
-                    `;
-                    chatMessages.appendChild(messageElement);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }
-
-                // Desktop notification
-                if (Notification.permission === 'granted') {
-                    new Notification('Event', { 
-                        body: `${data.name}: ${data.description}`,
-                        icon: '/favicon.ico'
-                    });
-                }
-
-                // Refresh data
-                checkLoginStatus();
-            });
-
-            // Request notification permission
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission();
+                return await res.json();
+            } catch (err) {
+                console.error('API Error:', err);
+                throw err;
             }
         }
 
-        // Initialize Event Listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            // Core navigation
-            const navButtons = {
-                'login-btn': () => showPage('login'),
-                'register-btn': () => showPage('register'),
-                'show-register': () => showPage('register'),
-                'show-login': () => showPage('login'),
-                'logout-btn': logout,
-                'admin-logout': logout,
-                'admin-btn': () => showPage('admin'),
-                'back-to-game': () => showPage('game')
-            };
-
-            // Attach event listeners
-            Object.entries(navButtons).forEach(([id, handler]) => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        handler();
-                    });
-                }
-            });
-
-            // Initial setup
-            showPage('home');
-            initializeEventHandlers();
-        });
-
-        // Clean up on page unload
-        window.addEventListener('unload', () => {
-            if (socket) {
-                socket.disconnect();
-            }
-            // Clean up any transient elements
-            $$('[data-transient="1"]').forEach(el => el.remove());
-        });
-        // Initialize all form handlers when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialization
-            initUI();
-            checkLoginStatus();
-            initSocketIO();
-            initEventHandlers();
-            
-            // Clean up any stuck overlays
-            cleanupOverlays();
-        });
-
-        // Core UI initialization
-        function initUI() {
-            // Set up button states
-            document.querySelectorAll('button, .btn, .styled-btn').forEach(function(btn) {
-                btn.style.position = 'relative';
-                btn.style.zIndex = '1001';  // Use explicit z-index
-                btn.style.pointerEvents = 'auto';
-                
-                // Ensure click handler is attached
-                btn.addEventListener('click', function(e) {
-                    // Prevent any stuck overlays from blocking clicks
-                    cleanupOverlays();
-                    console.log('Button clicked:', btn.textContent || btn.value);
-                });
-            });
-
-            // Initialize settings
-            initSettings();
-            
-            // Set up tabs
-            initTabs();
-
-            // Initialize shop
-            initShop();
-        }
-
-        // Initialize event handlers
-        function initEventHandlers() {
-            // Form handlers
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            
-            if (loginForm) {
-                loginForm.addEventListener('submit', handleLogin);
-            }
-            
-            if (registerForm) {
-                registerForm.addEventListener('submit', handleRegister);
-            }
-
-            // Chat handlers
-            const sendBtn = document.getElementById('send-btn');
-            const chatInput = document.getElementById('chat-input');
-            
-            if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-            if (chatInput) chatInput.addEventListener('keypress', e => {
-                if (e.key === 'Enter') sendMessage();
-            });
-
-            // Admin handlers
-            initAdminHandlers();
-
-            // Announcement bar
-            initAnnouncementBar();
-        }
-
-        // Socket.IO initialization
-        function initSocketIO() {
-            if (socket) {
-                socket.disconnect();
-            }
-            socket = io();
-            
-            socket.on('chat_message', handleChatMessage);
-            socket.on('new_announcement', handleAnnouncement);
-            socket.on('aa_event', handleAAEvent);
-            socket.on('new_event', handleEvent);
-        }
-
-        // Settings initialization
-        function initSettings() {
-            const soundToggle = document.getElementById('sound-toggle');
-            const themeToggle = document.getElementById('theme-toggle');
-            
-            try {
-                const saved = JSON.parse(localStorage.getItem('settings') || '{}');
-                if (saved.sound !== undefined && soundToggle) soundToggle.checked = !!saved.sound;
-                if (saved.theme !== undefined && themeToggle) themeToggle.checked = !!saved.theme;
-                applyTheme(themeToggle ? themeToggle.checked : false);
-            } catch (e) { /* ignore */ }
-
-            if (soundToggle) soundToggle.addEventListener('change', saveSettings);
-            if (themeToggle) themeToggle.addEventListener('change', () => {
-                applyTheme(themeToggle.checked);
-                saveSettings();
-            });
-        }
-
-        // Clean up any stuck overlays
-        function cleanupOverlays() {
-            // Remove transient overlays
-            document.querySelectorAll('[data-transient="1"]').forEach(el => el.remove());
-            document.querySelectorAll('.flash-overlay, .disco-overlay').forEach(el => el.remove());
-            
-            // Fix any stuck buttons
-            document.querySelectorAll('button, .btn, .styled-btn').forEach(btn => {
-                btn.style.position = 'relative';
-                btn.style.zIndex = '1001';
-                btn.style.pointerEvents = 'auto';
-                btn.disabled = false;
-            });
-            
-            // Ensure announcement bar is above content but below popups
-            const announceBar = document.querySelector('.announcement-bar');
-            if (announceBar) {
-                announceBar.style.zIndex = '1002';
-                announceBar.style.pointerEvents = 'auto';
-            }
-        }
-
-        // Handle any clicks/touches
-        document.addEventListener('pointerdown', (e) => {
-            // Clean up overlays when clicking anywhere
-            cleanupOverlays();
-            
-            // If clicking a button, ensure it's interactive
-            const btn = e.target.closest('button, .btn, .styled-btn');
-            if (btn) {
-                btn.style.position = 'relative';
-                btn.style.zIndex = '1001';
-                btn.style.pointerEvents = 'auto';
-                btn.disabled = false;
-            }
-            
-            // Remove any transient overlay under the pointer
-            const el = document.elementFromPoint(e.clientX, e.clientY);
-            if (el?.dataset?.transient === '1' || el?.closest('[data-transient="1"]')) {
-                el.remove();
-            }
-        }, { capture: true, passive: true });
-    </script>
-
-    <!-- Initialize Socket.IO connection -->
-    <script src="/socket.io/socket.io.js"></script>
-</body>
-</html>
-
-        // Login form
-        (function(){
-            const _loginForm = document.getElementById('login-form');
-            if (!_loginForm) return;
-            _loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = document.getElementById('login-username').value;
-                const password = document.getElementById('login-password').value;
-                const errorDiv = document.getElementById('login-error');
-                
-                // Show spinner
-                const btn = e.target.querySelector('button[type="submit"]');
-                if (btn) {
-                    btn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
-                    btn.disabled = true;
-                }
-                if (errorDiv) errorDiv.classList.add('hidden');
-                try {
-                    const response = await fetch('/api/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ username, password })
-                    });
-                    const data = await response.json();
-                    if (btn) { btn.innerHTML = 'Login'; btn.disabled = false; }
-                    if (data.success) {
-                        // After login we request the full data set to ensure client-side state is complete
-                        showPopup('Login successful!');
-                        await checkLoginStatus();
-                        if (currentUser && currentUser.isAdmin) {
-                            const adminBtn = document.getElementById('admin-btn'); if (adminBtn) adminBtn.classList.remove('hidden');
-                        }
-                        showPage('game');
-                    } else {
-                        if (errorDiv) { errorDiv.textContent = data.error; errorDiv.classList.remove('hidden'); }
-                        showPopup(data.error, '#e74c3c');
-                    }
-                } catch (error) {
-                    if (btn) { btn.innerHTML = 'Login'; btn.disabled = false; }
-                    if (errorDiv) { errorDiv.textContent = 'An error occurred. Please try again.'; errorDiv.classList.remove('hidden'); }
-                    showPopup('An error occurred.', '#e74c3c');
-                }
-            });
-        })();
-
-        // Register form
-        (function(){
-            const _registerForm = document.getElementById('register-form');
-            if (!_registerForm) return;
-            _registerForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = document.getElementById('register-username').value;
-                const password = document.getElementById('register-password').value;
-                const errorDiv = document.getElementById('register-error');
-                
-                // Show spinner
-                const btn = e.target.querySelector('button[type="submit"]');
-                if (btn) { btn.innerHTML = '<span class="loading-spinner"></span> Registering...'; btn.disabled = true; }
-                if (errorDiv) errorDiv.classList.add('hidden');
-                try {
-                    const response = await fetch('/api/register', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ username, password })
-                    });
-                    const data = await response.json();
-                    if (btn) { btn.innerHTML = 'Register'; btn.disabled = false; }
-                    if (data.success) {
-                        showPopup('Registration successful!');
-                        await checkLoginStatus();
-                        showPage('game');
-                    } else {
-                        if (errorDiv) { errorDiv.textContent = data.error; errorDiv.classList.remove('hidden'); }
-                        showPopup(data.error, '#e74c3c');
-                    }
-                } catch (error) {
-                    if (btn) { btn.innerHTML = 'Register'; btn.disabled = false; }
-                    if (errorDiv) { errorDiv.textContent = 'An error occurred. Please try again.'; errorDiv.classList.remove('hidden'); }
-                    showPopup('An error occurred.', '#e74c3c');
-                }
-            });
-        })();
-
-        // Spin functionality with cutscene support
-        function initSpinHandler() {
-            const spinBtn = document.getElementById('spin-btn');
-            if (!spinBtn) return;
-            
-            spinBtn.addEventListener('click', async () => {
-                try {
-                    const spinResult = document.getElementById('spin-result');
-                    spinBtn.disabled = true;
-                    spinBtn.innerHTML = ' Spinning...';
-                    spinResult.innerHTML = '';
-                    
-                    const response = await fetch('/api/spin', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        // Update coins immediately
-                        if (typeof data.coins === 'number') {
-                            document.getElementById('coin-count').textContent = data.coins;
-                            if (currentUser) currentUser.coins = data.coins;
-                        }
-                        
-                        // Run cutscene if specified
-                        if (data.cutscene) {
-                            await runExplosiveCutscene(data.item);
-                        }
-                        
-                        // Show result with earned coins
-                        const awardedHtml = (typeof data.awarded === 'number' && data.awarded > 0) 
-                            ? `<br><span style="color:#f1c40f">+${data.awarded} coins</span>` 
-                            : '';
-                            
-                        spinResult.innerHTML = `<div style="font-size:1.3em;animation:fadeIn 1s;">${data.item} (${data.rarity.name})${awardedHtml}</div>`;
-                        showPopup(`You got a ${data.rarity.name}!`, data.rarity.color || '#9b59b6');
-                        
-                        // Add to inventory
-                        if (currentUser?.inventory) {
-                            currentUser.inventory.push({ 
-                                name: data.item, 
-                                rarity: data.rarity.name.toLowerCase(), 
-                                date: new Date().toISOString() 
-                            });
-                            loadGameData({ user: currentUser });
-                        }
-                    } else {
-                        spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
-                        showPopup(data.error, '#e74c3c');
-                    }
-                } catch (error) {
-                    const spinResult = document.getElementById('spin-result');
-                    spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
-                    showPopup('An error occurred.', '#e74c3c');
-                } finally {
-                    spinBtn.disabled = false;
-                    spinBtn.innerHTML = 'Spin Now!';
-                }
-            });
-        }
-
-        // Chat functionality
-        function initChatHandlers() {
-            const sendBtn = document.getElementById('send-btn');
-            const chatInput = document.getElementById('chat-input');
-            
-            if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-            if (chatInput) chatInput.addEventListener('keypress', e => {
-                if (e.key === 'Enter') sendMessage();
-            });
-        }
-
-        function sendMessage() {
-            const chatInput = document.getElementById('chat-input');
-            const message = chatInput.value.trim();
-            
-            if (message && socket) {
-                socket.emit('chat_message', {
-                    username: currentUser.username,
-                    message: message
-                });
-                chatInput.value = '';
-            }
-        }
-
-        // Disco visuals
-        let discoEl = null;
-        
-        function startDisco() {
-            if (discoEl) return;
-            
-            discoEl = document.createElement('div');
-            discoEl.className = 'disco-overlay';
-            discoEl.dataset.transient = '1';
-            
-            discoEl.style.cssText = `
-                position: fixed;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                z-index: var(--z-overlay);
-                pointer-events: none;
-                background: 
-                    radial-gradient(circle at 20% 20%, rgba(255,0,150,0.08), transparent 10%),
-                    radial-gradient(circle at 80% 80%, rgba(0,200,255,0.06), transparent 12%);
-                animation: discoPulse 1s linear infinite;
-            `;
-            
-            document.body.appendChild(discoEl);
-        }
-        
-        function stopDisco() {
-            if (discoEl) {
-                discoEl.remove();
-                discoEl = null;
-            }
-        }
-
-        // Core animations and event handlers
-        function initAnimationsAndHandlers() {
-            // Add global animation styles
-            const globalStyles = document.createElement('style');
-            globalStyles.innerHTML = `
-                @keyframes discoPulse { 
-                    0% { filter: hue-rotate(0deg); } 
-                    50% { filter: hue-rotate(90deg); } 
-                    100% { filter: hue-rotate(180deg); }
-                }
-                
-                @keyframes fadeIn { 
-                    from { opacity: 0; transform: translateY(8px); } 
-                    to { opacity: 1; transform: translateY(0); } 
-                }
-                
-                @keyframes popupIn { 
-                    from { opacity: 0; transform: translate(-50%, 10px); } 
-                    to { opacity: 1; transform: translate(-50%, 0); } 
-                }
-            `;
-            document.head.appendChild(globalStyles);
-            
-            // Setup interactive elements
-            document.querySelectorAll('button, .btn, .styled-btn, [role="button"]').forEach(btn => {
-                btn.style.cssText = `
-                    position: relative;
-                    z-index: var(--z-content);
-                    pointer-events: auto;
-                `;
-            });
-            
-            // Clean up any stray overlays
-            function cleanupOverlays() {
-                document.querySelectorAll('[data-transient="1"]').forEach(el => el.remove());
-            }
-            
-            // Handle any click outside of interactive elements
-            document.addEventListener('click', (e) => {
-                if (e.target === document.body || e.target === document.documentElement) {
-                    cleanupOverlays();
-                }
-            });
-            
-            // Initialize features
-            initSpinHandler();
-            initChatHandlers();
-            checkLoginStatus();
-            
-            // Clean up on page unload
-            window.addEventListener('unload', () => {
-                if (socket) socket.disconnect();
-                cleanupOverlays();
-            });
-        }
-        
-        // Call initialization when DOM is ready
-        document.addEventListener('DOMContentLoaded', initAnimationsAndHandlers);
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            
-            @keyframes slideIn {
-                from { transform: translateX(-100%); }
-                to { transform: translateX(0); }
-            }
-            
-            .fade-in {
-                animation: fadeIn 0.3s ease forwards;
-            }
-            
-            .slide-in {
-                animation: slideIn 0.3s ease forwards;
-            }
-        `;
-        document.head.appendChild(globalStyles);
-
-        // Tab switching
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active class from all buttons and panes
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-                
-                // Add active class to clicked button and corresponding pane
-                btn.classList.add('active');
-                const tabId = btn.getAttribute('data-tab') + '-tab';
-                document.getElementById(tabId).classList.add('active');
-                
-                // Focus chat input when chat tab is active
-                if (btn.getAttribute('data-tab') === 'chat') {
-                    setTimeout(() => {
-                        document.getElementById('chat-input').focus();
-                    }, 100);
-                }
-            });
-        });
-
-        // Admin forms
-        (function(){
-            const _announcementForm = document.getElementById('announcement-form');
-            if (!_announcementForm) return;
-            _announcementForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const title = document.getElementById('announcement-title').value;
-            const content = document.getElementById('announcement-content').value;
-            
-            try {
-                const response = await fetch('/api/admin/announcement', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ title, content })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    document.getElementById('announcement-form').reset();
-                    showPopup('Announcement published and broadcasted!', '#f1c40f');
-                } else {
-                    showPopup('Error: ' + data.error, '#e74c3c');
-                }
-            } catch (error) {
-                alert('An error occurred. Please try again.');
-            }
-            });
-        })();
-
-        (function(){
-            const _eventForm = document.getElementById('event-form');
-            if (!_eventForm) return;
-            _eventForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('event-name').value;
-            const description = document.getElementById('event-description').value;
-            const startDate = document.getElementById('event-start').value;
-            const endDate = document.getElementById('event-end').value;
-            
-            try {
-                const response = await fetch('/api/admin/event', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name, description, startDate, endDate })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    document.getElementById('event-form').reset();
-                    showPopup('Event created and applied!', '#27ae60');
-                } else {
-                    showPopup('Error: ' + data.error, '#e74c3c');
-                }
-            } catch (error) {
-                alert('An error occurred. Please try again.');
-            }
-            });
-        })();
-
-        // Admin quick controls
-        const broadcastBtn = document.getElementById('broadcast-last-announcement');
-        if (broadcastBtn) broadcastBtn.addEventListener('click', async () => {
-            try {
-                const res = await fetch('/api/admin/rebroadcast-last-announcement', { method: 'POST' });
-                const d = await res.json();
-                if (d.success) showPopup('Broadcasted last announcement!', '#f1c40f');
-                else showPopup('No announcements to broadcast', '#e74c3c');
-            } catch (e) { showPopup('Error broadcasting', '#e74c3c'); }
-        });
-
-        const applyEventsBtn = document.getElementById('apply-all-active-events');
-        if (applyEventsBtn) applyEventsBtn.addEventListener('click', async () => {
-            try {
-                const res = await fetch('/api/admin/apply-active-events', { method: 'POST' });
-                const d = await res.json();
-                if (d.success) showPopup('Applied active events', '#27ae60');
-                else showPopup('No active events', '#e74c3c');
-            } catch (e) { showPopup('Error applying events', '#e74c3c'); }
-        });
-
-        // Admin list active events into admin-events container
-        const listActiveBtn = document.getElementById('list-active-events');
-        if (listActiveBtn) listActiveBtn.addEventListener('click', async () => {
-            try {
-                const res = await fetch('/api/data');
-                const d = await res.json();
-                const container = document.getElementById('admin-events');
-                container.innerHTML = '';
-                (d.events || []).forEach(ev => {
-                    if (ev.active || (new Date(ev.startDate) <= new Date() && new Date(ev.endDate) >= new Date())) {
-                        const el = document.createElement('div');
-                        el.className = 'event active';
-                        el.innerHTML = `<h3>${ev.name}</h3><p>${ev.description}</p><small>${new Date(ev.startDate).toLocaleString()} - ${new Date(ev.endDate).toLocaleString()}</small>`;
-                        container.appendChild(el);
-                    }
-                });
-                if (!container.children.length) container.innerHTML = '<p>No active events</p>';
-            } catch (e) { showPopup('Error listing events', '#e74c3c'); }
-        });
-
-        // Admin AA Disco controls
-        const discoStartBtn = document.getElementById('aa-disco-start');
-        const discoStopBtn = document.getElementById('aa-disco-stop');
-        if (discoStartBtn) discoStartBtn.addEventListener('click', async () => {
-            try {
-                const res = await fetch('/api/admin/aa-event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'disco', action: 'start' }) });
-                const d = await res.json(); if (d.success) showPopup('Disco started', '#f1c40f'); else showPopup('Error starting disco', '#e74c3c');
-            } catch (e) { showPopup('Error', '#e74c3c'); }
-        });
-        if (discoStopBtn) discoStopBtn.addEventListener('click', async () => {
-            try {
-                const res = await fetch('/api/admin/aa-event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'disco', action: 'stop' }) });
-                const d = await res.json(); if (d.success) showPopup('Disco stopped', '#f1c40f'); else showPopup('Error stopping disco', '#e74c3c');
-            } catch (e) { showPopup('Error', '#e74c3c'); }
-        });
-
-        // Quick open codes/shop
-        const openCodesBtn = document.getElementById('open-codes');
-        const openShopBtn = document.getElementById('open-shop');
-        if (openCodesBtn) openCodesBtn.addEventListener('click', () => {
-            // switch to inventory tab and focus code input
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-            document.querySelector('.tab-btn[data-tab="inventory"]').classList.add('active');
-            document.getElementById('inventory-tab').classList.add('active');
-            setTimeout(() => document.getElementById('code-input-tab').focus(), 150);
-        });
-        if (openShopBtn) openShopBtn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-            document.querySelector('.tab-btn[data-tab="inventory"]').classList.add('active');
-            document.getElementById('inventory-tab').classList.add('active');
-            setTimeout(() => document.getElementById('shop-list').scrollIntoView({ behavior: 'smooth' }), 150);
-        });
-
-        // Settings persistence
-        const soundToggle = document.getElementById('sound-toggle');
-        const themeToggle = document.getElementById('theme-toggle');
-        try {
-            const saved = JSON.parse(localStorage.getItem('settings') || '{}');
-            if (saved.sound !== undefined && soundToggle) soundToggle.checked = !!saved.sound;
-            if (saved.theme !== undefined && themeToggle) themeToggle.checked = !!saved.theme;
-            applyTheme(themeToggle ? themeToggle.checked : false);
-        } catch (e) { /* ignore */ }
-
-        if (soundToggle) soundToggle.addEventListener('change', () => saveSettings());
-        if (themeToggle) themeToggle.addEventListener('change', () => { applyTheme(themeToggle.checked); saveSettings(); });
-
-        function saveSettings() {
-            const s = { sound: soundToggle.checked, theme: themeToggle.checked };
-            localStorage.setItem('settings', JSON.stringify(s));
-        }
-
-        function applyTheme(dark) {
-            if (dark) document.body.classList.add('dark-theme');
-            else document.body.classList.remove('dark-theme');
-        }
-
-        // Populate a basic shop list client-side
-        const SHOP_ITEMS = [
-            { id: 'crate_common', name: 'Common Crate', price: 200, rarity: 'common' },
-            { id: 'crate_rare', name: 'Rare Crate', price: 1200, rarity: 'rare' },
-            { id: 'spin_token', name: 'Spin Token', price: 500, rarity: 'uncommon' }
-        ];
-        const shopList = document.getElementById('shop-list');
-        if (shopList) {
-            SHOP_ITEMS.forEach(it => {
-                const row = document.createElement('div');
-                row.className = 'code';
-                row.style.display = 'flex';
-                row.style.justifyContent = 'space-between';
-                row.innerHTML = `<div><strong>${it.name}</strong><div style="font-size:0.9rem;color:#bdc3c7">${it.price} coins</div></div><div><button class="btn buy-btn" data-id="${it.id}" data-price="${it.price}" data-name="${it.name}" data-rarity="${it.rarity}">Buy</button></div>`;
-                shopList.appendChild(row);
-            });
-
-            // Buy handler
-            shopList.addEventListener('click', async (e) => {
-            const btn = e.target.closest('.buy-btn');
-            if (!btn) return;
-            const price = Number(btn.dataset.price);
-            const itemName = btn.dataset.name;
-            const rarity = btn.dataset.rarity;
-            btn.disabled = true;
-            btn.textContent = 'Buying...';
-            try {
-                const res = await fetch('/api/shop/buy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ itemName, price, rarity }) });
-                const d = await res.json();
-                if (d.success) { showPopup('Purchase complete', '#27ae60'); document.getElementById('coin-count').textContent = d.coins; await checkLoginStatus(); }
-                else showPopup(d.error || 'Purchase failed', '#e74c3c');
-            } catch (err) { showPopup('Purchase error', '#e74c3c'); }
-            btn.disabled = false;
-            btn.textContent = 'Buy';
-            });
-        }
-
-        // Redeem in-tab handling
-        (function(){
-            const _redeemBtn = document.getElementById('redeem-btn-tab');
-            if (!_redeemBtn) return;
-            _redeemBtn.addEventListener('click', async () => {
-                const codeInput = document.getElementById('code-input-tab');
-                const out = document.getElementById('code-result-tab');
-                const code = codeInput ? codeInput.value.trim() : '';
-                if (!code) { if (out) out.innerHTML = '<span style="color:#e74c3c">Enter a code.</span>'; return; }
-                try {
-                    const res = await fetch('/api/use-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
-                    const d = await res.json();
-                    if (d.success) { if (out) out.innerHTML = '<span style="color:#27ae60">Redeemed!</span>'; await checkLoginStatus(); }
-                    else if (out) out.innerHTML = `<span style="color:#e74c3c">${d.error}</span>`;
-                } catch (e) { if (out) out.innerHTML = '<span style="color:#e74c3c">Error</span>'; }
-            });
-        })();
-
-        // Handle spin cutscene (Explosive) — full 4-point star custom animation
-        async function runExplosiveCutscene(itemName) {
-            const overlay = document.createElement('div');
-            overlay.className = 'flash-overlay';
-            overlay.dataset.transient = '1';
-            overlay.style.position = 'fixed'; overlay.style.left = 0; overlay.style.top = 0; overlay.style.width = '100%'; overlay.style.height = '100%';
-            overlay.style.background = '#000'; overlay.style.zIndex = 9999; overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center';
-            overlay.style.pointerEvents = 'none';
-
-            // star element (4-point star using CSS)
-            const star = document.createElement('div');
-            star.style.width = '160px'; star.style.height = '160px'; star.style.position = 'relative'; star.style.transform = 'rotate(0deg)';
-            star.style.transition = 'transform 0.2s linear';
-
-            const createPoint = (rotateDeg, color) => {
-                const p = document.createElement('div');
-                p.style.position = 'absolute'; p.style.left = '50%'; p.style.top = '50%';
-                p.style.width = '0'; p.style.height = '0';
-                p.style.borderLeft = '40px solid transparent'; p.style.borderRight = '40px solid transparent';
-                p.style.borderBottom = `80px solid ${color}`;
-                p.style.transform = `translate(-50%,-100%) rotate(${rotateDeg}deg)`;
-                return p;
-            };
-
-            // Pick a vibrant color from rarity or fallback
-            const color = (window.lastSpinRarityColor) ? window.lastSpinRarityColor : '#ffd700';
-            star.appendChild(createPoint(0, color));
-            star.appendChild(createPoint(90, color));
-            star.appendChild(createPoint(180, color));
-            star.appendChild(createPoint(270, color));
-
-            const info = document.createElement('div');
-            info.style.position = 'absolute'; info.style.bottom = '-80px'; info.style.width = '100%'; info.style.textAlign = 'center';            overlay.appendChild(star);
-            info.style.color = '#fff'; info.style.fontSize = '1.4rem'; info.style.opacity = '0'; info.style.transition = 'opacity 0.4s';
-            info.textContent = itemName;
-            document.body.appendChild(overlay);
- over ~4.5s then flash to white
-            // spin loop: increase speed over ~4.5s then flash to white
-            let speed = 2000; // ms per rotation
-            const endAt = Date.now() + 5000;
-            while (Date.now() < endAt) {${speed}ms linear`;
-                star.style.transition = `transform ${speed}ms linear`;   star.style.transform = `rotate(${Math.random()*360 + 360}deg)`;ent.getElementById('spin-result');
-                star.style.transform = `rotate(${Math.random()*360 + 360}deg)`;                await new Promise(r => setTimeout(r, 250));
-                await new Promise(r => setTimeout(r, 250)); = Math.max(120, speed - 120);tn.innerHTML = '<span class="loading-spinner"></span> Spinning...';
-                speed = Math.max(120, speed - 120);
-            }spin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
-
-            // revealfalse; spinBtn.innerHTML = 'Spin Now!';
-            info.style.opacity = '1';
-            // flash to whitensition = 'background 0.25s ease';
-            overlay.style.transition = 'background 0.25s ease';   overlay.style.background = '#fff';&& data.rarity.color) ? data.rarity.color : '#9b59b6';
-            overlay.style.background = '#fff';            await new Promise(r => setTimeout(r, 450));
-            await new Promise(r => setTimeout(r, 450));
-            overlay.remove();olor);
-        }} coins</div>` : '';
-a.rarity.name})</span>${awardedHtml}</div>`;
-        // Modify spin handler to show cutscene when flaggedElementById('spin-btn');};font-size:1.3em;animation:fadeIn 1s;">${data.item}</strong> <span style="font-weight:bold;">(${data.rarity.name})</span>${awardedHtml}</div>`;).textContent = data.coins;
-        const originalSpinBtn = document.getElementById('spin-btn');ount').textContent = data.coins;
-        if (originalSpinBtn) {Listener('click', async () => {ew Date().toISOString() });
-            originalSpinBtn.addEventListener('click', async () => {ata.item, rarity: data.rarity.name.toLowerCase(), date: new Date().toISOString() });
-            const spinBtn = originalSpinBtn; spinResult = document.getElementById('spin-result');m);
-            spinBtn.disabled = true;data.cutscene) await runExplosiveCutscene(data.item); else {
-            // Initialize spin handler
-            if (!spinBtn) return;
-            
-            spinBtn.addEventListener('click', async () => {
-                try {
-                    const spinResult = document.getElementById('spin-result');
-                    if (!spinResult) return;
-                    
-                    // Show loading state
-                    spinBtn.disabled = true;
-                    spinBtn.innerHTML = '<span class="loading-spinner"></span> Spinning...';
-                    spinResult.innerHTML = '';
-
-                    // Make API request
-                    const response = await fetch('/api/spin', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    const data = await response.json();
-
-                    if (data.success) {
-                        // Update coins
-                        if (typeof data.coins === 'number') {
-                            document.getElementById('coin-count').textContent = data.coins;
-                            if (currentUser) currentUser.coins = data.coins;
-                        }
-
-                        // Use server-provided rarity color or fallback
-                        const rarityColor = (data.rarity && data.rarity.color) ? data.rarity.color : '#9b59b6';
-                        window.lastSpinRarityColor = rarityColor;
-
-                        // Play cutscene if specified
-                        if (data.cutscene) {
-                            await runExplosiveCutscene(data.item);
-                        }
-
-                        // Format award coins HTML if present
-                        const awardedHtml = (typeof data.awarded === 'number' && data.awarded > 0) 
-                            ? `<div style="font-size:0.9rem;color:${rarityColor}">+${data.awarded} coins</div>`
-                            : '';
-
-                        // Show results
-                        spinResult.innerHTML = `
-                            <div>
-                                <strong style="color:${rarityColor};font-size:1.3em;animation:fadeIn 1s;">
-                                    ${data.item}
-                                </strong>
-                                <span style="font-weight:bold;">
-                                    (${data.rarity.name})
-                                </span>
-                                ${awardedHtml}
-                            </div>
-                        `;
-
-                        // Add to inventory
-                        if (currentUser?.inventory) {
-                            currentUser.inventory.push({
-                                name: data.item,
-                                rarity: data.rarity.name.toLowerCase(),
-                                date: new Date().toISOString()
-                            });
-                            loadGameData({ user: currentUser });
-                        }
-
-                        showPopup(`You got a ${data.rarity.name}!`, rarityColor);
-                    } else {
-                        spinResult.innerHTML = `<span style="color:#e74c3c">${data.error}</span>`;
-                        showPopup(data.error, '#e74c3c');
-                    }
-                } catch (error) {
-                    console.error('Spin error:', error);
-                    const spinResult = document.getElementById('spin-result');
-                    if (spinResult) {
-                        spinResult.innerHTML = `<span style="color:#e74c3c">An error occurred.</span>`;
-                    }
-                    showPopup('An error occurred.', '#e74c3c');
-                } finally {
-                    spinBtn.disabled = false;
-                    spinBtn.innerHTML = 'Spin Now!';
-                }
-            });
-        }
-
-        // Logout and cleanup functionality
-        async function logout() {
-            try {
-                await fetch('/api/logout');
-                currentUser = null;
-                if (socket) {
-                    socket.disconnect();
-                    socket = null;
-                }
-                cleanupOverlays();
-                showPage('home');
-            } catch (error) {
-                console.error('Logout error:', error);
-                showPage('home');
-            }
-        }
-
-        // Enhanced cleanup for overlays and interaction issues
-        function cleanupOverlays() {
-            // Remove any stray overlays that could block interaction
-            const viewportW = window.innerWidth;
-            const viewportH = window.innerHeight;
-            
-            Array.from(document.querySelectorAll('div')).forEach(el => {
-                if (!el || el === document.body || el === document.documentElement) return;
-                
-                // Get computed style
-                const style = window.getComputedStyle(el);
-                if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
-                
-                // Check if fixed/absolute and has transient flag
-                const pos = style.position;
-                if (!(pos === 'fixed' || pos === 'absolute' || el.dataset.transient === '1')) return;
-                
-                // Exclude known system elements
-                const isSystem = el.id === 'global-banner' || 
-                               el.classList.contains('announcement-bar') ||
-                               el.classList.contains('popup') ||
-                               el.classList.contains('disco-overlay') ||
-                               el.classList.contains('flash-overlay');
-                if (isSystem) return;
-                
-                // Check size and position
-                const rect = el.getBoundingClientRect();
-                if (rect.width < 40 || rect.height < 40) return;
-                
-                const coversCenter = rect.left <= viewportW/2 && rect.right >= viewportW/2 && 
-                                   rect.top <= viewportH/2 && rect.bottom >= viewportH/2;
-                                   
-                const areaRatio = (rect.width * rect.height) / (viewportW * viewportH);
-                
-                // Remove if element is too large or covers center
-                if (coversCenter || areaRatio > 0.25) {
-                    try {
-                        el.remove();
-                    } catch (e) { /* ignore */ }
-                }
-            });
-        }
-            const viewportW = window.innerWidth;
-            const viewportH = window.innerHeight;
-            const candidates = Array.from(document.querySelectorAll('div')) try { el.remove(); } catch (e) { /* ignore */ }
-                .filter(d => {            });
-                    if (!d || d === document.body || d === document.documentElement) return false;
-                    const style = window.getComputedStyle(d); .dismiss-btn, .tab-btn').forEach(btn => {
-                    if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return false;querySelectorAll('button, .btn, .dismiss-btn, .tab-btn').forEach(btn => {
-                    const pos = style.position;
-                    if (!(pos === 'fixed' || pos === 'absolute')) return false;auto';     btn.style.zIndex = '10001';
-                    // known system elements we should never remove      btn.style.position = 'relative';
-                    const isSystem = d.id === 'global-banner' || d.classList.contains('announcement-bar') || d.classList.contains('popup') || d.classList.contains('disco-overlay') || d.classList.contains('flash-overlay');position = 'relative';        } catch (e) {}
-                    if (isSystem) return false; } catch (e) {}
-                    const rect = d.getBoundingClientRect();   });
-                    // ignore tiny decorative elements}
-                    if (rect.width < 40 || rect.height < 40) return false;
-                    const coversCenter = rect.left <= viewportW/2 && rect.right >= viewportW/2 && rect.top <= viewportH/2 && rect.bottom >= viewportH/2;changeser('load', cleanupOverlays);
-                    const areaRatio = (rect.width * rect.height) / (viewportW * viewportH);ationObserver(cleanupOverlays);
-                    return coversCenter || areaRatio > 0.25;ver(cleanupOverlays);erver.observe(document.body, { 
-                });ment.body, {             childList: true, 
-e, 
-            candidates.forEach(el => { subtree: true 
-                try { el.remove(); } catch (e) { /* ignore */ }        });
-            });
-sient overlay (created by cutscenes or admin effects), remove it immediately so the
-            // Ensure interactive elements are clickable and sit above transient overlaysore other listeners.
-            document.querySelectorAll('button, .btn, .dismiss-btn, .tab-btn').forEach(btn => {s in capture phase to act before other listeners.r('pointerdown', (e) => {
-                try {addEventListener('pointerdown', (e) => {
-                    btn.style.pointerEvents = 'auto';
-                    btn.style.zIndex = '10001';ent.elementFromPoint(e.clientX, e.clientY);
-                    btn.style.position = 'relative';
-                } catch (e) {}(el.dataset && el.dataset.transient === '1' ? el : null);
-            });= el.closest('[data-transient="1"]') || (el.dataset && el.dataset.transient === '1' ? el : null);
-        }sient.remove();
-        
-        // Run cleanup on load and after dynamic content changessafes, 10);
-        window.addEventListener('load', cleanupOverlays);   setTimeout(cleanupOverlays, 10);                }
-        const observer = new MutationObserver(cleanupOverlays);
-        observer.observe(document.body, { 
-            childList: true,         }, { capture: true, passive: true });
-            subtree: true 
-        });nce
-k', (e) => {ouncement bar
-        // Defensive safety-net: if the user clicks and the element under the pointer is a transient
-        // visual overlay (created by cutscenes or admin effects), remove it immediately so the
-        // underlying UI can receive the interaction. Runs in capture phase to act before other listeners.= document.querySelector('.announcement-bar');f (bar) {
-        document.addEventListener('pointerdown', (e) => {lay = 'none';
-            try {smissed-v1', '1'); } catch (e) { /* ignore */ }
-                const el = document.elementFromPoint(e.clientX, e.clientY);   try { localStorage.setItem('announcement-dismissed-v1', '1'); } catch (e) { /* ignore */ }
-                if (!el) return;   }
-                // If the element is a visual overlay marked transient, remove it and allow the event to continue            }
-                const transient = el.closest('[data-transient="1"]') || (el.dataset && el.dataset.transient === '1' ? el : null);
-                if (transient) {'#global-banner .dismiss-btn')) {
-                    transient.remove();   const gb = document.getElementById('global-banner');
-                    // run cleanup afterwards to be safebal-banner');                if (gb) gb.classList.remove('visible');
-                    setTimeout(cleanupOverlays, 10);   if (gb) gb.classList.remove('visible');
-                } }
-            } catch (err) { /* ignore */ }        });
-        }, { capture: true, passive: true });
-spect persisted announcement dismissal across loads
-        // Announcement dismiss handlers + persistence
-        document.addEventListener('click', (e) => {') {.querySelector('.announcement-bar');
-            // dismiss announcement bar.announcement-bar');                if (bar) bar.style.display = 'none';
-            if (e.target.matches('.announcement-bar .dismiss-btn')) {   if (bar) bar.style.display = 'none';            }
-                const bar = document.querySelector('.announcement-bar');
-                if (bar) {        } catch (e) { /* ignore */ }
-                    bar.style.display = 'none';
-                    try { localStorage.setItem('announcement-dismissed-v1', '1'); } catch (e) { /* ignore */ }
-                }ontentLoaded', function() {
-            }t-bar');
-');('.dismiss-btn');
-            // dismiss global broadcast bannerbar && bar.querySelector('.dismiss-btn');
-            if (e.target.matches('#global-banner .dismiss-btn')) {
-                const gb = document.getElementById('global-banner');function() {sList.add('hide');
-                if (gb) gb.classList.remove('visible');'); setTimeout(function() {
-            }   bar.style.display = 'none';
-        });style.display = 'none';         }, 300);
- }, 300);                });
-        // respect persisted announcement dismissal across loads   });
-        try { }
-            if (localStorage.getItem('announcement-dismissed-v1') === '1') {        });
-                const bar = document.querySelector('.announcement-bar');
-                if (bar) bar.style.display = 'none';ion() {
-            }ch(function(btn) {
-        } catch (e) { /* ignore */ }tn, .styled-btn').forEach(function(btn) { btn.style.pointerEvents = 'auto';
- = 'auto';     btn.style.zIndex = '2';
-       btn.style.position = 'relative';
-        // Announcement bar dismiss with fade-out btn.style.position = 'relative';
-        document.addEventListener('DOMContentLoaded', function() { });
-            var bar = document.querySelector('.announcement-bar');        });
-            var btn = bar && bar.querySelector('.dismiss-btn');
-            if (btn) { input[type="submit"]').forEach(button => {
-                btn.addEventListener('click', function() {t[type="button"], input[type="submit"]').forEach(button => { button.addEventListener('click', (e) => {
-                    bar.classList.add('hide');ton clicked: ${button.textContent || button.value}`);
-                    setTimeout(function() { console.log(`Button clicked: ${button.textContent || button.value}`);
-                        bar.style.display = 'none'; });
-                    }, 300);        });
-                });
-            }
-        });
-
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize interactive elements
-            document.querySelectorAll('button, .btn, .styled-btn').forEach(function(btn) {
-                btn.style.cssText = `
-                    position: relative;
-                    z-index: var(--z-content);
-                    pointer-events: auto;
-                `;
-            });
-
-            // Add interaction tracking
-            document.querySelectorAll('button, .btn, input[type="button"], input[type="submit"]').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    console.log(`Button clicked: ${button.textContent || button.value}`);
-                });
-            });
-
-            // Initialize handlers
-            initSpinHandler();
-            initChatHandlers();
-            cleanupOverlays();
-
-            // Check initial login status
-            checkLoginStatus();
-
-            // Set up a MutationObserver for dynamic content
-            const observer = new MutationObserver(cleanupOverlays);
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-
-            // Always ensure interactive elements work
-            document.addEventListener('pointerdown', (e) => {
-                const el = document.elementFromPoint(e.clientX, e.clientY);
-                if (!el) return;
-
-                const transient = el.closest('[data-transient="1"]') || 
-                                (el.dataset && el.dataset.transient === '1' ? el : null);
-                if (transient) {
-                    transient.remove();
-                    cleanupOverlays();
-                }
-            }, {
-                capture: true,
-                passive: true
-            });
-        });
-
-        // Login handler
+        // Login Handler
         async function handleLogin(e) {
-            if (e) e.preventDefault();
-            
-            const form = $('#login-form');
-            const button = form?.querySelector('button[type="submit"]');
-            const errorDiv = $('#login-error');
-            
+            e.preventDefault();
+            const button = e.target.querySelector('button[type="submit"]');
+            const errorDiv = document.getElementById('login-error');
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
             try {
                 setLoading(button, true);
-                errorDiv?.classList.add('hidden');
-                
-                const username = $('#login-username').value.trim();
-                const password = $('#login-password').value;
-                
-                if (!username || !password) {
-                    throw new Error('Please enter both username and password');
-                }
-                
-                const loginData = await handleAPIRequest('/api/login', {
+                errorDiv.classList.add('hidden');
+
+                const data = await handleAPI('/api/login', {
                     method: 'POST',
                     body: JSON.stringify({ username, password })
                 });
-                
-                const userData = await handleAPIRequest('/api/data');
-                state.currentUser = userData.user;
-                loadGameData(userData);
-                showPage('game');
-                showPopup('Welcome back!', '#27ae60');
-                
+
+                if (data.success) {
+                    currentUser = data.user || { username, coins: 0 };
+                    document.getElementById('user-name').textContent = currentUser.username;
+                    document.getElementById('coin-count').textContent = currentUser.coins || 0;
+                    showPopup('Login successful!', '#27ae60');
+                    showPage('game');
+                } else {
+                    throw new Error(data.message || data.error || 'Login failed');
+                }
             } catch (err) {
-                errorDiv.textContent = err.message || 'Login failed';
+                errorDiv.textContent = err.message;
                 errorDiv.classList.remove('hidden');
                 showPopup('Login failed', '#e74c3c');
             } finally {
-                setLoading(button, false);
+                button.disabled = false;
+                button.innerHTML = 'Login';
             }
         }
+
+        // Register Handler
+        async function handleRegister(e) {
+            e.preventDefault();
+            const button = e.target.querySelector('button[type="submit"]');
+            const errorDiv = document.getElementById('register-error');
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                setLoading(button, true);
+                errorDiv.classList.add('hidden');
+
+                const data = await handleAPI('/api/register', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (data.success) {
+                    currentUser = data.user || { username, coins: 0 };
+                    document.getElementById('user-name').textContent = currentUser.username;
+                    document.getElementById('coin-count').textContent = currentUser.coins || 0;
+                    showPopup('Registration successful!', '#27ae60');
+                    showPage('game');
+                } else {
+                    throw new Error(data.message || data.error || 'Registration failed');
+                }
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.classList.remove('hidden');
+                showPopup('Registration failed', '#e74c3c');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = 'Register';
+            }
+        }
+
+        // Logout Handler
+        function handleLogout() {
+            currentUser = null;
+            showPopup('Logged out', '#f39c12');
+            showPage('home');
+        }
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navigation
+            document.getElementById('login-btn').addEventListener('click', () => showPage('login'));
+            document.getElementById('register-btn').addEventListener('click', () => showPage('register'));
+            document.getElementById('show-register').addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage('register');
+            });
+            document.getElementById('show-login').addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage('login');
+            });
+
+            // Forms
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+            document.getElementById('logout-btn').addEventListener('click', handleLogout);
+
+            // Announcement Bar
+            const announcementBar = document.getElementById('announcement-bar');
+            const dismissBtn = announcementBar.querySelector('.dismiss-btn');
+            
+            // Check if dismissed
+            try {
+                if (localStorage.getItem('announcement-dismissed') === '1') {
+                    announcementBar.classList.add('hide');
+                }
+            } catch (e) {}
+
+            // Dismiss handler
+            dismissBtn.addEventListener('click', () => {
+                announcementBar.classList.add('hide');
+                try {
+                    localStorage.setItem('announcement-dismissed', '1');
+                } catch (e) {}
+            });
+
+            // Start on home page
+            showPage('home');
+
+            console.log('App initialized successfully');
+        });
     </script>
 </body>
 </html>
