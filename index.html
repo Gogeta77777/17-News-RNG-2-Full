@@ -61,6 +61,27 @@
             z-index: 1;
         }
 
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 247, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 247, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 2;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
         /* Utility Classes */
         .hidden {
             display: none !important;
@@ -286,6 +307,46 @@
             flex-wrap: wrap;
         }
 
+        /* Update Log */
+        .update-log {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 24px;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            position: relative;
+            z-index: var(--z-content);
+        }
+
+        .update-log h3 {
+            color: var(--accent-primary);
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+        }
+
+        .log-entry {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 3px solid var(--accent-secondary);
+        }
+
+        .log-entry .date {
+            color: var(--accent-primary);
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .log-entry p {
+            color: #bcd;
+            font-size: 0.95rem;
+            margin: 4px 0;
+        }
+
         /* Game Page */
         .game-header {
             background: rgba(10, 18, 25, 0.95);
@@ -396,6 +457,18 @@
                     <button id="register-btn" class="btn">Register</button>
                 </div>
             </div>
+            <div class="update-log">
+                <h3>📰 Latest Updates</h3>
+                <div class="log-entry">
+                    <span class="date">31/10/25</span>
+                    <p>🎉 <strong>Alpha Release!</strong></p>
+                    <p>Welcome to 17 News RNG 2 Alpha testing phase. Start your journey now!</p>
+                </div>
+                <div class="log-entry">
+                    <span class="date">29/10/25</span>
+                    <p>🔧 System improvements and bug fixes</p>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -462,18 +535,29 @@
     </div>
 
     <script>
+        // CRITICAL FIX: Ensure all elements load properly
+        console.log('Script loading...');
+
         // State
         let currentUser = null;
 
         // Utility Functions
         function showPage(pageName) {
-            ['home-page', 'login-page', 'register-page', 'game-page'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
+            console.log('Switching to page:', pageName);
+            const pages = ['home-page', 'login-page', 'register-page', 'game-page'];
+            pages.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
             });
-            document.getElementById(pageName + '-page').classList.remove('hidden');
+            const targetPage = document.getElementById(pageName + '-page');
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+                console.log('Page switched to:', pageName);
+            }
         }
 
         function showPopup(message, color = '#27ae60') {
+            console.log('Showing popup:', message);
             const popup = document.createElement('div');
             popup.className = 'popup';
             popup.style.background = color;
@@ -507,6 +591,7 @@
         // Login Handler
         async function handleLogin(e) {
             e.preventDefault();
+            console.log('Login form submitted');
             const button = e.target.querySelector('button[type="submit"]');
             const errorDiv = document.getElementById('login-error');
             const username = document.getElementById('login-username').value.trim();
@@ -549,6 +634,7 @@
         // Register Handler
         async function handleRegister(e) {
             e.preventDefault();
+            console.log('Register form submitted');
             const button = e.target.querySelector('button[type="submit"]');
             const errorDiv = document.getElementById('register-error');
             const username = document.getElementById('register-username').value.trim();
@@ -590,54 +676,119 @@
 
         // Logout Handler
         function handleLogout() {
+            console.log('Logging out');
             currentUser = null;
             showPopup('Logged out', '#f39c12');
             showPage('home');
         }
 
-        // Initialize App
-        document.addEventListener('DOMContentLoaded', function() {
-            // Navigation
-            document.getElementById('login-btn').addEventListener('click', () => showPage('login'));
-            document.getElementById('register-btn').addEventListener('click', () => showPage('register'));
-            document.getElementById('show-register').addEventListener('click', (e) => {
-                e.preventDefault();
-                showPage('register');
-            });
-            document.getElementById('show-login').addEventListener('click', (e) => {
-                e.preventDefault();
-                showPage('login');
-            });
+        // Initialize App - CRITICAL FIX
+        function initializeApp() {
+            console.log('Initializing app...');
+
+            // Get all elements
+            const loginBtn = document.getElementById('login-btn');
+            const registerBtn = document.getElementById('register-btn');
+            const showRegisterLink = document.getElementById('show-register');
+            const showLoginLink = document.getElementById('show-login');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const logoutBtn = document.getElementById('logout-btn');
+            const announcementBar = document.getElementById('announcement-bar');
+            const dismissBtn = announcementBar ? announcementBar.querySelector('.dismiss-btn') : null;
+
+            // Navigation - Direct click handlers
+            if (loginBtn) {
+                loginBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Login button clicked!');
+                    showPage('login');
+                };
+                console.log('Login button handler attached');
+            }
+
+            if (registerBtn) {
+                registerBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Register button clicked!');
+                    showPage('register');
+                };
+                console.log('Register button handler attached');
+            }
+
+            if (showRegisterLink) {
+                showRegisterLink.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Show register link clicked!');
+                    showPage('register');
+                };
+            }
+
+            if (showLoginLink) {
+                showLoginLink.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Show login link clicked!');
+                    showPage('login');
+                };
+            }
 
             // Forms
-            document.getElementById('login-form').addEventListener('submit', handleLogin);
-            document.getElementById('register-form').addEventListener('submit', handleRegister);
-            document.getElementById('logout-btn').addEventListener('click', handleLogout);
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+                console.log('Login form handler attached');
+            }
+
+            if (registerForm) {
+                registerForm.addEventListener('submit', handleRegister);
+                console.log('Register form handler attached');
+            }
+
+            if (logoutBtn) {
+                logoutBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleLogout();
+                };
+            }
 
             // Announcement Bar
-            const announcementBar = document.getElementById('announcement-bar');
-            const dismissBtn = announcementBar.querySelector('.dismiss-btn');
-            
-            // Check if dismissed
-            try {
-                if (localStorage.getItem('announcement-dismissed') === '1') {
+            if (dismissBtn && announcementBar) {
+                dismissBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Dismiss button clicked!');
                     announcementBar.classList.add('hide');
-                }
-            } catch (e) {}
+                    try {
+                        localStorage.setItem('announcement-dismissed', '1');
+                    } catch (e) {}
+                };
+                console.log('Dismiss button handler attached');
 
-            // Dismiss handler
-            dismissBtn.addEventListener('click', () => {
-                announcementBar.classList.add('hide');
+                // Check if dismissed
                 try {
-                    localStorage.setItem('announcement-dismissed', '1');
+                    if (localStorage.getItem('announcement-dismissed') === '1') {
+                        announcementBar.classList.add('hide');
+                    }
                 } catch (e) {}
-            });
+            }
 
             // Start on home page
             showPage('home');
 
-            console.log('App initialized successfully');
-        });
+            console.log('App initialized successfully!');
+        }
+
+        // Wait for DOM to be fully loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            // DOM already loaded
+            initializeApp();
+        }
     </script>
 </body>
 </html>
