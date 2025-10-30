@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
-    <meta name="description" content="17 News RNG 2 - The Return">
     <title>17 News RNG 2</title>
     
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,9 +77,7 @@
             100% { transform: translate(50px, 50px); }
         }
 
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
         .container {
             width: 100%;
@@ -117,10 +114,7 @@
             box-shadow: 0 4px 12px rgba(0, 255, 247, 0.3);
         }
 
-        button:active, .btn:active {
-            transform: translateY(0);
-        }
-
+        button:active, .btn:active { transform: translateY(0); }
         button:disabled, .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -148,10 +142,7 @@
             transition: opacity 0.3s ease;
         }
 
-        .announcement-bar.hide {
-            opacity: 0;
-            pointer-events: none;
-        }
+        .announcement-bar.hide { opacity: 0; pointer-events: none; }
 
         .dismiss-btn {
             background: transparent;
@@ -195,9 +186,7 @@
             letter-spacing: 1px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+        .form-group { margin-bottom: 20px; }
 
         .form-group label {
             display: block;
@@ -243,9 +232,7 @@
             cursor: pointer;
         }
 
-        .auth-link a:hover {
-            text-decoration: underline;
-        }
+        .auth-link a:hover { text-decoration: underline; }
 
         .home-main {
             display: flex;
@@ -269,9 +256,7 @@
             z-index: var(--z-content);
         }
 
-        .welcome-card:hover {
-            transform: translateY(-6px);
-        }
+        .welcome-card:hover { transform: translateY(-6px); }
 
         .welcome-card h2 {
             font-size: 2rem;
@@ -394,6 +379,22 @@
             min-height: 50px;
         }
 
+        .active-potions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .active-potion {
+            background: rgba(156, 39, 176, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 2px solid #9C27B0;
+            font-size: 0.9rem;
+        }
+
         .main-content {
             width: 100%;
             max-width: 900px;
@@ -422,12 +423,26 @@
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
         }
 
-        .tab-pane {
-            display: none;
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        .inventory-categories {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        .tab-pane.active {
-            display: block;
+        .category-btn {
+            background: rgba(52, 152, 219, 0.2);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .category-btn.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
         }
 
         .inventory-grid {
@@ -442,6 +457,7 @@
             padding: 15px;
             border-radius: 8px;
             border-left: 4px solid;
+            position: relative;
         }
 
         .rarity-17-news { border-left-color: #4CAF50; }
@@ -450,15 +466,26 @@
         .rarity-cooper-metson { border-left-color: #FF9800; }
         .rarity-mr-fernanski { border-left-color: #F44336; }
 
-        .item-name {
+        .item-count {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
             font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
         }
 
-        .item-rarity {
-            font-size: 0.8rem;
-            text-transform: capitalize;
+        .potion-item {
+            background: rgba(156, 39, 176, 0.2);
+            border-left-color: #9C27B0;
+        }
+
+        .use-potion-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
         }
 
         .chat-messages {
@@ -496,11 +523,43 @@
             color: var(--text-light);
         }
 
-        .shop-item, .code-section {
+        .shop-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .shop-timer {
+            background: rgba(241, 196, 15, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            border: 2px solid #f1c40f;
+        }
+
+        .shop-item {
             background: rgba(255, 255, 255, 0.05);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .potion-shop {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .potion-shop-item {
+            background: rgba(156, 39, 176, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #9C27B0;
         }
 
         .announcement, .event {
@@ -528,14 +587,8 @@
         }
 
         @keyframes popupIn {
-            from {
-                opacity: 0;
-                transform: translate(-50%, 10px);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, 0);
-            }
+            from { opacity: 0; transform: translate(-50%, 10px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
         }
 
         .loading-spinner {
@@ -549,23 +602,13 @@
             margin-right: 8px;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 768px) {
-            .button-group {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .button-group button {
-                width: 100%;
-            }
-
-            .tabs {
-                overflow-x: auto;
-            }
+            .button-group { flex-direction: column; width: 100%; }
+            .button-group button { width: 100%; }
+            .tabs { overflow-x: auto; }
+            .inventory-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -590,11 +633,7 @@
                 <div class="log-entry">
                     <span class="date">31/10/25</span>
                     <p>🎉 <strong>Alpha Release!</strong></p>
-                    <p>Welcome to 17 News RNG 2 Alpha testing phase. Start your journey now!</p>
-                </div>
-                <div class="log-entry">
-                    <span class="date">29/10/25</span>
-                    <p>🔧 System improvements and bug fixes</p>
+                    <p>New: Potions, Shop Rotation, Inventory Stacking!</p>
                 </div>
             </div>
         </main>
@@ -659,46 +698,79 @@
                     <h2>🎰 Spin for Items</h2>
                     <button id="spin-btn" class="btn">Spin Now!</button>
                     <div id="spin-result"></div>
+                    <div id="active-potions" class="active-potions"></div>
                 </div>
 
                 <div class="main-content">
                     <div class="tabs">
                         <button class="tab-btn active" data-tab="inventory">Inventory</button>
                         <button class="tab-btn" data-tab="chat">Chat</button>
-                        <button class="tab-btn" data-tab="codes">Codes</button>
                         <button class="tab-btn" data-tab="shop">Shop</button>
+                        <button class="tab-btn" data-tab="codes">Codes</button>
                         <button class="tab-btn" data-tab="announcements">Announcements</button>
                         <button class="tab-btn" data-tab="events">Events</button>
                     </div>
 
                     <div class="tab-pane active" id="inventory-tab">
                         <h2>Your Inventory</h2>
-                        <div id="inventory-grid" class="inventory-grid">
-                            <p>Your inventory is empty. Spin to get items!</p>
+                        <div class="inventory-categories">
+                            <button class="category-btn active" data-category="rarities">Rarities</button>
+                            <button class="category-btn" data-category="potions">Potions</button>
+                            <button class="category-btn" data-category="items">Items</button>
                         </div>
+                        <div id="inventory-display"></div>
                     </div>
 
                     <div class="tab-pane" id="chat-tab">
                         <h2>Global Chat</h2>
                         <div id="chat-messages" class="chat-messages"></div>
                         <div class="chat-input">
-                            <input type="text" id="chat-input" placeholder="Type your message...">
+                            <input type="text" id="chat-input" placeholder="Type your message..." maxlength="500">
                             <button id="send-btn" class="btn">Send</button>
-                        </div>
-                    </div>
-
-                    <div class="tab-pane" id="codes-tab">
-                        <h2>Redeem Codes</h2>
-                        <div class="code-section">
-                            <input type="text" id="code-input" placeholder="Enter code here" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid rgba(52, 152, 219, 0.3); border-radius: 8px; background: rgba(10, 18, 25, 0.8); color: #e6f7ff;">
-                            <button id="redeem-btn" class="btn">Redeem Code</button>
-                            <div id="code-result" style="margin-top: 10px;"></div>
                         </div>
                     </div>
 
                     <div class="tab-pane" id="shop-tab">
                         <h2>Shop</h2>
-                        <div id="shop-list"></div>
+                        
+                        <div class="shop-section">
+                            <h3>🛒 Item Shop (Rotates Every 10 Minutes)</h3>
+                            <div class="shop-timer" id="shop-timer">Loading...</div>
+                            <div id="shop-item-display"></div>
+                        </div>
+
+                        <div class="shop-section">
+                            <h3>🧪 Potion Shop</h3>
+                            <div class="potion-shop">
+                                <div class="potion-shop-item">
+                                    <h4>Luck Potion I</h4>
+                                    <p style="font-size: 0.9rem; opacity: 0.8;">2x luck for 5 minutes</p>
+                                    <p style="color: #f1c40f; margin: 10px 0;">500 coins</p>
+                                    <button class="btn buy-potion-btn" data-potion="luck1">Buy</button>
+                                </div>
+                                <div class="potion-shop-item">
+                                    <h4>Speed Potion I</h4>
+                                    <p style="font-size: 0.9rem; opacity: 0.8;">50% faster spins for 5 minutes</p>
+                                    <p style="color: #f1c40f; margin: 10px 0;">800 coins</p>
+                                    <button class="btn buy-potion-btn" data-potion="speed1">Buy</button>
+                                </div>
+                                <div class="potion-shop-item">
+                                    <h4>Luck Potion II</h4>
+                                    <p style="font-size: 0.9rem; opacity: 0.8;">4x luck for 5 minutes</p>
+                                    <p style="color: #f1c40f; margin: 10px 0;">2000 coins</p>
+                                    <button class="btn buy-potion-btn" data-potion="luck2">Buy</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="codes-tab">
+                        <h2>Redeem Codes</h2>
+                        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
+                            <input type="text" id="code-input" placeholder="Enter code here" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid rgba(52, 152, 219, 0.3); border-radius: 8px; background: rgba(10, 18, 25, 0.8); color: #e6f7ff;">
+                            <button id="redeem-btn" class="btn">Redeem Code</button>
+                            <div id="code-result" style="margin-top: 10px;"></div>
+                        </div>
                     </div>
 
                     <div class="tab-pane" id="announcements-tab">
@@ -763,30 +835,80 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        console.log('🎮 17 News RNG 2 initializing...');
+        console.log('🎮 17 News RNG 2 - Complete Edition');
 
         let currentUser = null;
         let socket = null;
+        let currentInventoryCategory = 'rarities';
+        let shopUpdateInterval = null;
 
-        // Check for existing session on page load
+        // API Helper with credentials
+        async function handleAPI(url, options = {}) {
+            try {
+                console.log('🌐 API:', url);
+                const res = await fetch(url, {
+                    ...options,
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json', ...options.headers }
+                });
+                const data = await res.json();
+                console.log('📦 Response:', data.success ? '✅' : '❌', url);
+                return data;
+            } catch (err) {
+                console.error('❌ API Error:', url, err);
+                throw err;
+            }
+        }
+
+        function showPage(pageName) {
+            console.log('📄 Page:', pageName);
+            const pages = ['home-page', 'login-page', 'register-page', 'game-page', 'admin-panel'];
+            pages.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            const targetPage = document.getElementById(pageName + '-page') || document.getElementById(pageName);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+            }
+        }
+
+        function showPopup(message, color = '#27ae60') {
+            const popup = document.createElement('div');
+            popup.className = 'popup';
+            popup.style.background = color;
+            popup.textContent = message;
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 2500);
+        }
+
+        function setLoading(button, isLoading, text = 'Loading...') {
+            if (!button) return;
+            button.disabled = isLoading;
+            if (isLoading) {
+                button.innerHTML = `<span class="loading-spinner"></span> ${text}`;
+            }
+        }
+
+        // Check existing session on load
         async function checkExistingSession() {
             try {
-                console.log('🔍 Checking for existing session...');
+                console.log('🔍 Checking session...');
                 const data = await handleAPI('/api/check-session');
                 
                 if (data.success && data.loggedIn) {
-                    console.log('✅ Found existing session:', data.user.username);
+                    console.log('✅ Session found:', data.user.username);
                     currentUser = data.user;
                     await loadFullGameData();
                     showPage('game');
                     initSocket();
+                    updateActivePotions();
+                    startShopTimer();
                     return true;
                 }
                 
-                console.log('ℹ️ No existing session');
                 return false;
             } catch (err) {
-                console.log('ℹ️ No existing session');
                 return false;
             }
         }
@@ -802,54 +924,235 @@
             }
         }
 
-        function showPage(pageName) {
-            console.log('Switching to page:', pageName);
-            const pages = ['home-page', 'login-page', 'register-page', 'game-page', 'admin-panel'];
-            pages.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.classList.add('hidden');
-            });
-            const targetPage = document.getElementById(pageName + '-page') || document.getElementById(pageName);
-            if (targetPage) {
-                targetPage.classList.remove('hidden');
-                console.log('✅ Page switched to:', pageName);
+        function loadGameData(data) {
+            if (!data.user) return;
+            
+            currentUser = data.user;
+            document.getElementById('user-name').textContent = currentUser.username;
+            document.getElementById('coin-count').textContent = currentUser.coins || 0;
+
+            if (currentUser.isAdmin) {
+                document.getElementById('admin-btn').classList.remove('hidden');
             }
-        }
 
-        function showPopup(message, color = '#27ae60') {
-            const popup = document.createElement('div');
-            popup.className = 'popup';
-            popup.style.background = color;
-            popup.textContent = message;
-            document.body.appendChild(popup);
-            setTimeout(() => popup.remove(), 2000);
-        }
+            // Load inventory based on current category
+            loadInventory(currentUser.inventory);
 
-        function setLoading(button, isLoading, text = 'Loading...') {
-            if (!button) return;
-            button.disabled = isLoading;
-            if (isLoading) {
-                button.innerHTML = `<span class="loading-spinner"></span> ${text}`;
-            }
-        }
-
-        async function handleAPI(url, options = {}) {
-            try {
-                console.log('🌐 API Request:', url, options.method || 'GET');
-                const res = await fetch(url, {
-                    ...options,
-                    credentials: 'same-origin', // CRITICAL: Include session cookies
-                    headers: { 'Content-Type': 'application/json', ...options.headers }
+            // Load announcements
+            const announcementsList = document.getElementById('announcements-list');
+            announcementsList.innerHTML = '';
+            if (!data.announcements || data.announcements.length === 0) {
+                announcementsList.innerHTML = '<p style="text-align: center; color: #bdc3c7;">No announcements yet.</p>';
+            } else {
+                data.announcements.forEach(ann => {
+                    const annEl = document.createElement('div');
+                    annEl.className = 'announcement';
+                    annEl.innerHTML = `
+                        <h3>${ann.title}</h3>
+                        <p>${ann.content}</p>
+                        <small>By ${ann.author} on ${new Date(ann.date).toLocaleString()}</small>
+                    `;
+                    announcementsList.appendChild(annEl);
                 });
-                const data = await res.json();
-                console.log('📦 API Response:', url, data);
-                return data;
+            }
+
+            // Load events
+            const eventsList = document.getElementById('events-list');
+            eventsList.innerHTML = '';
+            if (!data.events || data.events.length === 0) {
+                eventsList.innerHTML = '<p style="text-align: center; color: #bdc3c7;">No events yet.</p>';
+            } else {
+                data.events.forEach(evt => {
+                    const evtEl = document.createElement('div');
+                    evtEl.className = 'event';
+                    evtEl.innerHTML = `
+                        <h3>${evt.name}</h3>
+                        <p>${evt.description}</p>
+                        <small>${new Date(evt.startDate).toLocaleString()} - ${new Date(evt.endDate).toLocaleString()}</small>
+                    `;
+                    eventsList.appendChild(evtEl);
+                });
+            }
+
+            // Load chat
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = '';
+            if (data.chatMessages && data.chatMessages.length > 0) {
+                data.chatMessages.forEach(msg => {
+                    const msgEl = document.createElement('div');
+                    msgEl.className = 'chat-message';
+                    msgEl.innerHTML = `
+                        <span class="username">${msg.username}:</span>
+                        <span>${msg.message}</span>
+                        <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
+                    `;
+                    chatMessages.appendChild(msgEl);
+                });
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            updateActivePotions();
+        }
+
+        function loadInventory(inventory) {
+            const display = document.getElementById('inventory-display');
+            display.innerHTML = '';
+
+            const category = inventory[currentInventoryCategory] || {};
+            const items = Object.values(category);
+
+            if (items.length === 0) {
+                display.innerHTML = '<p style="text-align: center; color: #bdc3c7; padding: 40px;">No items in this category yet.</p>';
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'inventory-grid';
+
+            if (currentInventoryCategory === 'rarities') {
+                items.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    const rarityClass = item.name.toLowerCase().replace(/\s+/g, '-');
+                    itemEl.className = `inventory-item rarity-${rarityClass}`;
+                    itemEl.innerHTML = `
+                        <div class="item-count">x${item.count}</div>
+                        <span class="item-name" style="color: ${item.color};">${item.name}</span>
+                    `;
+                    grid.appendChild(itemEl);
+                });
+            } else if (currentInventoryCategory === 'potions') {
+                Object.entries(category).forEach(([key, count]) => {
+                    if (count > 0) {
+                        const potionNames = {
+                            luck1: 'Luck Potion I',
+                            luck2: 'Luck Potion II',
+                            speed1: 'Speed Potion I'
+                        };
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'inventory-item potion-item';
+                        itemEl.innerHTML = `
+                            <div class="item-count">x${count}</div>
+                            <span class="item-name">${potionNames[key] || key}</span>
+                            <button class="btn use-potion-btn" data-potion="${key}">Use</button>
+                        `;
+                        grid.appendChild(itemEl);
+                    }
+                });
+            } else if (currentInventoryCategory === 'items') {
+                items.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'inventory-item';
+                    itemEl.innerHTML = `
+                        <div class="item-count">x${item.count}</div>
+                        <span class="item-name">${item.name}</span>
+                    `;
+                    grid.appendChild(itemEl);
+                });
+            }
+
+            display.appendChild(grid);
+
+            // Attach potion use handlers
+            display.querySelectorAll('.use-potion-btn').forEach(btn => {
+                btn.onclick = () => usePotion(btn.dataset.potion);
+            });
+        }
+
+        function updateActivePotions() {
+            const container = document.getElementById('active-potions');
+            container.innerHTML = '';
+
+            if (!currentUser || !currentUser.activePotions) return;
+
+            const now = Date.now();
+            const active = currentUser.activePotions.filter(p => p.expires > now);
+
+            active.forEach(potion => {
+                const el = document.createElement('div');
+                el.className = 'active-potion';
+                const remaining = Math.ceil((potion.expires - now) / 1000);
+                el.innerHTML = `${potion.name} - ${remaining}s`;
+                container.appendChild(el);
+            });
+
+            // Update every second
+            setTimeout(() => updateActivePotions(), 1000);
+        }
+
+        async function usePotion(potionKey) {
+            try {
+                const data = await handleAPI('/api/use-potion', {
+                    method: 'POST',
+                    body: JSON.stringify({ potionKey })
+                });
+
+                if (data.success) {
+                    showPopup(data.message, '#9C27B0');
+                    currentUser.activePotions = data.activePotions;
+                    await loadFullGameData();
+                    updateActivePotions();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
             } catch (err) {
-                console.error('❌ API Error:', url, err);
-                throw err;
+                showPopup('Failed to use potion', '#e74c3c');
             }
         }
 
+        function initSocket() {
+            if (socket) return;
+            
+            console.log('🔌 Initializing Socket.IO...');
+            socket = io();
+            
+            socket.on('connect', () => {
+                console.log('✅ Socket connected:', socket.id);
+            });
+            
+            socket.on('chat_message', (data) => {
+                console.log('💬 Chat:', data.username);
+                const chatMessages = document.getElementById('chat-messages');
+                const msgEl = document.createElement('div');
+                msgEl.className = 'chat-message';
+                msgEl.innerHTML = `
+                    <span class="username">${data.username}:</span>
+                    <span>${data.message}</span>
+                    <br><small style="opacity: 0.7;">${new Date(data.timestamp).toLocaleTimeString()}</small>
+                `;
+                chatMessages.appendChild(msgEl);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+
+            socket.on('new_announcement', (data) => {
+                console.log('📢 New announcement');
+                showPopup('📢 ' + data.title, '#f39c12');
+                loadFullGameData();
+            });
+
+            socket.on('new_event', (data) => {
+                console.log('🎉 New event');
+                showPopup('🎉 ' + data.name, '#9c27b0');
+                loadFullGameData();
+            });
+
+            socket.on('shop_rotated', (data) => {
+                console.log('🔄 Shop rotated');
+                loadShopItem();
+            });
+        }
+
+        async function refreshGameData() {
+            try {
+                const data = await handleAPI('/api/data');
+                if (data.success) {
+                    loadGameData(data);
+                }
+            } catch (err) {
+                console.error('Failed to refresh:', err);
+            }
+        }
+
+        // Login handler
         async function handleLogin(e) {
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
@@ -874,10 +1177,13 @@
 
                 if (data.success) {
                     currentUser = data.user;
-                    loadGameData(data);
+                    await loadFullGameData();
                     showPopup('Login successful!', '#27ae60');
                     showPage('game');
                     initSocket();
+                    updateActivePotions();
+                    startShopTimer();
+                    document.getElementById('spin-result').innerHTML = '';
                 } else {
                     throw new Error(data.message || 'Login failed');
                 }
@@ -891,6 +1197,7 @@
             }
         }
 
+        // Register handler
         async function handleRegister(e) {
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
@@ -915,10 +1222,13 @@
 
                 if (data.success) {
                     currentUser = data.user;
-                    loadGameData(data);
+                    await loadFullGameData();
                     showPopup('Registration successful!', '#27ae60');
                     showPage('game');
                     initSocket();
+                    updateActivePotions();
+                    startShopTimer();
+                    document.getElementById('spin-result').innerHTML = '';
                 } else {
                     throw new Error(data.message || 'Registration failed');
                 }
@@ -932,132 +1242,7 @@
             }
         }
 
-        function loadGameData(data) {
-            if (!data.user) return;
-            
-            currentUser = data.user;
-            document.getElementById('user-name').textContent = currentUser.username;
-            document.getElementById('coin-count').textContent = currentUser.coins || 0;
-
-            if (currentUser.isAdmin) {
-                document.getElementById('admin-btn').classList.remove('hidden');
-            }
-
-            const inventory = currentUser.inventory || [];
-            const inventoryGrid = document.getElementById('inventory-grid');
-            inventoryGrid.innerHTML = '';
-
-            if (inventory.length === 0) {
-                inventoryGrid.innerHTML = '<p style="text-align: center; color: #bdc3c7; padding: 20px;">Your inventory is empty. Spin to get items!</p>';
-            } else {
-                inventory.forEach(item => {
-                    const itemEl = document.createElement('div');
-                    const rarityClass = item.rarity.toLowerCase().replace(/\s+/g, '-');
-                    itemEl.className = `inventory-item rarity-${rarityClass}`;
-                    itemEl.innerHTML = `
-                        <span class="item-name">${item.name}</span>
-                        <span class="item-rarity">${item.rarity}</span>
-                        <small style="display: block; margin-top: 5px; opacity: 0.7;">${new Date(item.date).toLocaleDateString()}</small>
-                    `;
-                    inventoryGrid.appendChild(itemEl);
-                });
-            }
-
-            if (data.announcements) {
-                const announcementsList = document.getElementById('announcements-list');
-                announcementsList.innerHTML = '';
-                if (data.announcements.length === 0) {
-                    announcementsList.innerHTML = '<p>No announcements yet.</p>';
-                } else {
-                    data.announcements.forEach(ann => {
-                        const annEl = document.createElement('div');
-                        annEl.className = 'announcement';
-                        annEl.innerHTML = `
-                            <h3>${ann.title}</h3>
-                            <p>${ann.content}</p>
-                            <small>By ${ann.author} on ${new Date(ann.date).toLocaleString()}</small>
-                        `;
-                        announcementsList.appendChild(annEl);
-                    });
-                }
-            }
-
-            if (data.events) {
-                const eventsList = document.getElementById('events-list');
-                eventsList.innerHTML = '';
-                if (data.events.length === 0) {
-                    eventsList.innerHTML = '<p>No events yet.</p>';
-                } else {
-                    data.events.forEach(evt => {
-                        const evtEl = document.createElement('div');
-                        evtEl.className = 'event';
-                        evtEl.innerHTML = `
-                            <h3>${evt.name}</h3>
-                            <p>${evt.description}</p>
-                            <small>${new Date(evt.startDate).toLocaleString()} - ${new Date(evt.endDate).toLocaleString()}</small>
-                        `;
-                        eventsList.appendChild(evtEl);
-                    });
-                }
-            }
-
-            if (data.chatMessages) {
-                const chatMessages = document.getElementById('chat-messages');
-                chatMessages.innerHTML = '';
-                data.chatMessages.forEach(msg => {
-                    const msgEl = document.createElement('div');
-                    msgEl.className = 'chat-message';
-                    msgEl.innerHTML = `
-                        <span class="username">${msg.username}:</span>
-                        <span>${msg.message}</span>
-                        <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
-                    `;
-                    chatMessages.appendChild(msgEl);
-                });
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        }
-
-        function initSocket() {
-            if (socket) return;
-            
-            socket = io();
-            
-            socket.on('chat_message', (data) => {
-                const chatMessages = document.getElementById('chat-messages');
-                const msgEl = document.createElement('div');
-                msgEl.className = 'chat-message';
-                msgEl.innerHTML = `
-                    <span class="username">${data.username}:</span>
-                    <span>${data.message}</span>
-                    <br><small style="opacity: 0.7;">${new Date(data.timestamp).toLocaleTimeString()}</small>
-                `;
-                chatMessages.appendChild(msgEl);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-
-            socket.on('new_announcement', (data) => {
-                showPopup('New announcement: ' + data.title, '#f39c12');
-                refreshGameData();
-            });
-
-            socket.on('new_event', (data) => {
-                showPopup('New event: ' + data.name, '#9c27b0');
-                refreshGameData();
-            });
-        }
-
-        async function refreshGameData() {
-            try {
-                const data = await handleAPI('/api/data');
-                if (data.success) {
-                    loadGameData(data);
-                }
-            } catch (err) {
-                console.error('Failed to refresh data:', err);
-            }
-        }
-
+        // Spin handler
         async function handleSpin() {
             const button = document.getElementById('spin-btn');
             const result = document.getElementById('spin-result');
@@ -1076,13 +1261,12 @@
                     
                     result.innerHTML = `
                         <div style="animation: fadeIn 0.5s;">
-                            <strong style="color: ${rarityColor}; font-size: 1.3em;">${data.item}</strong>
-                            <br><span style="color: #bcd;">(${data.rarity.name})</span>
+                            <strong style="color: ${rarityColor}; font-size: 2em;">${data.item}</strong>
                             ${awardText}
                         </div>
                     `;
                     
-                    showPopup(`You got ${data.rarity.name}!`, rarityColor);
+                    showPopup(`${data.rarity.name}!`, rarityColor);
                     
                     await refreshGameData();
                 } else {
@@ -1098,11 +1282,13 @@
             }
         }
 
+        // Chat handler
         function sendMessage() {
             const input = document.getElementById('chat-input');
             const message = input.value.trim();
             
             if (message && socket && currentUser) {
+                console.log('📤 Sending:', message);
                 socket.emit('chat_message', {
                     username: currentUser.username,
                     message: message
@@ -1111,6 +1297,7 @@
             }
         }
 
+        // Code redemption
         async function redeemCode() {
             const input = document.getElementById('code-input');
             const resultDiv = document.getElementById('code-result');
@@ -1128,79 +1315,108 @@
                 });
 
                 if (data.success) {
-                    resultDiv.innerHTML = '<span style="color: #27ae60;">Code redeemed successfully!</span>';
+                    resultDiv.innerHTML = '<span style="color: #27ae60;">Code redeemed!</span>';
                     input.value = '';
                     showPopup('Code redeemed!', '#27ae60');
+                    document.getElementById('coin-count').textContent = data.coins;
                     await refreshGameData();
                 } else {
                     resultDiv.innerHTML = `<span style="color: #e74c3c;">${data.error}</span>`;
                     showPopup(data.error, '#e74c3c');
                 }
             } catch (err) {
-                resultDiv.innerHTML = '<span style="color: #e74c3c;">Error redeeming code</span>';
+                resultDiv.innerHTML = '<span style="color: #e74c3c;">Error</span>';
             }
         }
 
-        function initShop() {
-            const shopList = document.getElementById('shop-list');
-            const items = [
-                { name: 'Health Potion', price: 150, rarity: 'common', description: 'Restores vitality' },
-                { name: 'Mana Potion', price: 200, rarity: 'common', description: 'Restores energy' },
-                { name: 'Speed Potion', price: 500, rarity: 'uncommon', description: 'Increases speed' },
-                { name: 'Luck Potion', price: 800, rarity: 'rare', description: 'Improves luck' },
-                { name: 'Divine Elixir', price: 2000, rarity: 'legendary', description: 'Ultimate power' }
-            ];
-
-            shopList.innerHTML = '';
-            items.forEach(item => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'shop-item';
-                itemEl.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong style="color: var(--accent-primary);">${item.name}</strong>
-                            <div style="color: #bdc3c7; font-size: 0.85rem;">${item.description}</div>
-                            <div style="color: var(--warning); font-size: 0.9rem; margin-top: 4px;">${item.price} coins</div>
+        // Shop functions
+        async function loadShopItem() {
+            try {
+                const data = await handleAPI('/api/shop/current');
+                
+                if (data.success) {
+                    const display = document.getElementById('shop-item-display');
+                    display.innerHTML = `
+                        <div class="shop-item">
+                            <div>
+                                <strong style="color: var(--accent-primary);">${data.item.name}</strong>
+                                <div style="color: #bdc3c7; font-size: 0.9rem;">Type: ${data.item.type}</div>
+                                <div style="color: var(--warning); margin-top: 8px;">${data.item.price} coins</div>
+                            </div>
+                            <button class="btn" id="buy-shop-item">Buy</button>
                         </div>
-                        <button class="btn buy-btn" data-name="${item.name}" data-price="${item.price}" data-rarity="${item.rarity}">Buy</button>
-                    </div>
-                `;
-                shopList.appendChild(itemEl);
-            });
+                    `;
 
-            shopList.addEventListener('click', async (e) => {
-                const btn = e.target.closest('.buy-btn');
-                if (!btn) return;
+                    document.getElementById('buy-shop-item').onclick = () => buyShopItem(data.item.name);
+                }
+            } catch (err) {
+                console.error('Shop load error:', err);
+            }
+        }
 
-                const itemName = btn.dataset.name;
-                const price = parseInt(btn.dataset.price);
-                const rarity = btn.dataset.rarity;
+        async function buyShopItem(itemName) {
+            try {
+                const data = await handleAPI('/api/shop/buy', {
+                    method: 'POST',
+                    body: JSON.stringify({ itemName })
+                });
 
-                btn.disabled = true;
-                btn.textContent = 'Buying...';
+                if (data.success) {
+                    showPopup('Purchase successful!', '#27ae60');
+                    document.getElementById('coin-count').textContent = data.coins;
+                    currentUser.inventory = data.inventory;
+                    loadInventory(currentUser.inventory);
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Purchase failed', '#e74c3c');
+            }
+        }
 
+        function startShopTimer() {
+            loadShopItem();
+            
+            if (shopUpdateInterval) clearInterval(shopUpdateInterval);
+            
+            shopUpdateInterval = setInterval(async () => {
                 try {
-                    const data = await handleAPI('/api/shop/buy', {
+                    const data = await handleAPI('/api/shop/current');
+                    if (data.success) {
+                        const minutes = Math.floor(data.timeRemaining / 60000);
+                        const seconds = Math.floor((data.timeRemaining % 60000) / 1000);
+                        document.getElementById('shop-timer').textContent = 
+                            `Next item in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                } catch (err) {}
+            }, 1000);
+        }
+
+        // Buy potion from shop
+        document.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('buy-potion-btn')) {
+                const potionKey = e.target.dataset.potion;
+                try {
+                    const data = await handleAPI('/api/shop/buy-potion', {
                         method: 'POST',
-                        body: JSON.stringify({ itemName, price, rarity })
+                        body: JSON.stringify({ potionKey })
                     });
 
                     if (data.success) {
-                        showPopup('Purchase successful!', '#27ae60');
+                        showPopup('Potion purchased!', '#27ae60');
                         document.getElementById('coin-count').textContent = data.coins;
-                        await refreshGameData();
+                        currentUser.inventory = data.inventory;
+                        loadInventory(currentUser.inventory);
                     } else {
                         showPopup(data.error, '#e74c3c');
                     }
                 } catch (err) {
                     showPopup('Purchase failed', '#e74c3c');
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = 'Buy';
                 }
-            });
-        }
+            }
+        });
 
+        // Admin handlers
         async function handleAdminAnnouncement(e) {
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
@@ -1259,92 +1475,106 @@
             }
         }
 
+        // Logout handler
         async function handleLogout() {
             try {
+                console.log('👋 Logging out...');
                 await handleAPI('/api/logout', { method: 'POST' });
+                
                 currentUser = null;
                 if (socket) {
                     socket.disconnect();
                     socket = null;
                 }
+                
+                if (shopUpdateInterval) {
+                    clearInterval(shopUpdateInterval);
+                    shopUpdateInterval = null;
+                }
+                
+                document.getElementById('inventory-display').innerHTML = '';
+                document.getElementById('spin-result').innerHTML = '';
+                document.getElementById('chat-messages').innerHTML = '';
+                document.getElementById('admin-btn').classList.add('hidden');
+                document.getElementById('active-potions').innerHTML = '';
+                
                 showPopup('Logged out', '#f39c12');
                 showPage('home');
+                
+                console.log('✅ Logout complete');
             } catch (err) {
                 console.error('Logout error:', err);
                 showPage('home');
             }
         }
 
+        // Initialize app
         function initializeApp() {
-            console.log('🚀 Initializing app...');
+            console.log('🚀 Initializing...');
 
-            const loginBtn = document.getElementById('login-btn');
-            const registerBtn = document.getElementById('register-btn');
-            const showRegisterLink = document.getElementById('show-register');
-            const showLoginLink = document.getElementById('show-login');
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            const logoutBtn = document.getElementById('logout-btn');
-            const adminLogoutBtn = document.getElementById('admin-logout');
-            const adminBtn = document.getElementById('admin-btn');
-            const backToGameBtn = document.getElementById('back-to-game');
-            const spinBtn = document.getElementById('spin-btn');
-            const sendBtn = document.getElementById('send-btn');
-            const chatInput = document.getElementById('chat-input');
-            const redeemBtn = document.getElementById('redeem-btn');
+            // Navigation
+            document.getElementById('login-btn').onclick = () => showPage('login');
+            document.getElementById('register-btn').onclick = () => showPage('register');
+            document.getElementById('show-register').onclick = (e) => {
+                e.preventDefault();
+                showPage('register');
+            };
+            document.getElementById('show-login').onclick = (e) => {
+                e.preventDefault();
+                showPage('login');
+            };
+
+            // Forms
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+            
+            // Game actions
+            document.getElementById('spin-btn').onclick = handleSpin;
+            document.getElementById('send-btn').onclick = sendMessage;
+            document.getElementById('chat-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            document.getElementById('redeem-btn').onclick = redeemCode;
+
+            // Admin
+            document.getElementById('admin-btn').onclick = () => showPage('admin-panel');
+            document.getElementById('back-to-game').onclick = () => showPage('game');
+            document.getElementById('announcement-form').addEventListener('submit', handleAdminAnnouncement);
+            document.getElementById('event-form').addEventListener('submit', handleAdminEvent);
+
+            // Logout
+            document.getElementById('logout-btn').onclick = handleLogout;
+            document.getElementById('admin-logout').onclick = handleLogout;
+
+            // Tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                    btn.classList.add('active');
+                    const tabId = btn.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                };
+            });
+
+            // Inventory categories
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentInventoryCategory = btn.getAttribute('data-category');
+                    if (currentUser) {
+                        loadInventory(currentUser.inventory);
+                    }
+                };
+            });
+
+            // Announcement bar dismiss
             const announcementBar = document.getElementById('announcement-bar');
             const dismissBtn = announcementBar?.querySelector('.dismiss-btn');
-            const announcementForm = document.getElementById('announcement-form');
-            const eventForm = document.getElementById('event-form');
-
-            if (loginBtn) {
-                loginBtn.onclick = (e) => {
-                    e.preventDefault();
-                    showPage('login');
-                };
-            }
-
-            if (registerBtn) {
-                registerBtn.onclick = (e) => {
-                    e.preventDefault();
-                    showPage('register');
-                };
-            }
-
-            if (showRegisterLink) {
-                showRegisterLink.onclick = (e) => {
-                    e.preventDefault();
-                    showPage('register');
-                };
-            }
-
-            if (showLoginLink) {
-                showLoginLink.onclick = (e) => {
-                    e.preventDefault();
-                    showPage('login');
-                };
-            }
-
-            if (loginForm) loginForm.addEventListener('submit', handleLogin);
-            if (registerForm) registerForm.addEventListener('submit', handleRegister);
-            if (logoutBtn) logoutBtn.onclick = handleLogout;
-            if (adminLogoutBtn) adminLogoutBtn.onclick = handleLogout;
-            if (adminBtn) adminBtn.onclick = () => showPage('admin-panel');
-            if (backToGameBtn) backToGameBtn.onclick = () => showPage('game');
-            if (spinBtn) spinBtn.onclick = handleSpin;
-            if (sendBtn) sendBtn.onclick = sendMessage;
-            if (chatInput) {
-                chatInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') sendMessage();
-                });
-            }
-            if (redeemBtn) redeemBtn.onclick = redeemCode;
-            if (announcementForm) announcementForm.addEventListener('submit', handleAdminAnnouncement);
-            if (eventForm) eventForm.addEventListener('submit', handleAdminEvent);
-
-            if (dismissBtn && announcementBar) {
-                dismissBtn.onclick = (e) => {
-                    e.preventDefault();
+            
+            if (dismissBtn) {
+                dismissBtn.onclick = () => {
                     announcementBar.classList.add('hide');
                     try {
                         localStorage.setItem('announcement-dismissed', '1');
@@ -1358,22 +1588,17 @@
                 } catch (e) {}
             }
 
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.onclick = () => {
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-                    btn.classList.add('active');
-                    const tabId = btn.getAttribute('data-tab') + '-tab';
-                    document.getElementById(tabId).classList.add('active');
-                };
+            // Check session on load
+            checkExistingSession().then(hasSession => {
+                if (!hasSession) {
+                    showPage('home');
+                }
             });
 
-            initShop();
-            showPage('home');
-
-            console.log('✅ App initialized successfully!');
+            console.log('✅ App initialized!');
         }
 
+        // Start app
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeApp);
         } else {
