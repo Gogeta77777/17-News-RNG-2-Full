@@ -1329,7 +1329,7 @@
             }
         }
 
-        // Shop functions
+        // Shop functions - FIXED with accurate timer
         async function loadShopItem() {
             try {
                 const data = await handleAPI('/api/shop/current');
@@ -1348,10 +1348,37 @@
                     `;
 
                     document.getElementById('buy-shop-item').onclick = () => buyShopItem(data.item.name);
+                    
+                    // Update timer
+                    updateShopTimer(data.nextRotation);
                 }
             } catch (err) {
                 console.error('Shop load error:', err);
             }
+        }
+
+        function updateShopTimer(nextRotation) {
+            const timerEl = document.getElementById('shop-timer');
+            if (!timerEl) return;
+
+            function update() {
+                const now = Date.now();
+                const remaining = Math.max(0, nextRotation - now);
+                
+                if (remaining === 0) {
+                    timerEl.textContent = 'Rotating now...';
+                    setTimeout(() => loadShopItem(), 1000);
+                    return;
+                }
+                
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                timerEl.textContent = `Next item in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                setTimeout(update, 1000);
+            }
+            
+            update();
         }
 
         async function buyShopItem(itemName) {
@@ -1376,20 +1403,6 @@
 
         function startShopTimer() {
             loadShopItem();
-            
-            if (shopUpdateInterval) clearInterval(shopUpdateInterval);
-            
-            shopUpdateInterval = setInterval(async () => {
-                try {
-                    const data = await handleAPI('/api/shop/current');
-                    if (data.success) {
-                        const minutes = Math.floor(data.timeRemaining / 60000);
-                        const seconds = Math.floor((data.timeRemaining % 60000) / 1000);
-                        document.getElementById('shop-timer').textContent = 
-                            `Next item in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-                    }
-                } catch (err) {}
-            }, 1000);
         }
 
         // Buy potion from shop
