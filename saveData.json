@@ -4,8 +4,14 @@
       "username": "Mr_Fernanski",
       "password": "admin123",
       "isAdmin": true,
-      "inventory": [],
+      "inventory": {
+        "rarities": {},
+        "potions": {},
+        "items": {}
+      },
+      "activePotions": [],
       "coins": 10000,
+      "lastSpin": 0,
       "joinDate": "2025-10-22T00:00:00.000Z"
     }
   ],
@@ -17,9 +23,26 @@
         "amount": 500
       },
       "usedBy": []
+    },
+    {
+      "code": "ALPHA2025",
+      "reward": {
+        "type": "coins",
+        "amount": 1000
+      },
+      "usedBy": []
+    },
+    {
+      "code": "POTION",
+      "reward": {
+        "type": "potion",
+        "potion": "luck1"
+      },
+      "usedBy": []
     }
   ],
   "announcements": [],
   "events": [],
-  "chatMessages": []
+  "chatMessages": [],
+  "aaEvents": []
 }
