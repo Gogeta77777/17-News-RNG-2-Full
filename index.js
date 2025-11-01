@@ -1,6 +1,6 @@
 /*
-  17-News-RNG Server — FULL VERSION (Merged & Production Ready)
-  Combines original feature-rich server with PostgreSQL / Render / Vercel support
+  17-News-RNG Server — FULL VERSION (Final, Production-Ready)
+  PostgreSQL + JSON fallback + Render + Vercel KV support
 */
 
 const express = require('express');
@@ -10,13 +10,10 @@ const session = require('express-session');
 const MemoryStore = require('memorystore')(session);
 const path = require('path');
 const fs = require('fs');
-const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
 
-// ───────────────────────────────────────────────────────────────
-// Express + Socket.IO Setup
-// ───────────────────────────────────────────────────────────────
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -26,29 +23,37 @@ const io = new Server(server, {
   pingInterval: 25000
 });
 
-app.set('trust proxy', 1); // required for Render/Vercel
+// ─────────────────────────────────────────────
+// Deployment Environment Flags
+// ─────────────────────────────────────────────
+app.set('trust proxy', 1);
 
-// ───────────────────────────────────────────────────────────────
-// Database Setup (Render / Local / Fallback)
-// ───────────────────────────────────────────────────────────────
-let pool;
 const IS_VERCEL = process.env.VERCEL === '1';
 const IS_RENDER = process.env.RENDER === 'true';
-const USE_POSTGRES = process.env.DATABASE_URL;
+const DATABASE_URL =
+  process.env.DATABASE_URL ||
+  'postgresql://localhost:5432/one7_news_rng_db'; // local fallback
 
-if (USE_POSTGRES) {
+// ─────────────────────────────────────────────
+// Database Initialization
+// ─────────────────────────────────────────────
+let pool;
+try {
   pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    connectionString: DATABASE_URL,
+    ssl:
+      process.env.NODE_ENV === 'production'
+        ? { rejectUnauthorized: false }
+        : false
   });
-  console.log('✅ PostgreSQL initialized');
-} else {
-  console.log('⚠️ PostgreSQL not detected. Falling back to local saveData.json');
+  console.log('✅ PostgreSQL connection configured');
+} catch (err) {
+  console.log('⚠️ PostgreSQL unavailable, falling back to local JSON');
 }
 
-// ───────────────────────────────────────────────────────────────
-// Optional Vercel KV Support
-// ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// Optional Vercel KV
+// ─────────────────────────────────────────────
 let kv;
 if (IS_VERCEL) {
   try {
@@ -60,13 +65,15 @@ if (IS_VERCEL) {
   }
 }
 
-// ───────────────────────────────────────────────────────────────
-// Middleware
-// ───────────────────────────────────────────────────────────────
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
-}));
+// ─────────────────────────────────────────────
+// Middleware & Security
+// ─────────────────────────────────────────────
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+  })
+);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -91,29 +98,26 @@ const sessionMiddleware = session({
 });
 
 app.use(sessionMiddleware);
-io.use((socket, next) => {
-  sessionMiddleware(socket.request, socket.request.res || {}, next);
-});
+io.use((socket, next) =>
+  sessionMiddleware(socket.request, socket.request.res || {}, next)
+);
 
-// ───────────────────────────────────────────────────────────────
-// Static File Handling
-// ───────────────────────────────────────────────────────────────
-app.use(express.static(__dirname, {
-  index: false,
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-cache');
+// ─────────────────────────────────────────────
+// Static Files
+// ─────────────────────────────────────────────
+app.use(
+  express.static(__dirname, {
+    index: false,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
     }
-  }
-}));
+  })
+);
+app.get('/', (_, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// ───────────────────────────────────────────────────────────────
-// Database Initialization & JSON fallback
-// ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// Database Helpers
+// ─────────────────────────────────────────────
 const DATA_FILE = path.join(__dirname, 'saveData.json');
 const KV_KEY = 'rng2:gamedata';
 
@@ -127,16 +131,17 @@ async function initializeDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
     const result = await pool.query('SELECT data FROM game_data WHERE id = 1');
     if (result.rows.length === 0) {
-      const initialData = initializeData();
-      await pool.query('INSERT INTO game_data (id, data) VALUES (1, $1)', [JSON.stringify(initialData)]);
-      console.log('✅ Database initialized with default data');
-    } else {
-      console.log('✅ Database already initialized');
+      const init = initializeData();
+      await pool.query('INSERT INTO game_data (id, data) VALUES (1, $1)', [
+        JSON.stringify(init)
+      ]);
+      console.log('✅ PostgreSQL initialized with default data');
     }
   } catch (err) {
-    console.error('❌ Database init error:', err);
+    console.error('❌ Database initialization error:', err.message);
   }
 }
 
@@ -144,9 +149,9 @@ function initializeData() {
   return {
     users: [],
     codes: [
-      { code: "WELCOME17", reward: { type: "coins", amount: 500 }, usedBy: [] },
-      { code: "RELEASE2025", reward: { type: "coins", amount: 1000 }, usedBy: [] },
-      { code: "LUCKPOTION", reward: { type: "potion", potion: "luck1" }, usedBy: [] }
+      { code: 'WELCOME17', reward: { type: 'coins', amount: 500 }, usedBy: [] },
+      { code: 'RELEASE2025', reward: { type: 'coins', amount: 1000 }, usedBy: [] },
+      { code: 'LUCKPOTION', reward: { type: 'potion', potion: 'luck1' }, usedBy: [] }
     ],
     announcements: [],
     events: [],
@@ -154,14 +159,11 @@ function initializeData() {
   };
 }
 
-// ───────────────────────────────────────────────────────────────
-// Data Load/Save (PostgreSQL → KV → Local)
-// ───────────────────────────────────────────────────────────────
 async function readData() {
   try {
     if (pool) {
       const result = await pool.query('SELECT data FROM game_data WHERE id = 1');
-      if (result.rows.length > 0) return result.rows[0].data;
+      if (result.rows.length) return result.rows[0].data;
     }
     if (IS_VERCEL && kv) {
       const kvData = await kv.get(KV_KEY);
@@ -174,7 +176,7 @@ async function readData() {
     await writeData(init);
     return init;
   } catch (err) {
-    console.error('❌ Read error:', err);
+    console.error('❌ readData() error:', err.message);
     return initializeData();
   }
 }
@@ -182,25 +184,26 @@ async function readData() {
 async function writeData(data) {
   try {
     if (pool) {
-      await pool.query('UPDATE game_data SET data = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [JSON.stringify(data)]);
-      console.log('💾 Saved to PostgreSQL');
-      return;
+      await pool.query(
+        'UPDATE game_data SET data=$1, updated_at=CURRENT_TIMESTAMP WHERE id=1',
+        [JSON.stringify(data)]
+      );
+      return console.log('💾 Saved to PostgreSQL');
     }
     if (IS_VERCEL && kv) {
       await kv.set(KV_KEY, data);
-      console.log('💾 Saved to Vercel KV');
-      return;
+      return console.log('💾 Saved to Vercel KV');
     }
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-    console.log('💾 Saved to local JSON');
+    console.log('💾 Saved to JSON');
   } catch (err) {
-    console.error('❌ Write error:', err);
+    console.error('❌ writeData() error:', err.message);
   }
 }
 
-// ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
 // Game Constants
-// ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
 const SHOP_ITEMS = [
   { name: 'Potato Sticker', type: 'item', price: 300 },
   { name: 'Microphone', type: 'item', price: 800 },
@@ -221,26 +224,9 @@ const POTIONS = {
   speed1: { name: 'Speed Potion I', cooldownReduction: 0.5, duration: 300000, type: 'speed', price: 800 }
 };
 
-// ───────────────────────────────────────────────────────────────
-// Utility + Auth Middleware
-// ───────────────────────────────────────────────────────────────
-function requireAuth(req, res, next) {
-  if (!req.session?.user?.username) {
-    return res.status(401).json({ success: false, error: 'Not logged in' });
-  }
-  next();
-}
-
-function requireAdmin(req, res, next) {
-  if (!req.session?.user?.isAdmin) {
-    return res.status(401).json({ success: false, error: 'Admin required' });
-  }
-  next();
-}
-
-// ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
 // Shop Rotation
-// ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
 function getCurrentShopItem() {
   const now = Date.now();
   const start = Math.floor(now / 600000) * 600000;
@@ -249,26 +235,50 @@ function getCurrentShopItem() {
 }
 
 function broadcastShopRotation() {
-  const shopData = getCurrentShopItem();
-  io.emit('shop_rotated', { item: shopData.item, nextRotation: shopData.nextRotation });
-  console.log('🔄 Shop rotated:', shopData.item.name);
+  const shop = getCurrentShopItem();
+  io.emit('shop_rotated', { item: shop.item, nextRotation: shop.nextRotation });
+  console.log('🔄 Shop rotated:', shop.item.name);
 }
 
 setInterval(() => {
   const { nextRotation } = getCurrentShopItem();
-  const timeLeft = nextRotation - Date.now();
-  if (timeLeft < 5000 && timeLeft > 0) setTimeout(() => broadcastShopRotation(), timeLeft);
+  const left = nextRotation - Date.now();
+  if (left < 5000 && left > 0) setTimeout(() => broadcastShopRotation(), left);
 }, 5000);
 
-// ───────────────────────────────────────────────────────────────
-// Existing API + Socket Routes (keep your originals here)
-// ───────────────────────────────────────────────────────────────
-// Example route for test:
-app.get('/api/ping', (req, res) => res.json({ success: true, message: 'pong' }));
+// ─────────────────────────────────────────────
+// Utility + Auth Middleware
+// ─────────────────────────────────────────────
+function requireAuth(req, res, next) {
+  if (!req.session?.user?.username)
+    return res.status(401).json({ success: false, error: 'Not logged in' });
+  next();
+}
 
-// ───────────────────────────────────────────────────────────────
-// Initialize & Start Server
-// ───────────────────────────────────────────────────────────────
+function requireAdmin(req, res, next) {
+  if (!req.session?.user?.isAdmin)
+    return res.status(401).json({ success: false, error: 'Admin required' });
+  next();
+}
+
+// ─────────────────────────────────────────────
+// Health Check / Debug
+// ─────────────────────────────────────────────
+app.get('/api/ping', (_, res) =>
+  res.json({ success: true, message: 'pong', time: new Date().toISOString() })
+);
+app.get('/api/health', async (_, res) => {
+  try {
+    if (pool) await pool.query('SELECT 1');
+    res.json({ ok: true, pg: !!pool, kv: !!kv });
+  } catch {
+    res.json({ ok: false, pg: false });
+  }
+});
+
+// ─────────────────────────────────────────────
+// Initialization
+// ─────────────────────────────────────────────
 if (!IS_VERCEL) {
   initializeDatabase().then(async () => {
     await readData();
@@ -276,17 +286,17 @@ if (!IS_VERCEL) {
     server.listen(PORT, () => {
       const shop = getCurrentShopItem();
       console.log('\n🎮 17-News-RNG Production Server Running');
-      console.log('🌐', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
-      console.log('💾 Storage:', pool ? 'PostgreSQL' : (IS_VERCEL ? 'Vercel KV' : 'File'));
+      console.log('🌐', IS_RENDER ? 'Render' : `http://localhost:${PORT}`);
+      console.log('💾 Storage:', pool ? 'PostgreSQL' : IS_VERCEL ? 'Vercel KV' : 'JSON');
       console.log('🛒 Shop Item:', shop.item.name);
       console.log('✅ Ready!\n');
     });
   });
 }
 
-// ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
 // Graceful Shutdown
-// ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
 process.on('SIGTERM', async () => {
   if (pool) await pool.end();
   server.close(() => process.exit(0));
