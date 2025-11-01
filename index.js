@@ -22,7 +22,6 @@ const io = new Server(server, {
   pingInterval: 25000
 });
 
-// CRITICAL: Trust proxy for Render/Vercel/Railway deployments
 app.set('trust proxy', 1);
 
 // Database Setup
@@ -39,7 +38,6 @@ if (USE_POSTGRES) {
   console.log('✅ PostgreSQL initialized');
 }
 
-// Vercel KV Setup
 let kv;
 if (IS_VERCEL) {
   try {
@@ -51,7 +49,6 @@ if (IS_VERCEL) {
   }
 }
 
-// Rate limiting with proper proxy configuration
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -61,7 +58,6 @@ const authLimiter = rateLimit({
   validate: { trustProxy: true }
 });
 
-// Security
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
@@ -70,7 +66,6 @@ app.use(helmet({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Session configuration
 const sessionStore = new MemoryStore({
   checkPeriod: 86400000,
   ttl: 365 * 24 * 60 * 60 * 1000
@@ -93,12 +88,10 @@ const sessionMiddleware = session({
 
 app.use(sessionMiddleware);
 
-// Socket.IO session sharing
 io.use((socket, next) => {
   sessionMiddleware(socket.request, socket.request.res || {}, next);
 });
 
-// Static files
 app.use(express.static(__dirname, {
   index: false,
   setHeaders: (res, filePath) => {
@@ -135,13 +128,13 @@ async function initializeDatabase() {
         'INSERT INTO game_data (id, data) VALUES (1, $1)',
         [JSON.stringify(initialData)]
       );
-      console.log('✅ Database initialized with default data');
+      console.log('✅ Database initialized with Mr_Fernanski admin');
     } else {
-      // Ensure Mr_Fernanski exists as admin
       const data = result.rows[0].data;
       let needsUpdate = false;
       
-      if (!data.users.find(u => u.username === 'Mr_Fernanski')) {
+      const mrF = data.users.find(u => u.username === 'Mr_Fernanski');
+      if (!mrF) {
         data.users.push({
           username: 'Mr_Fernanski',
           password: 'admin123',
@@ -152,6 +145,9 @@ async function initializeDatabase() {
           lastSpin: 0,
           joinDate: '2025-10-22T00:00:00.000Z'
         });
+        needsUpdate = true;
+      } else if (!mrF.isAdmin) {
+        mrF.isAdmin = true;
         needsUpdate = true;
       }
       
@@ -165,9 +161,7 @@ async function initializeDatabase() {
           'UPDATE game_data SET data = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1',
           [JSON.stringify(data)]
         );
-        console.log('✅ Database updated with Mr_Fernanski admin');
-      } else {
-        console.log('✅ Database already has data');
+        console.log('✅ Mr_Fernanski admin access ensured');
       }
     }
   } catch (error) {
@@ -175,14 +169,14 @@ async function initializeDatabase() {
   }
 }
 
-// DATA MANAGEMENT
 const DATA_FILE = path.join(__dirname, 'saveData.json');
 const KV_KEY = 'rng2:gamedata';
 
 const SHOP_ITEMS = [
   { name: 'Potato Sticker', type: 'item', price: 300 },
   { name: 'Microphone', type: 'item', price: 800 },
-  { name: 'Chromebook', type: 'item', price: 1500 }
+  { name: 'Chromebook', type: 'item', price: 1500 },
+  { name: 'House Leader Badge', type: 'legendary', price: 10000 }
 ];
 
 function getCurrentShopItem() {
@@ -239,7 +233,6 @@ function initializeData() {
   };
 }
 
-// READ DATA - PostgreSQL Priority
 async function readData() {
   try {
     if (pool) {
@@ -268,7 +261,6 @@ async function readData() {
   }
 }
 
-// WRITE DATA - PostgreSQL Priority
 async function writeData(data) {
   try {
     if (pool) {
@@ -294,11 +286,14 @@ async function writeData(data) {
 }
 
 const RARITIES = [
-  { name: '17 News', chance: 45, color: '#4CAF50', coin: 100 },
-  { name: '17 News Reborn', chance: 30, color: '#2196F3', coin: 250 },
-  { name: 'Delan Fernando', chance: 15, color: '#9C27B0', coin: 500 },
-  { name: 'Cooper Metson', chance: 8, color: '#FF9800', coin: 1000 },
-  { name: 'Mr Fernanski', chance: 2, color: '#F44336', coin: 2500 }
+  { name: '17 News', chance: 37, color: '#4CAF50', coin: 100 },
+  { name: '17 News Reborn', chance: 25, color: '#2196F3', coin: 250 },
+  { name: 'Hudson Walter', chance: 10, color: '#00BCD4', coin: 400 },
+  { name: 'Baxter Walter', chance: 10, color: '#FF5722', coin: 500 },
+  { name: 'Atticus Lok', chance: 8, color: '#9C27B0', coin: 750 },
+  { name: 'Delan Fernando', chance: 5, color: '#E91E63', coin: 1200 },
+  { name: 'Cooper Metson', chance: 5, color: '#FF9800', coin: 1500 },
+  { name: 'Mr Fernanski', chance: 0.5, color: '#FFD700', coin: 5000 }
 ];
 
 const POTIONS = {
@@ -321,7 +316,6 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// Admin Event Coin Distributor
 let coinRushInterval = null;
 
 async function startCoinRush(coinsPerSecond) {
@@ -500,8 +494,9 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     user.activePotions = (user.activePotions || []).filter(p => p.expires > now);
     user.activePotions.filter(p => p.type === 'luck').forEach(p => luckMultiplier *= p.multiplier);
 
-    const adjustedRarities = RARITIES.map((r, idx) => 
-      idx >= RARITIES.length - 2 ? { ...r, chance: r.chance * luckMultiplier } : r
+    const adjustedRarities = RARITIES.map((r) => 
+      r.name === 'Mr Fernanski' || r.name === 'Cooper Metson' ? 
+        { ...r, chance: r.chance * luckMultiplier } : r
     );
     
     const total = adjustedRarities.reduce((s, r) => s + r.chance, 0);
@@ -532,6 +527,20 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     user.lastSpin = now;
     
     await writeData(data);
+
+    // Broadcast legendary pulls
+    if (picked.name === 'Mr Fernanski') {
+      const chatMsg = {
+        username: 'SYSTEM',
+        message: `🎉 ${user.username} just got the legendary Mr Fernanski! (0.5% chance)`,
+        timestamp: new Date().toISOString(),
+        isAdmin: true,
+        isSystem: true
+      };
+      data.chatMessages.push(chatMsg);
+      await writeData(data);
+      io.emit('chat_message', chatMsg);
+    }
 
     res.json({
       success: true,
@@ -632,7 +641,11 @@ app.post('/api/shop/buy', requireAuth, async (req, res) => {
     if (!user.inventory.items) user.inventory.items = {};
     const itemKey = shopData.item.name.toLowerCase().replace(/\s+/g, '-');
     if (!user.inventory.items[itemKey]) {
-      user.inventory.items[itemKey] = { name: shopData.item.name, count: 0 };
+      user.inventory.items[itemKey] = { 
+        name: shopData.item.name, 
+        count: 0,
+        type: shopData.item.type || 'item'
+      };
     }
     user.inventory.items[itemKey].count += 1;
 
@@ -824,7 +837,6 @@ app.post('/api/admin/event', requireAdmin, async (req, res) => {
   }
 });
 
-// ADMIN EVENT ROUTES
 app.post('/api/admin/coin-rush/start', requireAdmin, async (req, res) => {
   try {
     const { coinsPerSecond } = req.body;
@@ -994,7 +1006,7 @@ if (!IS_VERCEL) {
       console.log('🛒 Shop:', shopData.item.name);
       console.log('⏰ Rotation:', new Date(shopData.nextRotation).toLocaleTimeString());
       console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
-      console.log('🔒 Trust Proxy:', app.get('trust proxy') ? 'Enabled' : 'Disabled');
+      console.log('👑 Admin: Mr_Fernanski ready');
       console.log('');
       console.log('✅ Ready!');
       console.log('🎮 ════════════════════════════════════════════════');
