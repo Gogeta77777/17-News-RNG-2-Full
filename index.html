@@ -20,6 +20,7 @@
             --warning: #f39c12;
             --error: #e74c3c;
             --owner-gold: #FFD700;
+            --legendary: #FF1493;
             --z-base: 1;
             --z-content: 100;
             --z-buttons: 500;
@@ -93,6 +94,11 @@
                 transform: translateY(100vh) rotate(720deg);
                 opacity: 0;
             }
+        }
+
+        @keyframes legendaryGlow {
+            0%, 100% { box-shadow: 0 0 20px var(--legendary); }
+            50% { box-shadow: 0 0 40px var(--legendary); }
         }
 
         .hidden { display: none !important; }
@@ -494,9 +500,21 @@
 
         .rarity-17-news { border-left-color: #4CAF50; }
         .rarity-17-news-reborn { border-left-color: #2196F3; }
-        .rarity-delan-fernando { border-left-color: #9C27B0; }
+        .rarity-hudson-walter { border-left-color: #00BCD4; }
+        .rarity-baxter-walter { border-left-color: #FF5722; }
+        .rarity-atticus-lok { border-left-color: #9C27B0; }
+        .rarity-delan-fernando { border-left-color: #E91E63; }
         .rarity-cooper-metson { border-left-color: #FF9800; }
-        .rarity-mr-fernanski { border-left-color: #F44336; }
+        .rarity-mr-fernanski { 
+            border-left-color: #FFD700; 
+            animation: legendaryGlow 2s infinite;
+        }
+
+        .legendary-item {
+            border: 2px solid var(--legendary);
+            animation: legendaryGlow 2s infinite;
+            background: rgba(255, 20, 147, 0.1);
+        }
 
         .item-count {
             position: absolute;
@@ -552,6 +570,12 @@
             animation: fadeIn 0.3s ease;
             word-wrap: break-word;
             position: relative;
+        }
+
+        .chat-message.system-message {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid var(--owner-gold);
+            font-weight: bold;
         }
 
         .chat-message .username {
@@ -633,6 +657,11 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 15px;
+        }
+
+        .shop-item.legendary {
+            border: 2px solid var(--legendary);
+            animation: legendaryGlow 2s infinite;
         }
 
         .potion-shop {
@@ -774,10 +803,11 @@
             <div class="update-log">
                 <h3>Latest Updates</h3>
                 <div class="log-entry">
-                    <span class="date">01/11/25</span>
-                    <p>✨ 17 News RNG 2</p>
-                    <p>✨ Official Alpha Release</p>
-                    <p>✨ New updates & bug fixes coming soon!</p>
+                    <span class="date">02/11/25</span>
+                    <p>🎯 New Rarities Added</p>
+                    <p>🏆 House Leader Badge (Legendary)</p>
+                    <p>👑 Mr Fernanski now 0.5% chance</p>
+                    <p>💫 Chat System Announcements</p>
                 </div>
             </div>
         </main>
@@ -996,7 +1026,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        console.log('🎮 17 News RNG 2 - Enhanced Admin Edition');
+        console.log('🎮 17 News RNG 2 - Enhanced Edition v2.0');
 
         let currentUser = null;
         let socket = null;
@@ -1004,7 +1034,6 @@
         let shopTimerInterval = null;
         let coinRushActive = false;
 
-        // API Helper
         async function handleAPI(url, options = {}) {
             try {
                 console.log('🌐 API Call:', url);
@@ -1072,14 +1101,13 @@
             notification.classList.add('hidden');
         }
 
-        // Check existing session
         async function checkExistingSession() {
             try {
                 console.log('🔍 Checking session...');
                 const data = await handleAPI('/api/check-session');
                 
                 if (data.success && data.loggedIn && data.user) {
-                    console.log('✅ Session found:', data.user.username);
+                    console.log('✅ Session found:', data.user.username, 'Admin:', data.user.isAdmin);
                     currentUser = data.user;
                     await loadFullGameData();
                     showPage('game');
@@ -1100,10 +1128,20 @@
 
         function updateOwnerBadge() {
             const badgeContainer = document.getElementById('owner-badge');
+            const adminBtn = document.getElementById('admin-btn');
+            
             if (currentUser && currentUser.username === 'Mr_Fernanski') {
                 badgeContainer.innerHTML = '<span class="owner-badge">OWNER</span>';
             } else {
                 badgeContainer.innerHTML = '';
+            }
+            
+            // Show admin button if user is admin
+            if (currentUser && currentUser.isAdmin) {
+                console.log('✅ Showing admin button for:', currentUser.username);
+                adminBtn.classList.remove('hidden');
+            } else {
+                adminBtn.classList.add('hidden');
             }
         }
 
@@ -1133,15 +1171,8 @@
             document.getElementById('coin-count').textContent = currentUser.coins || 0;
             updateOwnerBadge();
 
-            if (currentUser.isAdmin) {
-                document.getElementById('admin-btn').classList.remove('hidden');
-            } else {
-                document.getElementById('admin-btn').classList.add('hidden');
-            }
-
             loadInventory(currentUser.inventory || { rarities: {}, potions: {}, items: {} });
 
-            // Load announcements
             const announcementsList = document.getElementById('announcements-list');
             if (announcementsList) {
                 announcementsList.innerHTML = '';
@@ -1161,7 +1192,6 @@
                 }
             }
 
-            // Load events
             const eventsList = document.getElementById('events-list');
             if (eventsList) {
                 eventsList.innerHTML = '';
@@ -1181,7 +1211,6 @@
                 }
             }
 
-            // Load chat
             const chatMessages = document.getElementById('chat-messages');
             if (chatMessages && data.chatMessages) {
                 chatMessages.innerHTML = '';
@@ -1193,7 +1222,6 @@
                 }
             }
 
-            // Check for active admin events
             if (data.adminEvents && data.adminEvents.length > 0) {
                 const coinRush = data.adminEvents.find(e => e.type === 'coin_rush' && e.active);
                 if (coinRush) {
@@ -1208,14 +1236,14 @@
         function addChatMessage(msg) {
             const chatMessages = document.getElementById('chat-messages');
             const msgEl = document.createElement('div');
-            msgEl.className = 'chat-message';
+            msgEl.className = msg.isSystem ? 'chat-message system-message' : 'chat-message';
             msgEl.dataset.messageId = msg.timestamp;
             
             const usernameClass = msg.username === 'Mr_Fernanski' ? 'username owner' : 'username';
             const ownerBadge = msg.username === 'Mr_Fernanski' ? '<span class="owner-badge">OWNER</span>' : '';
             
             let adminActions = '';
-            if (currentUser && currentUser.isAdmin) {
+            if (currentUser && currentUser.isAdmin && !msg.isSystem) {
                 adminActions = `
                     <div class="chat-message-actions">
                         <button class="delete-message-btn" onclick="deleteMessage('${msg.timestamp}')">Delete</button>
@@ -1223,12 +1251,19 @@
                 `;
             }
             
-            msgEl.innerHTML = `
-                ${adminActions}
-                <span class="${usernameClass}">${escapeHtml(msg.username)}${ownerBadge}:</span>
-                <span>${escapeHtml(msg.message)}</span>
-                <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
-            `;
+            if (msg.isSystem) {
+                msgEl.innerHTML = `
+                    <span style="font-weight: bold; color: #FFD700;">⚡ ${escapeHtml(msg.message)}</span>
+                    <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
+                `;
+            } else {
+                msgEl.innerHTML = `
+                    ${adminActions}
+                    <span class="${usernameClass}">${escapeHtml(msg.username)}${ownerBadge}:</span>
+                    <span>${escapeHtml(msg.message)}</span>
+                    <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
+                `;
+            }
             chatMessages.appendChild(msgEl);
         }
 
@@ -1338,10 +1373,11 @@
 
                 items.forEach(item => {
                     const itemEl = document.createElement('div');
-                    itemEl.className = 'inventory-item';
+                    itemEl.className = item.type === 'legendary' ? 'inventory-item legendary-item' : 'inventory-item';
                     itemEl.innerHTML = `
                         <div class="item-count">x${item.count}</div>
-                        <span class="item-name" style="font-weight: bold;">${escapeHtml(item.name)}</span>
+                        <span class="item-name" style="font-weight: bold; ${item.type === 'legendary' ? 'color: #FF1493;' : ''}">${escapeHtml(item.name)}</span>
+                        ${item.type === 'legendary' ? '<div style="color: #FF1493; font-size: 0.8em; margin-top: 5px;">⭐ LEGENDARY</div>' : ''}
                     `;
                     grid.appendChild(itemEl);
                 });
@@ -1500,7 +1536,6 @@
             }
         }
 
-        // Login
         async function handleLogin(e) {
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
@@ -1525,6 +1560,7 @@
 
                 if (data.success && data.user) {
                     currentUser = data.user;
+                    console.log('✅ Logged in as:', currentUser.username, 'Admin:', currentUser.isAdmin);
                     await loadFullGameData();
                     showPopup('Welcome back, ' + currentUser.username + '!', '#27ae60');
                     showPage('game');
@@ -1547,7 +1583,6 @@
             }
         }
 
-        // Register
         async function handleRegister(e) {
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
@@ -1606,7 +1641,6 @@
             }
         }
 
-        // Spin
         async function handleSpin() {
             const button = document.getElementById('spin-btn');
             const result = document.getElementById('spin-result');
@@ -1646,7 +1680,6 @@
             }
         }
 
-        // Chat
         function sendMessage() {
             const input = document.getElementById('chat-input');
             if (!input) return;
@@ -1680,7 +1713,6 @@
             input.value = '';
         }
 
-        // Code redemption
         async function redeemCode() {
             const input = document.getElementById('code-input');
             const resultDiv = document.getElementById('code-result');
@@ -1712,7 +1744,6 @@
             }
         }
 
-        // Shop
         async function loadShopItem() {
             try {
                 const data = await handleAPI('/api/shop/current');
@@ -1721,10 +1752,14 @@
                     const display = document.getElementById('shop-item-display');
                     if (!display) return;
 
+                    const isLegendary = data.item.type === 'legendary';
+                    const itemClass = isLegendary ? 'shop-item legendary' : 'shop-item';
+
                     display.innerHTML = `
-                        <div class="shop-item">
+                        <div class="${itemClass}">
                             <div>
-                                <strong style="color: var(--accent-primary); font-size: 1.1em;">${escapeHtml(data.item.name)}</strong>
+                                <strong style="color: ${isLegendary ? '#FF1493' : 'var(--accent-primary)'}; font-size: 1.1em;">${escapeHtml(data.item.name)}</strong>
+                                ${isLegendary ? '<div style="color: #FF1493; font-size: 0.9em; margin-top: 5px;">⭐ LEGENDARY ITEM</div>' : ''}
                                 <div style="color: #bdc3c7; font-size: 0.9rem; margin-top: 5px;">Type: ${escapeHtml(data.item.type)}</div>
                                 <div style="color: #f1c40f; margin-top: 8px; font-weight: bold;">${data.item.price} coins</div>
                             </div>
@@ -1801,7 +1836,6 @@
             loadShopItem();
         }
 
-        // Buy potion
         document.addEventListener('click', async (e) => {
             if (e.target.classList.contains('buy-potion-btn')) {
                 const potionKey = e.target.dataset.potion;
@@ -1834,7 +1868,6 @@
             }
         });
 
-        // Admin Functions
         async function startCoinRush() {
             const amount = parseInt(document.getElementById('coin-rush-amount').value);
             
@@ -1955,7 +1988,6 @@
             }
         }
 
-        // Logout
         async function handleLogout() {
             try {
                 console.log('👋 Logging out...');
@@ -1993,11 +2025,9 @@
             }
         }
 
-        // Initialize
         function initializeApp() {
             console.log('🚀 Initializing app...');
 
-            // Navigation
             document.getElementById('login-btn').onclick = () => showPage('login');
             document.getElementById('register-btn').onclick = () => showPage('register');
             document.getElementById('show-register').onclick = (e) => {
@@ -2009,11 +2039,9 @@
                 showPage('login');
             };
 
-            // Forms
             document.getElementById('login-form').addEventListener('submit', handleLogin);
             document.getElementById('register-form').addEventListener('submit', handleRegister);
             
-            // Game actions
             document.getElementById('spin-btn').onclick = handleSpin;
             document.getElementById('send-btn').onclick = sendMessage;
             document.getElementById('chat-input').addEventListener('keypress', (e) => {
@@ -2024,7 +2052,6 @@
             });
             document.getElementById('redeem-btn').onclick = redeemCode;
 
-            // Admin
             document.getElementById('admin-btn').onclick = () => showPage('admin-panel');
             document.getElementById('back-to-game').onclick = () => showPage('game');
             document.getElementById('announcement-form').addEventListener('submit', handleAdminAnnouncement);
@@ -2033,11 +2060,9 @@
             document.getElementById('stop-coin-rush').onclick = stopCoinRush;
             document.getElementById('clear-all-chat').onclick = clearAllChat;
 
-            // Logout
             document.getElementById('logout-btn').onclick = handleLogout;
             document.getElementById('admin-logout').onclick = handleLogout;
 
-            // Tabs
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.onclick = () => {
                     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -2048,7 +2073,6 @@
                 };
             });
 
-            // Inventory categories
             document.querySelectorAll('.category-btn').forEach(btn => {
                 btn.onclick = () => {
                     document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
@@ -2060,7 +2084,6 @@
                 };
             });
 
-            // Announcement bar dismiss
             const announcementBar = document.getElementById('announcement-bar');
             const dismissBtn = announcementBar?.querySelector('.dismiss-btn');
             
@@ -2079,7 +2102,6 @@
                 } catch (e) {}
             }
 
-            // Check session on load
             checkExistingSession().then(hasSession => {
                 if (!hasSession) {
                     showPage('home');
@@ -2089,7 +2111,6 @@
             console.log('✅ App initialized!');
         }
 
-        // Start app
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeApp);
         } else {
