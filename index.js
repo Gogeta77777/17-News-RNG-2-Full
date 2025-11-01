@@ -1,6 +1,5 @@
 /*
-  17-News-RNG Server - PRODUCTION READY with PostgreSQL
-  All bugs fixed, everything working, data persists forever!
+  17-News-RNG Server - PRODUCTION READY with PostgreSQL + Enhanced Admin
 */
 
 const express = require('express');
@@ -120,7 +119,6 @@ async function initializeDatabase() {
   try {
     console.log('🔧 Initializing database...');
     
-    // Create tables if they don't exist
     await pool.query(`
       CREATE TABLE IF NOT EXISTS game_data (
         id INTEGER PRIMARY KEY DEFAULT 1,
@@ -129,11 +127,9 @@ async function initializeDatabase() {
       );
     `);
 
-    // Check if data exists
     const result = await pool.query('SELECT data FROM game_data WHERE id = 1');
     
     if (result.rows.length === 0) {
-      // Insert initial data
       const initialData = initializeData();
       await pool.query(
         'INSERT INTO game_data (id, data) VALUES (1, $1)',
@@ -141,7 +137,38 @@ async function initializeDatabase() {
       );
       console.log('✅ Database initialized with default data');
     } else {
-      console.log('✅ Database already has data');
+      // Ensure Mr_Fernanski exists as admin
+      const data = result.rows[0].data;
+      let needsUpdate = false;
+      
+      if (!data.users.find(u => u.username === 'Mr_Fernanski')) {
+        data.users.push({
+          username: 'Mr_Fernanski',
+          password: 'admin123',
+          isAdmin: true,
+          inventory: { rarities: {}, potions: {}, items: {} },
+          activePotions: [],
+          coins: 10000,
+          lastSpin: 0,
+          joinDate: '2025-10-22T00:00:00.000Z'
+        });
+        needsUpdate = true;
+      }
+      
+      if (!data.adminEvents) {
+        data.adminEvents = [];
+        needsUpdate = true;
+      }
+      
+      if (needsUpdate) {
+        await pool.query(
+          'UPDATE game_data SET data = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1',
+          [JSON.stringify(data)]
+        );
+        console.log('✅ Database updated with Mr_Fernanski admin');
+      } else {
+        console.log('✅ Database already has data');
+      }
     }
   } catch (error) {
     console.error('❌ Database initialization error:', error);
@@ -178,7 +205,6 @@ function broadcastShopRotation() {
   console.log('🔄 Shop rotated:', shopData.item.name);
 }
 
-// Shop rotation checker
 setInterval(() => {
   const shopData = getCurrentShopItem();
   const timeUntilNext = shopData.nextRotation - Date.now();
@@ -189,7 +215,18 @@ setInterval(() => {
 
 function initializeData() {
   return {
-    users: [],
+    users: [
+      {
+        username: 'Mr_Fernanski',
+        password: 'admin123',
+        isAdmin: true,
+        inventory: { rarities: {}, potions: {}, items: {} },
+        activePotions: [],
+        coins: 10000,
+        lastSpin: 0,
+        joinDate: '2025-10-22T00:00:00.000Z'
+      }
+    ],
     codes: [
       { code: "WELCOME17", reward: { type: "coins", amount: 500 }, usedBy: [] },
       { code: "RELEASE2025", reward: { type: "coins", amount: 1000 }, usedBy: [] },
@@ -197,14 +234,14 @@ function initializeData() {
     ],
     announcements: [],
     events: [],
-    chatMessages: []
+    chatMessages: [],
+    adminEvents: []
   };
 }
 
 // READ DATA - PostgreSQL Priority
 async function readData() {
   try {
-    // 1. Try PostgreSQL first (PRIORITY)
     if (pool) {
       const result = await pool.query('SELECT data FROM game_data WHERE id = 1');
       if (result.rows.length > 0) {
@@ -212,19 +249,16 @@ async function readData() {
       }
     }
 
-    // 2. Try Vercel KV
     if (IS_VERCEL && kv) {
       const data = await kv.get(KV_KEY);
       if (data) return data;
     }
     
-    // 3. Fallback to local file
     if (fs.existsSync(DATA_FILE)) {
       const rawData = fs.readFileSync(DATA_FILE, 'utf8');
       return JSON.parse(rawData);
     }
 
-    // 4. Return default data
     const initialData = initializeData();
     await writeData(initialData);
     return initialData;
@@ -237,7 +271,6 @@ async function readData() {
 // WRITE DATA - PostgreSQL Priority
 async function writeData(data) {
   try {
-    // 1. Write to PostgreSQL first (PRIORITY)
     if (pool) {
       await pool.query(
         'UPDATE game_data SET data = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1',
@@ -246,13 +279,11 @@ async function writeData(data) {
       return true;
     }
 
-    // 2. Write to Vercel KV
     if (IS_VERCEL && kv) {
       await kv.set(KV_KEY, data);
       return true;
     }
     
-    // 3. Fallback to local file
     const jsonData = JSON.stringify(data, null, 2);
     fs.writeFileSync(DATA_FILE, jsonData, 'utf8');
     return true;
@@ -288,6 +319,36 @@ function requireAdmin(req, res, next) {
     return res.status(401).json({ success: false, error: 'Admin required' });
   }
   next();
+}
+
+// Admin Event Coin Distributor
+let coinRushInterval = null;
+
+async function startCoinRush(coinsPerSecond) {
+  if (coinRushInterval) {
+    clearInterval(coinRushInterval);
+  }
+  
+  coinRushInterval = setInterval(async () => {
+    try {
+      const data = await readData();
+      data.users.forEach(user => {
+        user.coins = (user.coins || 0) + coinsPerSecond;
+      });
+      await writeData(data);
+      
+      io.emit('coin_rush_tick', { coins: coinsPerSecond });
+    } catch (error) {
+      console.error('Coin rush error:', error);
+    }
+  }, 1000);
+}
+
+function stopCoinRush() {
+  if (coinRushInterval) {
+    clearInterval(coinRushInterval);
+    coinRushInterval = null;
+  }
 }
 
 // ROUTES
@@ -695,7 +756,8 @@ app.get('/api/data', requireAuth, async (req, res) => {
       },
       announcements: data.announcements || [],
       events: data.events || [],
-      chatMessages: (data.chatMessages || []).slice(-50)
+      chatMessages: (data.chatMessages || []).slice(-50),
+      adminEvents: data.adminEvents || []
     });
   } catch (error) {
     console.error('❌ Data error:', error);
@@ -762,6 +824,102 @@ app.post('/api/admin/event', requireAdmin, async (req, res) => {
   }
 });
 
+// ADMIN EVENT ROUTES
+app.post('/api/admin/coin-rush/start', requireAdmin, async (req, res) => {
+  try {
+    const { coinsPerSecond } = req.body;
+    
+    if (!coinsPerSecond || coinsPerSecond < 1 || coinsPerSecond > 1000) {
+      return res.json({ success: false, error: 'Invalid coins per second (1-1000)' });
+    }
+
+    const data = await readData();
+    
+    const adminEvent = {
+      id: Date.now(),
+      type: 'coin_rush',
+      name: 'Coin Rush',
+      active: true,
+      coinsPerSecond,
+      startedAt: new Date().toISOString(),
+      startedBy: req.session.user.username
+    };
+
+    if (!data.adminEvents) data.adminEvents = [];
+    data.adminEvents = data.adminEvents.filter(e => e.type !== 'coin_rush');
+    data.adminEvents.push(adminEvent);
+    
+    await writeData(data);
+    
+    startCoinRush(coinsPerSecond);
+    io.emit('coin_rush_start', { coinsPerSecond });
+
+    res.json({ success: true, adminEvent });
+  } catch (error) {
+    console.error('❌ Coin rush start error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/coin-rush/stop', requireAdmin, async (req, res) => {
+  try {
+    const data = await readData();
+    
+    if (!data.adminEvents) data.adminEvents = [];
+    data.adminEvents = data.adminEvents.filter(e => e.type !== 'coin_rush');
+    
+    await writeData(data);
+    
+    stopCoinRush();
+    io.emit('coin_rush_stop');
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Coin rush stop error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/chat/:messageId', requireAdmin, async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const data = await readData();
+    
+    const messageIndex = data.chatMessages.findIndex(m => m.timestamp === messageId);
+    
+    if (messageIndex === -1) {
+      return res.json({ success: false, error: 'Message not found' });
+    }
+
+    data.chatMessages.splice(messageIndex, 1);
+    await writeData(data);
+    
+    io.emit('chat_message_deleted', { messageId });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Delete message error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/chat/bulk', requireAdmin, async (req, res) => {
+  try {
+    const data = await readData();
+    const deletedCount = data.chatMessages.length;
+    
+    data.chatMessages = [];
+    await writeData(data);
+    
+    io.emit('chat_cleared');
+
+    res.json({ success: true, deletedCount });
+  } catch (error) {
+    console.error('❌ Bulk delete error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 app.post('/api/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) console.error('Logout error:', err);
@@ -770,7 +928,7 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// Socket.IO - FIXED CHAT
+// Socket.IO
 io.on('connection', (socket) => {
   console.log('🔌 Socket connected:', socket.id);
 
@@ -786,10 +944,13 @@ io.on('connection', (socket) => {
       }
       
       const data = await readData();
+      const user = data.users.find(u => u.username === msg.username);
+      
       const chatMsg = {
         username: msg.username,
         message: sanitizedMessage,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        isAdmin: user?.isAdmin || false
       };
       
       data.chatMessages.push(chatMsg);
@@ -820,7 +981,7 @@ app.use((err, req, res, next) => {
 // Initialize
 if (!IS_VERCEL) {
   initializeDatabase().then(async () => {
-    await readData(); // Load initial data
+    await readData();
     const PORT = process.env.PORT || 3000;
     server.listen(PORT, () => {
       const shopData = getCurrentShopItem();
@@ -852,7 +1013,7 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => {
   console.log('👋 Shutting down gracefully...');
   if (pool) await pool.end();
-server.close(() => process.exit(0));
+  server.close(() => process.exit(0));
 });
 
 module.exports = app;
