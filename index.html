@@ -77,6 +77,11 @@
             100% { transform: translate(50px, 50px); }
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .hidden { display: none !important; }
 
         .container {
@@ -430,6 +435,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .category-btn {
@@ -495,6 +501,21 @@
             border-radius: 12px;
             padding: 12px;
             margin-bottom: 15px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--accent-secondary);
+            border-radius: 4px;
         }
 
         .chat-message {
@@ -502,6 +523,8 @@
             padding: 10px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
+            animation: fadeIn 0.3s ease;
+            word-wrap: break-word;
         }
 
         .chat-message .username {
@@ -521,6 +544,12 @@
             border-radius: 8px;
             background: rgba(10, 18, 25, 0.8);
             color: var(--text-light);
+            font-family: inherit;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
         }
 
         .shop-section {
@@ -537,6 +566,7 @@
             text-align: center;
             margin-bottom: 15px;
             border: 2px solid #f1c40f;
+            font-weight: bold;
         }
 
         .shop-item {
@@ -547,6 +577,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .potion-shop {
@@ -584,6 +616,7 @@
             font-weight: 700;
             animation: popupIn 0.3s ease;
             pointer-events: none;
+            max-width: 90%;
         }
 
         @keyframes popupIn {
@@ -605,16 +638,20 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 768px) {
+            .container { padding: 16px; }
             .button-group { flex-direction: column; width: 100%; }
             .button-group button { width: 100%; }
             .tabs { overflow-x: auto; }
             .inventory-grid { grid-template-columns: 1fr; }
+            .game-header { padding: 15px; }
+            .spin-section { padding: 20px; }
+            #spin-btn { font-size: 1.2em; padding: 15px 30px; }
         }
     </style>
 </head>
 <body>
     <div class="announcement-bar" id="announcement-bar">
-        <span>RNG 2 - Alpha Testing</span>
+        <span>🎮 RNG 2 - Official Release!</span>
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
@@ -622,7 +659,7 @@
         <main class="home-main">
             <div class="welcome-card">
                 <h2>17 News RNG 2</h2>
-                <p>The Return</p>
+                <p>The Official Return</p>
                 <div class="button-group">
                     <button id="login-btn" class="btn">Login</button>
                     <button id="register-btn" class="btn">Register</button>
@@ -631,9 +668,12 @@
             <div class="update-log">
                 <h3>📰 Latest Updates</h3>
                 <div class="log-entry">
-                    <span class="date">31/10/25</span>
-                    <p>🎉 <strong>Alpha Release!</strong></p>
-                    <p>New: Potions, Shop Rotation, Inventory Stacking!</p>
+                    <span class="date">01/11/25</span>
+                    <p>🚀 <strong>Official Release!</strong></p>
+                    <p>✅ Persistent data with Vercel KV</p>
+                    <p>✅ Fixed global chat system</p>
+                    <p>✅ Shop rotation synchronized</p>
+                    <p>✅ Production ready!</p>
                 </div>
             </div>
         </main>
@@ -646,11 +686,11 @@
             <form id="login-form">
                 <div class="form-group">
                     <label for="login-username">Username</label>
-                    <input type="text" id="login-username" required>
+                    <input type="text" id="login-username" required autocomplete="username">
                 </div>
                 <div class="form-group">
                     <label for="login-password">Password</label>
-                    <input type="password" id="login-password" required>
+                    <input type="password" id="login-password" required autocomplete="current-password">
                 </div>
                 <button type="submit" class="btn">Login</button>
             </form>
@@ -667,11 +707,11 @@
             <form id="register-form">
                 <div class="form-group">
                     <label for="register-username">Username</label>
-                    <input type="text" id="register-username" required>
+                    <input type="text" id="register-username" required autocomplete="username">
                 </div>
                 <div class="form-group">
                     <label for="register-password">Password</label>
-                    <input type="password" id="register-password" required>
+                    <input type="password" id="register-password" required autocomplete="new-password">
                 </div>
                 <button type="submit" class="btn">Register</button>
             </form>
@@ -687,7 +727,7 @@
                 <h1>17 News RNG 2</h1>
                 <div class="user-info">
                     <span>Welcome, <strong id="user-name">Player</strong></span>
-                    <span class="coins">Coins: <span id="coin-count">0</span></span>
+                    <span class="coins">💰 <span id="coin-count">0</span></span>
                     <button id="admin-btn" class="btn hidden">Admin Panel</button>
                     <button id="logout-btn" class="btn">Logout</button>
                 </div>
@@ -725,7 +765,7 @@
                         <h2>Global Chat</h2>
                         <div id="chat-messages" class="chat-messages"></div>
                         <div class="chat-input">
-                            <input type="text" id="chat-input" placeholder="Type your message..." maxlength="500">
+                            <input type="text" id="chat-input" placeholder="Type your message..." maxlength="500" autocomplete="off">
                             <button id="send-btn" class="btn">Send</button>
                         </div>
                     </div>
@@ -745,19 +785,19 @@
                                 <div class="potion-shop-item">
                                     <h4>Luck Potion I</h4>
                                     <p style="font-size: 0.9rem; opacity: 0.8;">2x luck for 5 minutes</p>
-                                    <p style="color: #f1c40f; margin: 10px 0;">500 coins</p>
+                                    <p style="color: #f1c40f; margin: 10px 0;">💰 500 coins</p>
                                     <button class="btn buy-potion-btn" data-potion="luck1">Buy</button>
                                 </div>
                                 <div class="potion-shop-item">
                                     <h4>Speed Potion I</h4>
                                     <p style="font-size: 0.9rem; opacity: 0.8;">50% faster spins for 5 minutes</p>
-                                    <p style="color: #f1c40f; margin: 10px 0;">800 coins</p>
+                                    <p style="color: #f1c40f; margin: 10px 0;">💰 800 coins</p>
                                     <button class="btn buy-potion-btn" data-potion="speed1">Buy</button>
                                 </div>
                                 <div class="potion-shop-item">
                                     <h4>Luck Potion II</h4>
                                     <p style="font-size: 0.9rem; opacity: 0.8;">4x luck for 5 minutes</p>
-                                    <p style="color: #f1c40f; margin: 10px 0;">2000 coins</p>
+                                    <p style="color: #f1c40f; margin: 10px 0;">💰 2000 coins</p>
                                     <button class="btn buy-potion-btn" data-potion="luck2">Buy</button>
                                 </div>
                             </div>
@@ -767,7 +807,7 @@
                     <div class="tab-pane" id="codes-tab">
                         <h2>Redeem Codes</h2>
                         <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
-                            <input type="text" id="code-input" placeholder="Enter code here" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid rgba(52, 152, 219, 0.3); border-radius: 8px; background: rgba(10, 18, 25, 0.8); color: #e6f7ff;">
+                            <input type="text" id="code-input" placeholder="Enter code here" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid rgba(52, 152, 219, 0.3); border-radius: 8px; background: rgba(10, 18, 25, 0.8); color: #e6f7ff; font-family: inherit;">
                             <button id="redeem-btn" class="btn">Redeem Code</button>
                             <div id="code-result" style="margin-top: 10px;"></div>
                         </div>
@@ -835,14 +875,14 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        console.log('🎮 17 News RNG 2 - Complete Edition');
+        console.log('🎮 17 News RNG 2 - Production Release');
 
         let currentUser = null;
         let socket = null;
         let currentInventoryCategory = 'rarities';
-        let shopUpdateInterval = null;
+        let shopTimerInterval = null;
 
-        // API Helper with credentials
+        // API Helper
         async function handleAPI(url, options = {}) {
             try {
                 console.log('🌐 API:', url);
@@ -879,7 +919,7 @@
             popup.style.background = color;
             popup.textContent = message;
             document.body.appendChild(popup);
-            setTimeout(() => popup.remove(), 2500);
+            setTimeout(() => popup.remove(), 3000);
         }
 
         function setLoading(button, isLoading, text = 'Loading...') {
@@ -890,7 +930,7 @@
             }
         }
 
-        // Check existing session on load
+        // Check existing session
         async function checkExistingSession() {
             try {
                 console.log('🔍 Checking session...');
@@ -935,22 +975,21 @@
                 document.getElementById('admin-btn').classList.remove('hidden');
             }
 
-            // Load inventory based on current category
             loadInventory(currentUser.inventory);
 
             // Load announcements
             const announcementsList = document.getElementById('announcements-list');
             announcementsList.innerHTML = '';
             if (!data.announcements || data.announcements.length === 0) {
-                announcementsList.innerHTML = '<p style="text-align: center; color: #bdc3c7;">No announcements yet.</p>';
+                announcementsList.innerHTML = '<p style="text-align: center; color: #bdc3c7; padding: 20px;">No announcements yet.</p>';
             } else {
-                data.announcements.forEach(ann => {
+                data.announcements.slice().reverse().forEach(ann => {
                     const annEl = document.createElement('div');
                     annEl.className = 'announcement';
                     annEl.innerHTML = `
-                        <h3>${ann.title}</h3>
-                        <p>${ann.content}</p>
-                        <small>By ${ann.author} on ${new Date(ann.date).toLocaleString()}</small>
+                        <h3>${escapeHtml(ann.title)}</h3>
+                        <p>${escapeHtml(ann.content)}</p>
+                        <small style="opacity: 0.7;">By ${escapeHtml(ann.author)} on ${new Date(ann.date).toLocaleString()}</small>
                     `;
                     announcementsList.appendChild(annEl);
                 });
@@ -960,15 +999,15 @@
             const eventsList = document.getElementById('events-list');
             eventsList.innerHTML = '';
             if (!data.events || data.events.length === 0) {
-                eventsList.innerHTML = '<p style="text-align: center; color: #bdc3c7;">No events yet.</p>';
+                eventsList.innerHTML = '<p style="text-align: center; color: #bdc3c7; padding: 20px;">No events yet.</p>';
             } else {
-                data.events.forEach(evt => {
+                data.events.slice().reverse().forEach(evt => {
                     const evtEl = document.createElement('div');
                     evtEl.className = 'event';
                     evtEl.innerHTML = `
-                        <h3>${evt.name}</h3>
-                        <p>${evt.description}</p>
-                        <small>${new Date(evt.startDate).toLocaleString()} - ${new Date(evt.endDate).toLocaleString()}</small>
+                        <h3>${escapeHtml(evt.name)}</h3>
+                        <p>${escapeHtml(evt.description)}</p>
+                        <small style="opacity: 0.7;">${new Date(evt.startDate).toLocaleString()} - ${new Date(evt.endDate).toLocaleString()}</small>
                     `;
                     eventsList.appendChild(evtEl);
                 });
@@ -982,8 +1021,8 @@
                     const msgEl = document.createElement('div');
                     msgEl.className = 'chat-message';
                     msgEl.innerHTML = `
-                        <span class="username">${msg.username}:</span>
-                        <span>${msg.message}</span>
+                        <span class="username">${escapeHtml(msg.username)}:</span>
+                        <span>${escapeHtml(msg.message)}</span>
                         <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
                     `;
                     chatMessages.appendChild(msgEl);
@@ -994,72 +1033,103 @@
             updateActivePotions();
         }
 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function loadInventory(inventory) {
             const display = document.getElementById('inventory-display');
             display.innerHTML = '';
 
             const category = inventory[currentInventoryCategory] || {};
-            const items = Object.values(category);
-
-            if (items.length === 0) {
-                display.innerHTML = '<p style="text-align: center; color: #bdc3c7; padding: 40px;">No items in this category yet.</p>';
-                return;
-            }
-
-            const grid = document.createElement('div');
-            grid.className = 'inventory-grid';
-
+            
             if (currentInventoryCategory === 'rarities') {
+                const items = Object.values(category);
+                if (items.length === 0) {
+                    display.innerHTML = '<p style="text-align: center; color: #bdc3c7; padding: 40px;">No rarities collected yet. Start spinning!</p>';
+                    return;
+                }
+
+                const grid = document.createElement('div');
+                grid.className = 'inventory-grid';
+
                 items.forEach(item => {
                     const itemEl = document.createElement('div');
                     const rarityClass = item.name.toLowerCase().replace(/\s+/g, '-');
                     itemEl.className = `inventory-item rarity-${rarityClass}`;
                     itemEl.innerHTML = `
                         <div class="item-count">x${item.count}</div>
-                        <span class="item-name" style="color: ${item.color};">${item.name}</span>
+                        <span class="item-name" style="color: ${item.color}; font-weight: bold;">${escapeHtml(item.name)}</span>
                     `;
                     grid.appendChild(itemEl);
                 });
+
+                display.appendChild(grid);
             } else if (currentInventoryCategory === 'potions') {
+                const hasPotions = Object.entries(category).some(([key, count]) => count > 0);
+                
+                if (!hasPotions) {
+                    display.innerHTML = '<p style="text-align: center; color: #bdc3c7; padding: 40px;">No potions yet. Buy some from the shop!</p>';
+                    return;
+                }
+
+                const grid = document.createElement('div');
+                grid.className = 'inventory-grid';
+
+                const potionNames = {
+                    luck1: 'Luck Potion I',
+                    luck2: 'Luck Potion II',
+                    speed1: 'Speed Potion I'
+                };
+
                 Object.entries(category).forEach(([key, count]) => {
                     if (count > 0) {
-                        const potionNames = {
-                            luck1: 'Luck Potion I',
-                            luck2: 'Luck Potion II',
-                            speed1: 'Speed Potion I'
-                        };
                         const itemEl = document.createElement('div');
                         itemEl.className = 'inventory-item potion-item';
                         itemEl.innerHTML = `
                             <div class="item-count">x${count}</div>
-                            <span class="item-name">${potionNames[key] || key}</span>
+                            <span class="item-name" style="font-weight: bold;">${potionNames[key] || key}</span>
                             <button class="btn use-potion-btn" data-potion="${key}">Use</button>
                         `;
                         grid.appendChild(itemEl);
                     }
                 });
+
+                display.appendChild(grid);
+
+                display.querySelectorAll('.use-potion-btn').forEach(btn => {
+                    btn.onclick = () => usePotion(btn.dataset.potion);
+                });
             } else if (currentInventoryCategory === 'items') {
+                const items = Object.values(category);
+                if (items.length === 0) {
+                    display.innerHTML = '<p style="text-align: center; color: #bdc3c7; padding: 40px;">No items yet. Check the shop!</p>';
+                    return;
+                }
+
+                const grid = document.createElement('div');
+                grid.className = 'inventory-grid';
+
                 items.forEach(item => {
                     const itemEl = document.createElement('div');
                     itemEl.className = 'inventory-item';
                     itemEl.innerHTML = `
                         <div class="item-count">x${item.count}</div>
-                        <span class="item-name">${item.name}</span>
+                        <span class="item-name" style="font-weight: bold;">${escapeHtml(item.name)}</span>
                     `;
                     grid.appendChild(itemEl);
                 });
+
+                display.appendChild(grid);
             }
-
-            display.appendChild(grid);
-
-            // Attach potion use handlers
-            display.querySelectorAll('.use-potion-btn').forEach(btn => {
-                btn.onclick = () => usePotion(btn.dataset.potion);
-            });
         }
 
         function updateActivePotions() {
             const container = document.getElementById('active-potions');
+            if (!container) return;
+            
             container.innerHTML = '';
 
             if (!currentUser || !currentUser.activePotions) return;
@@ -1071,12 +1141,13 @@
                 const el = document.createElement('div');
                 el.className = 'active-potion';
                 const remaining = Math.ceil((potion.expires - now) / 1000);
-                el.innerHTML = `${potion.name} - ${remaining}s`;
+                el.innerHTML = `✨ ${potion.name} - ${remaining}s`;
                 container.appendChild(el);
             });
 
-            // Update every second
-            setTimeout(() => updateActivePotions(), 1000);
+            if (active.length > 0) {
+                setTimeout(() => updateActivePotions(), 1000);
+            }
         }
 
         async function usePotion(potionKey) {
@@ -1100,27 +1171,47 @@
         }
 
         function initSocket() {
-            if (socket) return;
+            if (socket && socket.connected) {
+                console.log('🔌 Socket already connected');
+                return;
+            }
             
             console.log('🔌 Initializing Socket.IO...');
-            socket = io();
+            socket = io({
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                reconnectionAttempts: 10
+            });
             
             socket.on('connect', () => {
                 console.log('✅ Socket connected:', socket.id);
             });
+
+            socket.on('connect_error', (error) => {
+                console.error('❌ Socket connection error:', error);
+            });
             
             socket.on('chat_message', (data) => {
-                console.log('💬 Chat:', data.username);
+                console.log('💬 Chat received:', data.username);
                 const chatMessages = document.getElementById('chat-messages');
+                if (!chatMessages) return;
+
                 const msgEl = document.createElement('div');
                 msgEl.className = 'chat-message';
                 msgEl.innerHTML = `
-                    <span class="username">${data.username}:</span>
-                    <span>${data.message}</span>
+                    <span class="username">${escapeHtml(data.username)}:</span>
+                    <span>${escapeHtml(data.message)}</span>
                     <br><small style="opacity: 0.7;">${new Date(data.timestamp).toLocaleTimeString()}</small>
                 `;
                 chatMessages.appendChild(msgEl);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Keep only last 50 messages in DOM
+                while (chatMessages.children.length > 50) {
+                    chatMessages.removeChild(chatMessages.firstChild);
+                }
             });
 
             socket.on('new_announcement', (data) => {
@@ -1137,7 +1228,12 @@
 
             socket.on('shop_rotated', (data) => {
                 console.log('🔄 Shop rotated');
+                showPopup('🛒 Shop rotated!', '#f39c12');
                 loadShopItem();
+            });
+
+            socket.on('disconnect', (reason) => {
+                console.log('🔌 Socket disconnected:', reason);
             });
         }
 
@@ -1152,7 +1248,7 @@
             }
         }
 
-        // Login handler
+        // Login
         async function handleLogin(e) {
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
@@ -1178,12 +1274,13 @@
                 if (data.success) {
                     currentUser = data.user;
                     await loadFullGameData();
-                    showPopup('Login successful!', '#27ae60');
+                    showPopup('Welcome back!', '#27ae60');
                     showPage('game');
                     initSocket();
                     updateActivePotions();
                     startShopTimer();
                     document.getElementById('spin-result').innerHTML = '';
+                    e.target.reset();
                 } else {
                     throw new Error(data.message || 'Login failed');
                 }
@@ -1197,7 +1294,7 @@
             }
         }
 
-        // Register handler
+        // Register
         async function handleRegister(e) {
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
@@ -1223,12 +1320,13 @@
                 if (data.success) {
                     currentUser = data.user;
                     await loadFullGameData();
-                    showPopup('Registration successful!', '#27ae60');
+                    showPopup('Account created! Welcome!', '#27ae60');
                     showPage('game');
                     initSocket();
                     updateActivePotions();
                     startShopTimer();
                     document.getElementById('spin-result').innerHTML = '';
+                    e.target.reset();
                 } else {
                     throw new Error(data.message || 'Registration failed');
                 }
@@ -1242,7 +1340,7 @@
             }
         }
 
-        // Spin handler
+        // Spin
         async function handleSpin() {
             const button = document.getElementById('spin-btn');
             const result = document.getElementById('spin-result');
@@ -1257,20 +1355,20 @@
                     document.getElementById('coin-count').textContent = data.coins;
                     
                     const rarityColor = data.rarity.color || '#9c27b0';
-                    const awardText = data.awarded > 0 ? `<br><span style="color: ${rarityColor};">+${data.awarded} coins</span>` : '';
+                    const awardText = data.awarded > 0 ? `<br><span style="color: #f1c40f;">+${data.awarded} coins</span>` : '';
                     
                     result.innerHTML = `
                         <div style="animation: fadeIn 0.5s;">
-                            <strong style="color: ${rarityColor}; font-size: 2em;">${data.item}</strong>
+                            <strong style="color: ${rarityColor}; font-size: 2em;">${escapeHtml(data.item)}</strong>
                             ${awardText}
                         </div>
                     `;
                     
-                    showPopup(`${data.rarity.name}!`, rarityColor);
+                    showPopup(`Got ${data.rarity.name}!`, rarityColor);
                     
                     await refreshGameData();
                 } else {
-                    result.innerHTML = `<span style="color: #e74c3c;">${data.error}</span>`;
+                    result.innerHTML = `<span style="color: #e74c3c;">${escapeHtml(data.error)}</span>`;
                     showPopup(data.error, '#e74c3c');
                 }
             } catch (err) {
@@ -1282,19 +1380,39 @@
             }
         }
 
-        // Chat handler
+        // Chat - FIXED
         function sendMessage() {
             const input = document.getElementById('chat-input');
+            if (!input) return;
+            
             const message = input.value.trim();
             
-            if (message && socket && currentUser) {
-                console.log('📤 Sending:', message);
-                socket.emit('chat_message', {
-                    username: currentUser.username,
-                    message: message
-                });
-                input.value = '';
+            if (!message) {
+                showPopup('Please type a message', '#f39c12');
+                return;
             }
+
+            if (!socket || !socket.connected) {
+                showPopup('Connecting to chat...', '#f39c12');
+                initSocket();
+                setTimeout(() => sendMessage(), 1000);
+                return;
+            }
+
+            if (!currentUser) {
+                showPopup('Please log in', '#e74c3c');
+                return;
+            }
+            
+            console.log('📤 Sending message:', message);
+            
+            // Emit chat message
+            socket.emit('chat_message', {
+                username: currentUser.username,
+                message: message
+            });
+            
+            input.value = '';
         }
 
         // Code redemption
@@ -1315,41 +1433,45 @@
                 });
 
                 if (data.success) {
-                    resultDiv.innerHTML = '<span style="color: #27ae60;">Code redeemed!</span>';
+                    resultDiv.innerHTML = '<span style="color: #27ae60;">✅ Code redeemed!</span>';
                     input.value = '';
-                    showPopup('Code redeemed!', '#27ae60');
+                    showPopup('Code redeemed successfully!', '#27ae60');
                     document.getElementById('coin-count').textContent = data.coins;
                     await refreshGameData();
                 } else {
-                    resultDiv.innerHTML = `<span style="color: #e74c3c;">${data.error}</span>`;
+                    resultDiv.innerHTML = `<span style="color: #e74c3c;">${escapeHtml(data.error)}</span>`;
                     showPopup(data.error, '#e74c3c');
                 }
             } catch (err) {
-                resultDiv.innerHTML = '<span style="color: #e74c3c;">Error</span>';
+                resultDiv.innerHTML = '<span style="color: #e74c3c;">Error redeeming code</span>';
             }
         }
 
-        // Shop functions - FIXED with accurate timer
+        // Shop
         async function loadShopItem() {
             try {
                 const data = await handleAPI('/api/shop/current');
                 
                 if (data.success) {
                     const display = document.getElementById('shop-item-display');
+                    if (!display) return;
+
                     display.innerHTML = `
                         <div class="shop-item">
                             <div>
-                                <strong style="color: var(--accent-primary);">${data.item.name}</strong>
-                                <div style="color: #bdc3c7; font-size: 0.9rem;">Type: ${data.item.type}</div>
-                                <div style="color: var(--warning); margin-top: 8px;">${data.item.price} coins</div>
+                                <strong style="color: var(--accent-primary); font-size: 1.1em;">${escapeHtml(data.item.name)}</strong>
+                                <div style="color: #bdc3c7; font-size: 0.9rem; margin-top: 5px;">Type: ${escapeHtml(data.item.type)}</div>
+                                <div style="color: #f1c40f; margin-top: 8px; font-weight: bold;">💰 ${data.item.price} coins</div>
                             </div>
-                            <button class="btn" id="buy-shop-item">Buy</button>
+                            <button class="btn" id="buy-shop-item">Buy Now</button>
                         </div>
                     `;
 
-                    document.getElementById('buy-shop-item').onclick = () => buyShopItem(data.item.name);
+                    const buyBtn = document.getElementById('buy-shop-item');
+                    if (buyBtn) {
+                        buyBtn.onclick = () => buyShopItem(data.item.name);
+                    }
                     
-                    // Update timer
                     updateShopTimer(data.nextRotation);
                 }
             } catch (err) {
@@ -1361,24 +1483,30 @@
             const timerEl = document.getElementById('shop-timer');
             if (!timerEl) return;
 
+            // Clear existing interval
+            if (shopTimerInterval) {
+                clearInterval(shopTimerInterval);
+            }
+
             function update() {
                 const now = Date.now();
                 const remaining = Math.max(0, nextRotation - now);
                 
                 if (remaining === 0) {
-                    timerEl.textContent = 'Rotating now...';
-                    setTimeout(() => loadShopItem(), 1000);
+                    timerEl.textContent = '⏳ Rotating now...';
+                    setTimeout(() => {
+                        loadShopItem();
+                    }, 2000);
                     return;
                 }
                 
                 const minutes = Math.floor(remaining / 60000);
                 const seconds = Math.floor((remaining % 60000) / 1000);
-                timerEl.textContent = `Next item in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-                
-                setTimeout(update, 1000);
+                timerEl.textContent = `⏰ Next rotation: ${minutes}:${seconds.toString().padStart(2, '0')}`;
             }
             
             update();
+            shopTimerInterval = setInterval(update, 1000);
         }
 
         async function buyShopItem(itemName) {
@@ -1389,7 +1517,7 @@
                 });
 
                 if (data.success) {
-                    showPopup('Purchase successful!', '#27ae60');
+                    showPopup('✅ Purchase successful!', '#27ae60');
                     document.getElementById('coin-count').textContent = data.coins;
                     currentUser.inventory = data.inventory;
                     loadInventory(currentUser.inventory);
@@ -1405,18 +1533,22 @@
             loadShopItem();
         }
 
-        // Buy potion from shop
+        // Buy potion
         document.addEventListener('click', async (e) => {
             if (e.target.classList.contains('buy-potion-btn')) {
                 const potionKey = e.target.dataset.potion;
+                const button = e.target;
+                
                 try {
+                    setLoading(button, true, 'Buying...');
+                    
                     const data = await handleAPI('/api/shop/buy-potion', {
                         method: 'POST',
                         body: JSON.stringify({ potionKey })
                     });
 
                     if (data.success) {
-                        showPopup('Potion purchased!', '#27ae60');
+                        showPopup('✅ Potion purchased!', '#27ae60');
                         document.getElementById('coin-count').textContent = data.coins;
                         currentUser.inventory = data.inventory;
                         loadInventory(currentUser.inventory);
@@ -1425,11 +1557,14 @@
                     }
                 } catch (err) {
                     showPopup('Purchase failed', '#e74c3c');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Buy';
                 }
             }
         });
 
-        // Admin handlers
+        // Admin
         async function handleAdminAnnouncement(e) {
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
@@ -1445,7 +1580,7 @@
                 });
 
                 if (data.success) {
-                    showPopup('Announcement published!', '#27ae60');
+                    showPopup('✅ Announcement published!', '#27ae60');
                     e.target.reset();
                 } else {
                     showPopup(data.error, '#e74c3c');
@@ -1475,7 +1610,7 @@
                 });
 
                 if (data.success) {
-                    showPopup('Event created!', '#27ae60');
+                    showPopup('✅ Event created!', '#27ae60');
                     e.target.reset();
                 } else {
                     showPopup(data.error, '#e74c3c');
@@ -1488,21 +1623,22 @@
             }
         }
 
-        // Logout handler
+        // Logout
         async function handleLogout() {
             try {
                 console.log('👋 Logging out...');
                 await handleAPI('/api/logout', { method: 'POST' });
                 
                 currentUser = null;
+                
                 if (socket) {
                     socket.disconnect();
                     socket = null;
                 }
                 
-                if (shopUpdateInterval) {
-                    clearInterval(shopUpdateInterval);
-                    shopUpdateInterval = null;
+                if (shopTimerInterval) {
+                    clearInterval(shopTimerInterval);
+                    shopTimerInterval = null;
                 }
                 
                 document.getElementById('inventory-display').innerHTML = '';
@@ -1511,7 +1647,7 @@
                 document.getElementById('admin-btn').classList.add('hidden');
                 document.getElementById('active-potions').innerHTML = '';
                 
-                showPopup('Logged out', '#f39c12');
+                showPopup('Logged out successfully', '#f39c12');
                 showPage('home');
                 
                 console.log('✅ Logout complete');
@@ -1521,9 +1657,9 @@
             }
         }
 
-        // Initialize app
+        // Initialize
         function initializeApp() {
-            console.log('🚀 Initializing...');
+            console.log('🚀 Initializing app...');
 
             // Navigation
             document.getElementById('login-btn').onclick = () => showPage('login');
@@ -1545,7 +1681,10 @@
             document.getElementById('spin-btn').onclick = handleSpin;
             document.getElementById('send-btn').onclick = sendMessage;
             document.getElementById('chat-input').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') sendMessage();
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage();
+                }
             });
             document.getElementById('redeem-btn').onclick = redeemCode;
 
