@@ -16,7 +16,7 @@
     "memorystore": "^1.6.7",
     "helmet": "^7.0.0",
     "socket.io": "^4.7.2",
-    "@vercel/kv": "^1.0.1"
+    "@vercel/kv": "^1.0.1",
     "pg": "^8.11.3"
   },
   "engines": {
