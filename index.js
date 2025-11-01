@@ -22,9 +22,13 @@ const io = new Server(server, {
   pingInterval: 25000
 });
 
+// CRITICAL: Trust proxy for Render/Vercel/Railway deployments
+app.set('trust proxy', 1);
+
 // Vercel KV Setup
 let kv;
 const IS_VERCEL = process.env.VERCEL === '1';
+const IS_RENDER = process.env.RENDER === 'true';
 
 if (IS_VERCEL) {
   try {
@@ -36,11 +40,14 @@ if (IS_VERCEL) {
   }
 }
 
-// Rate limiting
+// Rate limiting with proper proxy configuration
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
-  message: { success: false, message: 'Too many attempts' }
+  message: { success: false, message: 'Too many attempts' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { trustProxy: true }
 });
 
 // Security
@@ -66,10 +73,10 @@ const sessionMiddleware = session({
   rolling: true,
   name: 'rng2.sid',
   cookie: {
-    secure: false,
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 365 * 24 * 60 * 60 * 1000,
-    sameSite: 'lax'
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }
 });
 
@@ -760,10 +767,11 @@ if (!IS_VERCEL) {
       console.log('🎮  17-News-RNG Server - PRODUCTION');
       console.log('🎮 ════════════════════════════════════════════════');
       console.log('');
-      console.log('🌐 Server:', `http://localhost:${PORT}`);
+      console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
       console.log('🛒 Shop:', shopData.item.name);
       console.log('⏰ Rotation:', new Date(shopData.nextRotation).toLocaleTimeString());
       console.log('💾 Storage:', IS_VERCEL ? 'Vercel KV' : 'File System');
+      console.log('🔒 Trust Proxy:', app.get('trust proxy') ? 'Enabled' : 'Disabled');
       console.log('');
       console.log('✅ Ready!');
       console.log('🎮 ════════════════════════════════════════════════');
