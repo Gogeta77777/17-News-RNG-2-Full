@@ -19,12 +19,14 @@
             --success: #27ae60;
             --warning: #f39c12;
             --error: #e74c3c;
+            --owner-gold: #FFD700;
             --z-base: 1;
             --z-content: 100;
             --z-buttons: 500;
             --z-overlay: 800;
             --z-banner: 900;
             --z-popup: 1000;
+            --z-coins: 9999;
         }
 
         * {
@@ -80,6 +82,17 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes coinFall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
         }
 
         .hidden { display: none !important; }
@@ -160,6 +173,19 @@
             margin: 0;
             z-index: var(--z-banner);
             pointer-events: auto !important;
+        }
+
+        .owner-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--owner-gold), #FFA500);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-left: 8px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
         }
 
         .auth-container {
@@ -525,11 +551,39 @@
             border-radius: 8px;
             animation: fadeIn 0.3s ease;
             word-wrap: break-word;
+            position: relative;
         }
 
         .chat-message .username {
             font-weight: bold;
             color: var(--accent-secondary);
+        }
+
+        .chat-message .username.owner {
+            color: var(--owner-gold);
+        }
+
+        .chat-message-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .chat-message:hover .chat-message-actions {
+            opacity: 1;
+        }
+
+        .delete-message-btn {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            margin: 0;
         }
 
         .chat-input {
@@ -602,6 +656,32 @@
             border-left: 4px solid var(--accent-secondary);
         }
 
+        .admin-event-section {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid var(--owner-gold);
+        }
+
+        .coin-rush-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .coin-rush-controls input {
+            padding: 10px;
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            border-radius: 8px;
+            background: rgba(10, 18, 25, 0.8);
+            color: var(--text-light);
+            font-family: inherit;
+            width: 150px;
+        }
+
         .popup {
             position: fixed;
             left: 50%;
@@ -622,6 +702,30 @@
         @keyframes popupIn {
             from { opacity: 0; transform: translate(-50%, 10px); }
             to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        .coin-rush-notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--owner-gold), #FFA500);
+            color: #000;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.2em;
+            z-index: var(--z-banner);
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.5);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .falling-coin {
+            position: fixed;
+            font-size: 2em;
+            z-index: var(--z-coins);
+            pointer-events: none;
+            animation: coinFall 3s linear forwards;
         }
 
         .loading-spinner {
@@ -655,6 +759,8 @@
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
+    <div id="coin-rush-notification" class="coin-rush-notification hidden"></div>
+
     <div id="home-page" class="container">
         <main class="home-main">
             <div class="welcome-card">
@@ -669,7 +775,9 @@
                 <h3>Latest Updates</h3>
                 <div class="log-entry">
                     <span class="date">01/11/25</span>
-                    <p>Release of 17 News RNG 2</p>
+                    <p>✨ Enhanced Admin Panel</p>
+                    <p>💰 Coin Rush Events</p>
+                    <p>👑 Owner Badge System</p>
                 </div>
             </div>
         </main>
@@ -722,7 +830,7 @@
             <header class="game-header">
                 <h1>17 News RNG 2</h1>
                 <div class="user-info">
-                    <span>Welcome, <strong id="user-name">Player</strong></span>
+                    <span>Welcome, <strong id="user-name">Player</strong><span id="owner-badge"></span></span>
                     <span class="coins">Coins: <span id="coin-count">0</span></span>
                     <button id="admin-btn" class="btn hidden">Admin Panel</button>
                     <button id="logout-btn" class="btn">Logout</button>
@@ -833,7 +941,24 @@
         </header>
 
         <div class="main-content">
-            <h2>Create Announcement</h2>
+            <div class="admin-event-section">
+                <h2 style="color: var(--owner-gold); margin-bottom: 15px;">💰 Coin Rush Event</h2>
+                <p style="margin-bottom: 15px;">Activate a server-wide coin rush! All players receive coins every second.</p>
+                <div class="coin-rush-controls">
+                    <input type="number" id="coin-rush-amount" placeholder="Coins per second (1-1000)" min="1" max="1000" value="10">
+                    <button id="start-coin-rush" class="btn">Start Coin Rush</button>
+                    <button id="stop-coin-rush" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Stop Coin Rush</button>
+                </div>
+                <div id="coin-rush-status" style="margin-top: 10px; font-weight: bold;"></div>
+            </div>
+
+            <div class="admin-event-section">
+                <h2 style="color: var(--error); margin-bottom: 15px;">🗑️ Chat Management</h2>
+                <p style="margin-bottom: 15px;">Manage chat messages. Delete individual messages by hovering over them in the chat tab, or clear all messages at once.</p>
+                <button id="clear-all-chat" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Clear All Chat Messages</button>
+            </div>
+
+            <h2 style="margin-top: 30px;">📢 Create Announcement</h2>
             <form id="announcement-form">
                 <div class="form-group">
                     <label>Title</label>
@@ -843,10 +968,10 @@
                     <label>Content</label>
                     <textarea id="announcement-content" required style="min-height: 100px;"></textarea>
                 </div>
-                <button type="submit" class="btn">Publish Announcements</button>
+                <button type="submit" class="btn">Publish Announcement</button>
             </form>
 
-            <h2 style="margin-top: 30px;">Create Events</h2>
+            <h2 style="margin-top: 30px;">🎉 Create Event</h2>
             <form id="event-form">
                 <div class="form-group">
                     <label>Event Name</label>
@@ -871,12 +996,13 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        console.log('🎮 17 News RNG 2 - Production Release');
+        console.log('🎮 17 News RNG 2 - Enhanced Admin Edition');
 
         let currentUser = null;
         let socket = null;
         let currentInventoryCategory = 'rarities';
         let shopTimerInterval = null;
+        let coinRushActive = false;
 
         // API Helper
         async function handleAPI(url, options = {}) {
@@ -926,6 +1052,26 @@
             }
         }
 
+        function createFallingCoin() {
+            const coin = document.createElement('div');
+            coin.className = 'falling-coin';
+            coin.textContent = '🪙';
+            coin.style.left = Math.random() * 100 + '%';
+            document.body.appendChild(coin);
+            setTimeout(() => coin.remove(), 3000);
+        }
+
+        function showCoinRushNotification(coinsPerSecond) {
+            const notification = document.getElementById('coin-rush-notification');
+            notification.textContent = `💰 COIN RUSH! +${coinsPerSecond} coins/sec`;
+            notification.classList.remove('hidden');
+        }
+
+        function hideCoinRushNotification() {
+            const notification = document.getElementById('coin-rush-notification');
+            notification.classList.add('hidden');
+        }
+
         // Check existing session
         async function checkExistingSession() {
             try {
@@ -940,6 +1086,7 @@
                     initSocket();
                     updateActivePotions();
                     startShopTimer();
+                    updateOwnerBadge();
                     return true;
                 }
                 
@@ -948,6 +1095,15 @@
             } catch (err) {
                 console.error('Session check error:', err);
                 return false;
+            }
+        }
+
+        function updateOwnerBadge() {
+            const badgeContainer = document.getElementById('owner-badge');
+            if (currentUser && currentUser.username === 'Mr_Fernanski') {
+                badgeContainer.innerHTML = '<span class="owner-badge">OWNER</span>';
+            } else {
+                badgeContainer.innerHTML = '';
             }
         }
 
@@ -975,6 +1131,7 @@
             currentUser = data.user;
             document.getElementById('user-name').textContent = currentUser.username || 'Player';
             document.getElementById('coin-count').textContent = currentUser.coins || 0;
+            updateOwnerBadge();
 
             if (currentUser.isAdmin) {
                 document.getElementById('admin-btn').classList.remove('hidden');
@@ -1030,20 +1187,67 @@
                 chatMessages.innerHTML = '';
                 if (data.chatMessages.length > 0) {
                     data.chatMessages.forEach(msg => {
-                        const msgEl = document.createElement('div');
-                        msgEl.className = 'chat-message';
-                        msgEl.innerHTML = `
-                            <span class="username">${escapeHtml(msg.username)}:</span>
-                            <span>${escapeHtml(msg.message)}</span>
-                            <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
-                        `;
-                        chatMessages.appendChild(msgEl);
+                        addChatMessage(msg);
                     });
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 }
             }
 
+            // Check for active admin events
+            if (data.adminEvents && data.adminEvents.length > 0) {
+                const coinRush = data.adminEvents.find(e => e.type === 'coin_rush' && e.active);
+                if (coinRush) {
+                    coinRushActive = true;
+                    showCoinRushNotification(coinRush.coinsPerSecond);
+                }
+            }
+
             updateActivePotions();
+        }
+
+        function addChatMessage(msg) {
+            const chatMessages = document.getElementById('chat-messages');
+            const msgEl = document.createElement('div');
+            msgEl.className = 'chat-message';
+            msgEl.dataset.messageId = msg.timestamp;
+            
+            const usernameClass = msg.username === 'Mr_Fernanski' ? 'username owner' : 'username';
+            const ownerBadge = msg.username === 'Mr_Fernanski' ? '<span class="owner-badge">OWNER</span>' : '';
+            
+            let adminActions = '';
+            if (currentUser && currentUser.isAdmin) {
+                adminActions = `
+                    <div class="chat-message-actions">
+                        <button class="delete-message-btn" onclick="deleteMessage('${msg.timestamp}')">Delete</button>
+                    </div>
+                `;
+            }
+            
+            msgEl.innerHTML = `
+                ${adminActions}
+                <span class="${usernameClass}">${escapeHtml(msg.username)}${ownerBadge}:</span>
+                <span>${escapeHtml(msg.message)}</span>
+                <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
+            `;
+            chatMessages.appendChild(msgEl);
+        }
+
+        async function deleteMessage(messageId) {
+            if (!confirm('Delete this message?')) return;
+            
+            try {
+                const data = await handleAPI(`/api/admin/chat/${messageId}`, {
+                    method: 'DELETE'
+                });
+
+                if (data.success) {
+                    showPopup('Message deleted', '#27ae60');
+                } else {
+                    showPopup(data.error || 'Failed to delete message', '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to delete message', '#e74c3c');
+            }
         }
 
         function escapeHtml(text) {
@@ -1217,22 +1421,49 @@
             
             socket.on('chat_message', (data) => {
                 console.log('💬 Chat received:', data.username);
+                addChatMessage(data);
                 const chatMessages = document.getElementById('chat-messages');
-                if (!chatMessages) return;
-
-                const msgEl = document.createElement('div');
-                msgEl.className = 'chat-message';
-                msgEl.innerHTML = `
-                    <span class="username">${escapeHtml(data.username)}:</span>
-                    <span>${escapeHtml(data.message)}</span>
-                    <br><small style="opacity: 0.7;">${new Date(data.timestamp).toLocaleTimeString()}</small>
-                `;
-                chatMessages.appendChild(msgEl);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                while (chatMessages.children.length > 50) {
-                    chatMessages.removeChild(chatMessages.firstChild);
+                if (chatMessages) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    while (chatMessages.children.length > 50) {
+                        chatMessages.removeChild(chatMessages.firstChild);
+                    }
                 }
+            });
+
+            socket.on('chat_message_deleted', (data) => {
+                const msgEl = document.querySelector(`[data-message-id="${data.messageId}"]`);
+                if (msgEl) msgEl.remove();
+            });
+
+            socket.on('chat_cleared', () => {
+                const chatMessages = document.getElementById('chat-messages');
+                if (chatMessages) chatMessages.innerHTML = '';
+                showPopup('Chat cleared by admin', '#f39c12');
+            });
+
+            socket.on('coin_rush_start', (data) => {
+                console.log('💰 Coin Rush started');
+                coinRushActive = true;
+                showCoinRushNotification(data.coinsPerSecond);
+                showPopup(`COIN RUSH STARTED! +${data.coinsPerSecond} coins/sec`, '#FFD700');
+            });
+
+            socket.on('coin_rush_tick', (data) => {
+                if (coinRushActive) {
+                    createFallingCoin();
+                    if (currentUser) {
+                        currentUser.coins = (currentUser.coins || 0) + data.coins;
+                        document.getElementById('coin-count').textContent = currentUser.coins;
+                    }
+                }
+            });
+
+            socket.on('coin_rush_stop', () => {
+                console.log('💰 Coin Rush stopped');
+                coinRushActive = false;
+                hideCoinRushNotification();
+                showPopup('Coin Rush ended!', '#f39c12');
             });
 
             socket.on('new_announcement', (data) => {
@@ -1300,6 +1531,7 @@
                     initSocket();
                     updateActivePotions();
                     startShopTimer();
+                    updateOwnerBadge();
                     document.getElementById('spin-result').innerHTML = '';
                     e.target.reset();
                 } else {
@@ -1358,6 +1590,7 @@
                     initSocket();
                     updateActivePotions();
                     startShopTimer();
+                    updateOwnerBadge();
                     document.getElementById('spin-result').innerHTML = '';
                     e.target.reset();
                 } else {
@@ -1601,7 +1834,69 @@
             }
         });
 
-        // Admin
+        // Admin Functions
+        async function startCoinRush() {
+            const amount = parseInt(document.getElementById('coin-rush-amount').value);
+            
+            if (!amount || amount < 1 || amount > 1000) {
+                showPopup('Please enter a valid amount (1-1000)', '#e74c3c');
+                return;
+            }
+
+            try {
+                const data = await handleAPI('/api/admin/coin-rush/start', {
+                    method: 'POST',
+                    body: JSON.stringify({ coinsPerSecond: amount })
+                });
+
+                if (data.success) {
+                    showPopup('Coin Rush started!', '#27ae60');
+                    document.getElementById('coin-rush-status').innerHTML = `<span style="color: #27ae60;">✅ Active: ${amount} coins/sec</span>`;
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to start coin rush', '#e74c3c');
+            }
+        }
+
+        async function stopCoinRush() {
+            try {
+                const data = await handleAPI('/api/admin/coin-rush/stop', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('Coin Rush stopped!', '#f39c12');
+                    document.getElementById('coin-rush-status').innerHTML = '<span style="color: #95a5a6;">⏸️ Inactive</span>';
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to stop coin rush', '#e74c3c');
+            }
+        }
+
+        async function clearAllChat() {
+            if (!confirm('Are you sure you want to clear ALL chat messages? This cannot be undone!')) {
+                return;
+            }
+
+            try {
+                const data = await handleAPI('/api/admin/chat/bulk', {
+                    method: 'DELETE'
+                });
+
+                if (data.success) {
+                    showPopup(`Cleared ${data.deletedCount} messages`, '#27ae60');
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to clear chat', '#e74c3c');
+            }
+        }
+
         async function handleAdminAnnouncement(e) {
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
@@ -1677,12 +1972,16 @@
                     clearInterval(shopTimerInterval);
                     shopTimerInterval = null;
                 }
+
+                coinRushActive = false;
+                hideCoinRushNotification();
                 
                 document.getElementById('inventory-display').innerHTML = '';
                 document.getElementById('spin-result').innerHTML = '';
                 document.getElementById('chat-messages').innerHTML = '';
                 document.getElementById('admin-btn').classList.add('hidden');
                 document.getElementById('active-potions').innerHTML = '';
+                document.getElementById('owner-badge').innerHTML = '';
                 
                 showPopup('Logged out successfully', '#f39c12');
                 showPage('home');
@@ -1730,6 +2029,9 @@
             document.getElementById('back-to-game').onclick = () => showPage('game');
             document.getElementById('announcement-form').addEventListener('submit', handleAdminAnnouncement);
             document.getElementById('event-form').addEventListener('submit', handleAdminEvent);
+            document.getElementById('start-coin-rush').onclick = startCoinRush;
+            document.getElementById('stop-coin-rush').onclick = stopCoinRush;
+            document.getElementById('clear-all-chat').onclick = clearAllChat;
 
             // Logout
             document.getElementById('logout-btn').onclick = handleLogout;
