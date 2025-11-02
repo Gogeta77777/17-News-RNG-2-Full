@@ -20,6 +20,7 @@
             --warning: #f39c12;
             --error: #e74c3c;
             --owner-gold: #FFD700;
+            --mythical: #FF0000;
             --legendary: #FF1493;
             --z-base: 1;
             --z-content: 100;
@@ -93,6 +94,17 @@
             100% {
                 transform: translateY(100vh) rotate(720deg);
                 opacity: 0;
+            }
+        }
+
+        @keyframes mythicalGlow {
+            0%, 100% { 
+                box-shadow: 0 0 20px var(--mythical), 0 0 40px var(--mythical);
+                text-shadow: 0 0 10px var(--mythical);
+            }
+            50% { 
+                box-shadow: 0 0 40px var(--mythical), 0 0 60px var(--mythical);
+                text-shadow: 0 0 20px var(--mythical);
             }
         }
 
@@ -232,7 +244,7 @@
             color: var(--text-light);
         }
 
-        .form-group input, .form-group textarea {
+        .form-group input, .form-group textarea, .form-group select {
             width: 100%;
             padding: 12px;
             border: 2px solid rgba(52, 152, 219, 0.3);
@@ -243,7 +255,7 @@
             transition: border-color 0.2s ease;
         }
 
-        .form-group input:focus, .form-group textarea:focus {
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
             outline: none;
             border-color: var(--accent-primary);
         }
@@ -506,8 +518,9 @@
         .rarity-delan-fernando { border-left-color: #E91E63; }
         .rarity-cooper-metson { border-left-color: #FF9800; }
         .rarity-mr-fernanski { 
-            border-left-color: #FFD700; 
-            animation: legendaryGlow 2s infinite;
+            border-left-color: var(--mythical);
+            animation: mythicalGlow 2s infinite;
+            background: rgba(255, 0, 0, 0.1);
         }
 
         .legendary-item {
@@ -757,6 +770,32 @@
             animation: coinFall 3s linear forwards;
         }
 
+        .user-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .user-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .user-item.admin-user {
+            border: 2px solid var(--owner-gold);
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 8px;
+        }
+
         .loading-spinner {
             display: inline-block;
             width: 16px;
@@ -973,7 +1012,7 @@
         <div class="main-content">
             <div class="admin-event-section">
                 <h2 style="color: var(--owner-gold); margin-bottom: 15px;">💰 Coin Rush Event</h2>
-                <p style="margin-bottom: 15px;">Activate a server-wide coin rush! All players receive coins every second.</p>
+                <p style="margin-bottom: 15px;">Activate a server-wide coin rush! All players receive coins every second with falling coin animation.</p>
                 <div class="coin-rush-controls">
                     <input type="number" id="coin-rush-amount" placeholder="Coins per second (1-1000)" min="1" max="1000" value="10">
                     <button id="start-coin-rush" class="btn">Start Coin Rush</button>
@@ -986,6 +1025,13 @@
                 <h2 style="color: var(--error); margin-bottom: 15px;">🗑️ Chat Management</h2>
                 <p style="margin-bottom: 15px;">Manage chat messages. Delete individual messages by hovering over them in the chat tab, or clear all messages at once.</p>
                 <button id="clear-all-chat" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Clear All Chat Messages</button>
+            </div>
+
+            <div class="admin-event-section" style="border-color: #e74c3c; background: rgba(231, 76, 60, 0.1);">
+                <h2 style="color: #e74c3c; margin-bottom: 15px;">👥 User Management</h2>
+                <p style="margin-bottom: 15px;">Manage user accounts. Delete accounts will remove all their data and messages permanently.</p>
+                <button id="load-users-btn" class="btn">Load All Users</button>
+                <div id="users-list" class="user-list"></div>
             </div>
 
             <h2 style="margin-top: 30px;">📢 Create Announcement</h2>
@@ -1033,6 +1079,7 @@
         let currentInventoryCategory = 'rarities';
         let shopTimerInterval = null;
         let coinRushActive = false;
+        let coinFallInterval = null;
 
         async function handleAPI(url, options = {}) {
             try {
@@ -1090,15 +1137,33 @@
             setTimeout(() => coin.remove(), 3000);
         }
 
+        function startCoinFallAnimation() {
+            if (coinFallInterval) return;
+            coinFallInterval = setInterval(() => {
+                if (coinRushActive) {
+                    createFallingCoin();
+                }
+            }, 150);
+        }
+
+        function stopCoinFallAnimation() {
+            if (coinFallInterval) {
+                clearInterval(coinFallInterval);
+                coinFallInterval = null;
+            }
+        }
+
         function showCoinRushNotification(coinsPerSecond) {
             const notification = document.getElementById('coin-rush-notification');
             notification.textContent = `💰 COIN RUSH! +${coinsPerSecond} coins/sec`;
             notification.classList.remove('hidden');
+            startCoinFallAnimation();
         }
 
         function hideCoinRushNotification() {
             const notification = document.getElementById('coin-rush-notification');
             notification.classList.add('hidden');
+            stopCoinFallAnimation();
         }
 
         async function checkExistingSession() {
@@ -1136,7 +1201,6 @@
                 badgeContainer.innerHTML = '';
             }
             
-            // Show admin button if user is admin
             if (currentUser && currentUser.isAdmin) {
                 console.log('✅ Showing admin button for:', currentUser.username);
                 adminBtn.classList.remove('hidden');
@@ -1377,7 +1441,6 @@
                     itemEl.innerHTML = `
                         <div class="item-count">x${item.count}</div>
                         <span class="item-name" style="font-weight: bold; ${item.type === 'legendary' ? 'color: #FF1493;' : ''}">${escapeHtml(item.name)}</span>
-                        ${item.type === 'legendary' ? '<div style="color: #FF1493; font-size: 0.8em; margin-top: 5px;">⭐ LEGENDARY</div>' : ''}
                     `;
                     grid.appendChild(itemEl);
                 });
@@ -1487,7 +1550,6 @@
 
             socket.on('coin_rush_tick', (data) => {
                 if (coinRushActive) {
-                    createFallingCoin();
                     if (currentUser) {
                         currentUser.coins = (currentUser.coins || 0) + data.coins;
                         document.getElementById('coin-count').textContent = currentUser.coins;
@@ -1520,7 +1582,15 @@
                 loadShopItem();
             });
 
-            socket.on('disconnect', (reason) => {
+            socket.on('user_deleted', (data) => {
+                if (currentUser && currentUser.username === data.username) {
+                    showPopup('Your account has been deleted by an admin', '#e74c3c');
+                    setTimeout(() => handleLogout(), 2000);
+                }
+            });
+
+            socket.on('disconnect', (reason)
+            => {
                 console.log('🔌 Socket disconnected:', reason);
             });
         }
@@ -1656,11 +1726,13 @@
                     
                     const rarityColor = data.rarity.color || '#9c27b0';
                     const awardText = data.awarded > 0 ? `<br><span style="color: #f1c40f;">+${data.awarded} coins</span>` : '';
+                    const chanceText = data.rarity.chance ? `<br><span style="color: #95a5a6; font-size: 0.8em;">(${data.rarity.chance}% chance)</span>` : '';
                     
                     result.innerHTML = `
                         <div style="animation: fadeIn 0.5s;">
                             <strong style="color: ${rarityColor}; font-size: 2em;">${escapeHtml(data.item)}</strong>
                             ${awardText}
+                            ${chanceText}
                         </div>
                     `;
                     
@@ -1759,8 +1831,6 @@
                         <div class="${itemClass}">
                             <div>
                                 <strong style="color: ${isLegendary ? '#FF1493' : 'var(--accent-primary)'}; font-size: 1.1em;">${escapeHtml(data.item.name)}</strong>
-                                ${isLegendary ? '<div style="color: #FF1493; font-size: 0.9em; margin-top: 5px;">⭐ LEGENDARY ITEM</div>' : ''}
-                                <div style="color: #bdc3c7; font-size: 0.9rem; margin-top: 5px;">Type: ${escapeHtml(data.item.type)}</div>
                                 <div style="color: #f1c40f; margin-top: 8px; font-weight: bold;">${data.item.price} coins</div>
                             </div>
                             <button class="btn" id="buy-shop-item">Buy Now</button>
@@ -1930,6 +2000,66 @@
             }
         }
 
+        async function loadAllUsers() {
+            try {
+                const data = await handleAPI('/api/admin/users');
+                
+                if (data.success && data.users) {
+                    const usersList = document.getElementById('users-list');
+                    usersList.innerHTML = '';
+                    
+                    if (data.users.length === 0) {
+                        usersList.innerHTML = '<p style="text-align: center; color: #bdc3c7; padding: 20px;">No users found.</p>';
+                        return;
+                    }
+                    
+                    data.users.forEach(user => {
+                        const userEl = document.createElement('div');
+                        userEl.className = user.isAdmin ? 'user-item admin-user' : 'user-item';
+                        userEl.innerHTML = `
+                            <div>
+                                <strong>${escapeHtml(user.username)}</strong>
+                                ${user.isAdmin ? '<span class="owner-badge">ADMIN</span>' : ''}
+                                <div style="font-size: 0.85em; color: #95a5a6; margin-top: 4px;">
+                                    Coins: ${user.coins} | Joined: ${new Date(user.joinDate).toLocaleDateString()}
+                                </div>
+                            </div>
+                            <div class="user-actions">
+                                ${!user.isAdmin ? `<button class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b); margin: 0; padding: 8px 16px; font-size: 0.9rem;" onclick="deleteUser('${user.username}')">Delete Account</button>` : '<span style="color: #95a5a6; font-size: 0.85em;">Protected</span>'}
+                            </div>
+                        `;
+                        usersList.appendChild(userEl);
+                    });
+                } else {
+                    showPopup(data.error || 'Failed to load users', '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to load users', '#e74c3c');
+            }
+        }
+
+        async function deleteUser(username) {
+            if (!confirm(`Are you sure you want to DELETE the account "${username}"?\n\nThis will:\n- Delete their account permanently\n- Remove all their chat messages\n- Remove all their data\n\nThis CANNOT be undone!`)) {
+                return;
+            }
+
+            try {
+                const data = await handleAPI('/api/admin/user/delete', {
+                    method: 'DELETE',
+                    body: JSON.stringify({ username })
+                });
+
+                if (data.success) {
+                    showPopup(`Account "${username}" deleted successfully`, '#27ae60');
+                    loadAllUsers();
+                } else {
+                    showPopup(data.error || 'Failed to delete user', '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to delete user', '#e74c3c');
+            }
+        }
+
         async function handleAdminAnnouncement(e) {
             e.preventDefault();
             const button = e.target.querySelector('button[type="submit"]');
@@ -2059,6 +2189,7 @@
             document.getElementById('start-coin-rush').onclick = startCoinRush;
             document.getElementById('stop-coin-rush').onclick = stopCoinRush;
             document.getElementById('clear-all-chat').onclick = clearAllChat;
+            document.getElementById('load-users-btn').onclick = loadAllUsers;
 
             document.getElementById('logout-btn').onclick = handleLogout;
             document.getElementById('admin-logout').onclick = handleLogout;
