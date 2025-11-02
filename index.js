@@ -293,7 +293,7 @@ const RARITIES = [
   { name: 'Atticus Lok', chance: 8, color: '#9C27B0', coin: 750 },
   { name: 'Delan Fernando', chance: 5, color: '#E91E63', coin: 1200 },
   { name: 'Cooper Metson', chance: 5, color: '#FF9800', coin: 1500 },
-  { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000', coin: 5000 }
+  { name: 'Mr Fernanski', chance: 0.5, color: '#FFD700', coin: 5000 }
 ];
 
 const POTIONS = {
@@ -528,11 +528,11 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     
     await writeData(data);
 
-    // Broadcast mythical pulls
+    // Broadcast legendary pulls
     if (picked.name === 'Mr Fernanski') {
       const chatMsg = {
         username: 'SYSTEM',
-        message: `🔥 ${user.username} just got the MYTHICAL Mr Fernanski! (0.5% chance)`,
+        message: `🎉 ${user.username} just got the legendary Mr Fernanski! (0.5% chance)`,
         timestamp: new Date().toISOString(),
         isAdmin: true,
         isSystem: true
@@ -807,29 +807,225 @@ app.post('/api/admin/announcement', requireAdmin, async (req, res) => {
   }
 });
 
-app.delete('/api/admin/announcement/:id', requireAdmin, async (req, res) => {
+app.post('/api/admin/event', requireAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
-    const data = await readData();
+    const { name, description, startDate, endDate } = req.body;
     
-    const index = data.announcements.findIndex(a => a.id === parseInt(id));
-    
-    if (index === -1) {
-      return res.json({ success: false, error: 'Announcement not found' });
+    if (!name || !startDate || !endDate) {
+      return res.json({ success: false, error: 'Required fields missing' });
     }
 
-    data.announcements.splice(index, 1);
-    await writeData(data);
+    const data = await readData();
     
-    io.emit('announcement_deleted', { id: parseInt(id) });
+    const event = {
+      id: Date.now(),
+      name,
+      description: description || '',
+      startDate,
+      endDate,
+      active: true
+    };
 
-    res.json({ success: true });
+    data.events.push(event);
+    await writeData(data);
+    io.emit('new_event', event);
+
+    res.json({ success: true, event });
   } catch (error) {
-    console.error('❌ Delete announcement error:', error);
+    console.error('❌ Event error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
 
-app.post('/api/admin/event', requireAdmin, async (req, res) => {
+app.post('/api/admin/coin-rush/start', requireAdmin, async (req, res) => {
   try {
-    const { name, description, startDate, endDate } = req.body;
+    const { coinsPerSecond } = req.body;
+    
+    if (!coinsPerSecond || coinsPerSecond < 1 || coinsPerSecond > 1000) {
+      return res.json({ success: false, error: 'Invalid coins per second (1-1000)' });
+    }
+
+    const data = await readData();
+    
+    const adminEvent = {
+      id: Date.now(),
+      type: 'coin_rush',
+      name: 'Coin Rush',
+      active: true,
+      coinsPerSecond,
+      startedAt: new Date().toISOString(),
+      startedBy: req.session.user.username
+    };
+
+    if (!data.adminEvents) data.adminEvents = [];
+    data.adminEvents = data.adminEvents.filter(e => e.type !== 'coin_rush');
+    data.adminEvents.push(adminEvent);
+    
+    await writeData(data);
+    
+    startCoinRush(coinsPerSecond);
+    io.emit('coin_rush_start', { coinsPerSecond });
+
+    res.json({ success: true, adminEvent });
+  } catch (error) {
+    console.error('❌ Coin rush start error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/coin-rush/stop', requireAdmin, async (req, res) => {
+  try {
+    const data = await readData();
+    
+    if (!data.adminEvents) data.adminEvents = [];
+    data.adminEvents = data.adminEvents.filter(e => e.type !== 'coin_rush');
+    
+    await writeData(data);
+    
+    stopCoinRush();
+    io.emit('coin_rush_stop');
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Coin rush stop error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/chat/:messageId', requireAdmin, async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const data = await readData();
+    
+    const messageIndex = data.chatMessages.findIndex(m => m.timestamp === messageId);
+    
+    if (messageIndex === -1) {
+      return res.json({ success: false, error: 'Message not found' });
+    }
+
+    data.chatMessages.splice(messageIndex, 1);
+    await writeData(data);
+    
+    io.emit('chat_message_deleted', { messageId });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Delete message error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/chat/bulk', requireAdmin, async (req, res) => {
+  try {
+    const data = await readData();
+    const deletedCount = data.chatMessages.length;
+    
+    data.chatMessages = [];
+    await writeData(data);
+    
+    io.emit('chat_cleared');
+
+    res.json({ success: true, deletedCount });
+  } catch (error) {
+    console.error('❌ Bulk delete error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) console.error('Logout error:', err);
+    res.clearCookie('rng2.sid');
+    res.json({ success: true });
+  });
+});
+
+// Socket.IO
+io.on('connection', (socket) => {
+  console.log('🔌 Socket connected:', socket.id);
+
+  socket.on('chat_message', async (msg) => {
+    try {
+      if (!msg || !msg.username || !msg.message) {
+        return;
+      }
+      
+      const sanitizedMessage = String(msg.message).trim().slice(0, 500);
+      if (!sanitizedMessage) {
+        return;
+      }
+      
+      const data = await readData();
+      const user = data.users.find(u => u.username === msg.username);
+      
+      const chatMsg = {
+        username: msg.username,
+        message: sanitizedMessage,
+        timestamp: new Date().toISOString(),
+        isAdmin: user?.isAdmin || false
+      };
+      
+      data.chatMessages.push(chatMsg);
+      
+      if (data.chatMessages.length > 100) {
+        data.chatMessages = data.chatMessages.slice(-100);
+      }
+      
+      await writeData(data);
+      
+      io.emit('chat_message', chatMsg);
+    } catch (error) {
+      console.error('❌ Chat error:', error);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('🔌 Disconnected:', socket.id);
+  });
+});
+
+// Error handling
+app.use((err, req, res, next) => {
+  console.error('❌ Server error:', err);
+  res.status(500).json({ success: false, error: 'Internal server error' });
+});
+
+// Initialize
+if (!IS_VERCEL) {
+  initializeDatabase().then(async () => {
+    await readData();
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, () => {
+      const shopData = getCurrentShopItem();
+      console.log('');
+      console.log('🎮 ════════════════════════════════════════════════');
+      console.log('🎮  17-News-RNG Server - PRODUCTION');
+      console.log('🎮 ════════════════════════════════════════════════');
+      console.log('');
+      console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
+      console.log('🛒 Shop:', shopData.item.name);
+      console.log('⏰ Rotation:', new Date(shopData.nextRotation).toLocaleTimeString());
+      console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
+      console.log('👑 Admin: Mr_Fernanski ready');
+      console.log('');
+      console.log('✅ Ready!');
+      console.log('🎮 ════════════════════════════════════════════════');
+      console.log('');
+    });
+  });
+}
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('👋 Shutting down gracefully...');
+  if (pool) await pool.end();
+  server.close(() => process.exit(0));
+});
+
+process.on('SIGINT', async () => {
+  console.log('👋 Shutting down gracefully...');
+  if (pool) await pool.end();
+  server.close(() => process.exit(0));
+});
+
+module.exports = app;
