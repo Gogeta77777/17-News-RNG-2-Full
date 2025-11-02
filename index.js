@@ -293,7 +293,7 @@ const RARITIES = [
   { name: 'Atticus Lok', chance: 8, color: '#9C27B0', coin: 750 },
   { name: 'Delan Fernando', chance: 5, color: '#E91E63', coin: 1200 },
   { name: 'Cooper Metson', chance: 5, color: '#FF9800', coin: 1500 },
-  { name: 'Mr Fernanski', chance: 0.5, color: '#FFD700', coin: 5000 }
+  { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000', coin: 5000 }
 ];
 
 const POTIONS = {
@@ -528,11 +528,11 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     
     await writeData(data);
 
-    // Broadcast legendary pulls
+    // Broadcast mythical pulls
     if (picked.name === 'Mr Fernanski') {
       const chatMsg = {
         username: 'SYSTEM',
-        message: `🎉 ${user.username} just got the legendary Mr Fernanski! (0.5% chance)`,
+        message: `🎉 ${user.username} just got the MYTHICAL Mr Fernanski! (0.5% chance)`,
         timestamp: new Date().toISOString(),
         isAdmin: true,
         isSystem: true
@@ -774,6 +774,64 @@ app.get('/api/data', requireAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Data error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// ADMIN ROUTES
+
+app.get('/api/admin/users', requireAdmin, async (req, res) => {
+  try {
+    const data = await readData();
+    const users = data.users.map(u => ({
+      username: u.username,
+      isAdmin: u.isAdmin || false,
+      coins: u.coins || 0,
+      joinDate: u.joinDate
+    }));
+    
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error('❌ Users list error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/user/delete', requireAdmin, async (req, res) => {
+  try {
+    const { username } = req.body;
+    
+    if (!username) {
+      return res.json({ success: false, error: 'Username required' });
+    }
+
+    const data = await readData();
+    const userIndex = data.users.findIndex(u => u.username === username);
+    
+    if (userIndex === -1) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    const user = data.users[userIndex];
+    
+    if (user.isAdmin) {
+      return res.json({ success: false, error: 'Cannot delete admin accounts' });
+    }
+
+    // Remove user
+    data.users.splice(userIndex, 1);
+    
+    // Remove their chat messages
+    data.chatMessages = (data.chatMessages || []).filter(msg => msg.username !== username);
+    
+    await writeData(data);
+    
+    // Notify the user if connected
+    io.emit('user_deleted', { username });
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Delete user error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
