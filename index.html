@@ -20,7 +20,9 @@
             --warning: #f39c12;
             --error: #e74c3c;
             --owner-gold: #FFD700;
-            --legendary: #FF1493;
+            --mythical: #FF0000;
+            --divine: #00FF88;
+            --secret: #FFD700;
             --z-base: 1;
             --z-content: 100;
             --z-buttons: 500;
@@ -96,9 +98,28 @@
             }
         }
 
-        @keyframes legendaryGlow {
-            0%, 100% { box-shadow: 0 0 20px var(--legendary); }
-            50% { box-shadow: 0 0 40px var(--legendary); }
+        @keyframes mythicalGlow {
+            0%, 100% { box-shadow: 0 0 20px var(--mythical), 0 0 40px var(--mythical); }
+            50% { box-shadow: 0 0 40px var(--mythical), 0 0 60px var(--mythical); }
+        }
+
+        @keyframes divineGlow {
+            0%, 100% { box-shadow: 0 0 20px var(--divine), 0 0 40px var(--divine); }
+            50% { box-shadow: 0 0 40px var(--divine), 0 0 60px var(--divine); }
+        }
+
+        @keyframes secretGlow {
+            0%, 100% { 
+                box-shadow: 0 0 20px var(--secret), 0 0 40px var(--secret), 0 0 5px #000;
+            }
+            50% { 
+                box-shadow: 0 0 40px var(--secret), 0 0 60px var(--secret), 0 0 10px #000;
+            }
+        }
+
+        @keyframes blueGlow {
+            0%, 100% { box-shadow: 0 0 20px #2196F3, 0 0 40px #2196F3; }
+            50% { box-shadow: 0 0 40px #2196F3, 0 0 60px #2196F3; }
         }
 
         .hidden { display: none !important; }
@@ -502,18 +523,39 @@
         .rarity-17-news-reborn { border-left-color: #2196F3; }
         .rarity-hudson-walter { border-left-color: #00BCD4; }
         .rarity-baxter-walter { border-left-color: #FF5722; }
+        .rarity-stanley-bowden { border-left-color: #8B4513; }
         .rarity-atticus-lok { border-left-color: #9C27B0; }
         .rarity-delan-fernando { border-left-color: #E91E63; }
         .rarity-cooper-metson { border-left-color: #FF9800; }
         .rarity-mr-fernanski { 
-            border-left-color: #FFD700; 
-            animation: legendaryGlow 2s infinite;
+            border-left-color: #FF0000; 
+            animation: mythicalGlow 2s infinite;
+        }
+        .rarity-mrs-joseph-mcglashan {
+            border-left-color: #00FF88;
+            animation: divineGlow 2s infinite;
+        }
+        .rarity-lord-crinkle {
+            border-left-color: #FFD700;
+            animation: secretGlow 2s infinite;
         }
 
-        .legendary-item {
-            border: 2px solid var(--legendary);
-            animation: legendaryGlow 2s infinite;
-            background: rgba(255, 20, 147, 0.1);
+        .mythical-item {
+            border: 2px solid var(--mythical);
+            animation: mythicalGlow 2s infinite;
+            background: rgba(255, 0, 0, 0.1);
+        }
+
+        .divine-item {
+            border: 2px solid var(--divine);
+            animation: divineGlow 2s infinite;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .secret-item {
+            border: 2px solid var(--secret);
+            animation: secretGlow 2s infinite;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(0, 0, 0, 0.3));
         }
 
         .item-count {
@@ -573,9 +615,19 @@
         }
 
         .chat-message.system-message {
-            background: rgba(255, 215, 0, 0.2);
-            border: 2px solid var(--owner-gold);
+            background: rgba(255, 0, 0, 0.15);
+            border: 2px solid rgba(255, 0, 0, 0.5);
             font-weight: bold;
+        }
+
+        .chat-message.system-message.divine-message {
+            background: rgba(0, 255, 136, 0.15);
+            border: 2px solid rgba(0, 255, 136, 0.5);
+        }
+
+        .chat-message.system-message.secret-message {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 0, 0, 0.3));
+            border: 2px solid rgba(255, 215, 0, 0.5);
         }
 
         .chat-message .username {
@@ -659,9 +711,14 @@
             gap: 15px;
         }
 
-        .shop-item.legendary {
-            border: 2px solid var(--legendary);
-            animation: legendaryGlow 2s infinite;
+        .shop-item.red-aura {
+            border: 2px solid #FF0000;
+            animation: mythicalGlow 2s infinite;
+        }
+
+        .shop-item.blue-aura {
+            border: 2px solid #2196F3;
+            animation: blueGlow 2s infinite;
         }
 
         .potion-shop {
@@ -803,11 +860,11 @@
             <div class="update-log">
                 <h3>Latest Updates</h3>
                 <div class="log-entry">
-                    <span class="date">02/11/25</span>
-                    <p>🎯 New Rarities Added</p>
-                    <p>🏆 House Leader Badge (Legendary)</p>
-                    <p>👑 Mr Fernanski now 0.5% chance</p>
-                    <p>💫 Chat System Announcements</p>
+                    <span class="date">09/11/25</span>
+                    <p>🎯 New Rarities</p>
+                    <p>🛍️ New Items</p>
+                    <p>🔮 New Secret Rarity</p>
+                    <p>🐛 Bug Fixes</p>
                 </div>
             </div>
         </main>
@@ -1026,7 +1083,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        console.log('🎮 17 News RNG 2 - Enhanced Edition v2.0');
+        console.log('🎮 17 News RNG 2 - Enhanced Edition v2.1');
 
         let currentUser = null;
         let socket = null;
@@ -1136,7 +1193,6 @@
                 badgeContainer.innerHTML = '';
             }
             
-            // Show admin button if user is admin
             if (currentUser && currentUser.isAdmin) {
                 console.log('✅ Showing admin button for:', currentUser.username);
                 adminBtn.classList.remove('hidden');
@@ -1236,7 +1292,18 @@
         function addChatMessage(msg) {
             const chatMessages = document.getElementById('chat-messages');
             const msgEl = document.createElement('div');
-            msgEl.className = msg.isSystem ? 'chat-message system-message' : 'chat-message';
+            
+            let messageClass = 'chat-message';
+            if (msg.isSystem) {
+                messageClass += ' system-message';
+                if (msg.rarityType === 'divine') {
+                    messageClass += ' divine-message';
+                } else if (msg.rarityType === 'secret') {
+                    messageClass += ' secret-message';
+                }
+            }
+            
+            msgEl.className = messageClass;
             msgEl.dataset.messageId = msg.timestamp;
             
             const usernameClass = msg.username === 'Mr_Fernanski' ? 'username owner' : 'username';
@@ -1252,8 +1319,12 @@
             }
             
             if (msg.isSystem) {
+                let systemColor = '#FF0000';
+                if (msg.rarityType === 'divine') systemColor = '#00FF88';
+                else if (msg.rarityType === 'secret') systemColor = '#FFD700';
+                
                 msgEl.innerHTML = `
-                    <span style="font-weight: bold; color: #FFD700;">⚡ ${escapeHtml(msg.message)}</span>
+                    <span style="font-weight: bold; color: ${systemColor};">⚡ ${escapeHtml(msg.message)}</span>
                     <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
                 `;
             } else {
@@ -1373,11 +1444,10 @@
 
                 items.forEach(item => {
                     const itemEl = document.createElement('div');
-                    itemEl.className = item.type === 'legendary' ? 'inventory-item legendary-item' : 'inventory-item';
+                    itemEl.className = 'inventory-item';
                     itemEl.innerHTML = `
                         <div class="item-count">x${item.count}</div>
-                        <span class="item-name" style="font-weight: bold; ${item.type === 'legendary' ? 'color: #FF1493;' : ''}">${escapeHtml(item.name)}</span>
-                        ${item.type === 'legendary' ? '<div style="color: #FF1493; font-size: 0.8em; margin-top: 5px;">⭐ LEGENDARY</div>' : ''}
+                        <span class="item-name" style="font-weight: bold;">${escapeHtml(item.name)}</span>
                     `;
                     grid.appendChild(itemEl);
                 });
@@ -1752,14 +1822,21 @@
                     const display = document.getElementById('shop-item-display');
                     if (!display) return;
 
-                    const isLegendary = data.item.type === 'legendary';
-                    const itemClass = isLegendary ? 'shop-item legendary' : 'shop-item';
+                    let itemClass = 'shop-item';
+                    let itemColor = 'var(--accent-primary)';
+                    
+                    if (data.item.name === 'House Leader Badge') {
+                        itemClass += ' red-aura';
+                        itemColor = '#FF0000';
+                    } else if (data.item.name === 'School Leader Badge') {
+                        itemClass += ' blue-aura';
+                        itemColor = '#2196F3';
+                    }
 
                     display.innerHTML = `
                         <div class="${itemClass}">
                             <div>
-                                <strong style="color: ${isLegendary ? '#FF1493' : 'var(--accent-primary)'}; font-size: 1.1em;">${escapeHtml(data.item.name)}</strong>
-                                ${isLegendary ? '<div style="color: #FF1493; font-size: 0.9em; margin-top: 5px;">⭐ LEGENDARY ITEM</div>' : ''}
+                                <strong style="color: ${itemColor}; font-size: 1.1em;">${escapeHtml(data.item.name)}</strong>
                                 <div style="color: #bdc3c7; font-size: 0.9rem; margin-top: 5px;">Type: ${escapeHtml(data.item.type)}</div>
                                 <div style="color: #f1c40f; margin-top: 8px; font-weight: bold;">${data.item.price} coins</div>
                             </div>
