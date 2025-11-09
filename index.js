@@ -176,7 +176,9 @@ const SHOP_ITEMS = [
   { name: 'Potato Sticker', type: 'item', price: 300 },
   { name: 'Microphone', type: 'item', price: 800 },
   { name: 'Chromebook', type: 'item', price: 1500 },
-  { name: 'House Leader Badge', type: 'legendary', price: 10000 }
+  { name: 'Football', type: 'item', price: 2000 },
+  { name: 'House Leader Badge', type: 'special', price: 10000 },
+  { name: 'School Leader Badge', type: 'special', price: 50000 }
 ];
 
 function getCurrentShopItem() {
@@ -290,10 +292,13 @@ const RARITIES = [
   { name: '17 News Reborn', chance: 25, color: '#2196F3', coin: 250 },
   { name: 'Hudson Walter', chance: 10, color: '#00BCD4', coin: 400 },
   { name: 'Baxter Walter', chance: 10, color: '#FF5722', coin: 500 },
+  { name: 'Stanley Bowden', chance: 10, color: '#8B4513', coin: 450 },
   { name: 'Atticus Lok', chance: 8, color: '#9C27B0', coin: 750 },
   { name: 'Delan Fernando', chance: 5, color: '#E91E63', coin: 1200 },
   { name: 'Cooper Metson', chance: 5, color: '#FF9800', coin: 1500 },
-  { name: 'Mr Fernanski', chance: 0.5, color: '#FFD700', coin: 5000 }
+  { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000', coin: 5000, type: 'mythical' },
+  { name: 'Mrs Joseph Mcglashan', chance: 0.1, color: '#00FF88', coin: 9999, type: 'divine' },
+  { name: 'Lord Crinkle', chance: 0.01, color: '#FFD700', coin: 20000, type: 'secret' }
 ];
 
 const POTIONS = {
@@ -495,7 +500,7 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     user.activePotions.filter(p => p.type === 'luck').forEach(p => luckMultiplier *= p.multiplier);
 
     const adjustedRarities = RARITIES.map((r) => 
-      r.name === 'Mr Fernanski' || r.name === 'Cooper Metson' ? 
+      (r.type === 'mythical' || r.type === 'divine' || r.type === 'secret' || r.name === 'Cooper Metson') ? 
         { ...r, chance: r.chance * luckMultiplier } : r
     );
     
@@ -528,14 +533,39 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     
     await writeData(data);
 
-    // Broadcast legendary pulls
-    if (picked.name === 'Mr Fernanski') {
+    // Broadcast special pulls
+    if (picked.type === 'mythical') {
       const chatMsg = {
         username: 'SYSTEM',
-        message: `🎉 ${user.username} just got the legendary Mr Fernanski! (0.5% chance)`,
+        message: `🎉 ${user.username} just got the mythical ${picked.name}! (${picked.chance}% chance)`,
         timestamp: new Date().toISOString(),
         isAdmin: true,
-        isSystem: true
+        isSystem: true,
+        rarityType: 'mythical'
+      };
+      data.chatMessages.push(chatMsg);
+      await writeData(data);
+      io.emit('chat_message', chatMsg);
+    } else if (picked.type === 'divine') {
+      const chatMsg = {
+        username: 'SYSTEM',
+        message: `✨ ${user.username} just got the divine ${picked.name}! (${picked.chance}% chance)`,
+        timestamp: new Date().toISOString(),
+        isAdmin: true,
+        isSystem: true,
+        rarityType: 'divine'
+      };
+      data.chatMessages.push(chatMsg);
+      await writeData(data);
+      io.emit('chat_message', chatMsg);
+    } else if (picked.type === 'secret') {
+      const chatMsg = {
+        username: 'SYSTEM',
+        message: `🌟 ${user.username} just got the secret ${picked.name}! (${picked.chance}% chance)`,
+        timestamp: new Date().toISOString(),
+        isAdmin: true,
+        isSystem: true,
+        rarityType: 'secret'
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
@@ -999,7 +1029,7 @@ if (!IS_VERCEL) {
       const shopData = getCurrentShopItem();
       console.log('');
       console.log('🎮 ════════════════════════════════════════════════');
-      console.log('🎮  17-News-RNG Server - PRODUCTION');
+      console.log('🎮  17-News-RNG Server - PRODUCTION v2.1');
       console.log('🎮 ════════════════════════════════════════════════');
       console.log('');
       console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
@@ -1007,6 +1037,8 @@ if (!IS_VERCEL) {
       console.log('⏰ Rotation:', new Date(shopData.nextRotation).toLocaleTimeString());
       console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
       console.log('👑 Admin: Mr_Fernanski ready');
+      console.log('🎯 New Rarities: Stanley Bowden, Mrs Joseph Mcglashan (Divine), Lord Crinkle (Secret)');
+      console.log('🛍️ New Items: Football, School Leader Badge');
       console.log('');
       console.log('✅ Ready!');
       console.log('🎮 ════════════════════════════════════════════════');
