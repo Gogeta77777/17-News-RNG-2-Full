@@ -302,9 +302,9 @@ const RARITIES = [
 ];
 
 const POTIONS = {
-  luck1: { name: 'Luck Potion I', multiplier: 2, duration: 300000, type: 'luck', price: 500000 },
-  luck2: { name: 'Luck Potion II', multiplier: 4, duration: 300000, type: 'luck', price: 2000000 },
-  speed1: { name: 'Speed Potion I', cooldownReduction: 0.5, duration: 300000, type: 'speed', price: 800000 }
+  luck1: { name: 'Luck Potion I', multiplier: 2, duration: 300000, type: 'luck', price: 500 },
+  luck2: { name: 'Luck Potion II', multiplier: 4, duration: 300000, type: 'luck', price: 2000 },
+  speed1: { name: 'Speed Potion I', cooldownReduction: 0.5, duration: 300000, type: 'speed', price: 800 }
 };
 
 function requireAuth(req, res, next) {
