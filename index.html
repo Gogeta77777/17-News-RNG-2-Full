@@ -23,6 +23,7 @@
             --mythical: #FF0000;
             --divine: #00FF88;
             --secret: #FFD700;
+            --legendary: #9B59B6;
             --z-base: 1;
             --z-content: 100;
             --z-buttons: 500;
@@ -30,6 +31,7 @@
             --z-banner: 900;
             --z-popup: 1000;
             --z-coins: 9999;
+            --z-meteor: 10000;
         }
 
         * {
@@ -77,9 +79,18 @@
             animation: gridMove 20s linear infinite;
         }
 
+        body.disco-mode::after {
+            animation: gridMove 1s linear infinite, discoGrid 2s linear infinite;
+        }
+
         @keyframes gridMove {
             0% { transform: translate(0, 0); }
             100% { transform: translate(50px, 50px); }
+        }
+
+        @keyframes discoGrid {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
         }
 
         @keyframes fadeIn {
@@ -117,12 +128,100 @@
             }
         }
 
+        @keyframes legendaryGlow {
+            0%, 100% { box-shadow: 0 0 20px var(--legendary), 0 0 40px var(--legendary); }
+            50% { box-shadow: 0 0 40px var(--legendary), 0 0 60px var(--legendary); }
+        }
+
         @keyframes blueGlow {
             0%, 100% { box-shadow: 0 0 20px #2196F3, 0 0 40px #2196F3; }
             50% { box-shadow: 0 0 40px #2196F3, 0 0 60px #2196F3; }
         }
 
+        @keyframes meteorFall {
+            0% {
+                transform: translate(-50%, -200%) rotate(-45deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(50vw, 100vh) rotate(-45deg);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes staticFlicker {
+            0%, 100% { opacity: 0.9; }
+            50% { opacity: 1; }
+        }
+
         .hidden { display: none !important; }
+
+        .meteor-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: var(--z-meteor);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        .meteor-overlay.active {
+            opacity: 1;
+            animation: staticFlicker 0.1s infinite;
+            background: repeating-linear-gradient(
+                0deg,
+                #fff 0px,
+                #000 2px,
+                #fff 4px
+            );
+        }
+
+        .meteor {
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, #ff6b00, #ff0000);
+            border-radius: 50%;
+            box-shadow: 0 0 50px #ff6b00, 0 0 100px #ff0000;
+            z-index: var(--z-meteor);
+            pointer-events: none;
+        }
+
+        .meteor::before {
+            content: '';
+            position: absolute;
+            width: 200px;
+            height: 50px;
+            background: linear-gradient(90deg, rgba(255,107,0,0.8), transparent);
+            top: 25px;
+            left: -200px;
+            transform: rotate(-10deg);
+        }
+
+        .disco-notification {
+            position: fixed;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #9B59B6, #E91E63);
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.2em;
+            z-index: var(--z-banner);
+            box-shadow: 0 8px 24px rgba(155, 89, 182, 0.5);
+            animation: fadeIn 0.5s ease, discoGlow 1s infinite;
+        }
+
+        @keyframes discoGlow {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
 
         .container {
             width: 100%;
@@ -202,7 +301,7 @@
             pointer-events: auto !important;
         }
 
-        .owner-badge {
+        .owner-badge, .title-badge {
             display: inline-block;
             background: linear-gradient(135deg, var(--owner-gold), #FFA500);
             color: #000;
@@ -213,6 +312,21 @@
             margin-left: 8px;
             text-shadow: 0 1px 2px rgba(0,0,0,0.2);
             box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+        }
+
+        .title-badge.walter-curse {
+            background: linear-gradient(135deg, #9B59B6, #8E44AD);
+            box-shadow: 0 2px 4px rgba(155, 89, 182, 0.3);
+        }
+
+        .title-badge.banana-legend {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+        }
+
+        .title-badge.millionaire {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            box-shadow: 0 2px 4px rgba(39, 174, 96, 0.3);
         }
 
         .auth-container {
@@ -253,7 +367,7 @@
             color: var(--text-light);
         }
 
-        .form-group input, .form-group textarea {
+        .form-group input, .form-group textarea, .form-group select {
             width: 100%;
             padding: 12px;
             border: 2px solid rgba(52, 152, 219, 0.3);
@@ -264,7 +378,7 @@
             transition: border-color 0.2s ease;
         }
 
-        .form-group input:focus, .form-group textarea:focus {
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
             outline: none;
             border-color: var(--accent-primary);
         }
@@ -524,9 +638,12 @@
         .rarity-hudson-walter { border-left-color: #00BCD4; }
         .rarity-baxter-walter { border-left-color: #FF5722; }
         .rarity-stanley-bowden { border-left-color: #8B4513; }
+        .rarity-iyo-tenedor { border-left-color: #4B0082; }
         .rarity-atticus-lok { border-left-color: #9C27B0; }
+        .rarity-the-great-ace { border-left-color: #FFB6C1; animation: legendaryGlow 2s infinite; }
         .rarity-delan-fernando { border-left-color: #E91E63; }
         .rarity-cooper-metson { border-left-color: #FF9800; }
+        .rarity-the-dark-knight { border-left-color: #000; animation: divineGlow 2s infinite; }
         .rarity-mr-fernanski { 
             border-left-color: #FF0000; 
             animation: mythicalGlow 2s infinite;
@@ -538,24 +655,6 @@
         .rarity-lord-crinkle {
             border-left-color: #FFD700;
             animation: secretGlow 2s infinite;
-        }
-
-        .mythical-item {
-            border: 2px solid var(--mythical);
-            animation: mythicalGlow 2s infinite;
-            background: rgba(255, 0, 0, 0.1);
-        }
-
-        .divine-item {
-            border: 2px solid var(--divine);
-            animation: divineGlow 2s infinite;
-            background: rgba(0, 255, 136, 0.1);
-        }
-
-        .secret-item {
-            border: 2px solid var(--secret);
-            animation: secretGlow 2s infinite;
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(0, 0, 0, 0.3));
         }
 
         .item-count {
@@ -628,6 +727,11 @@
         .chat-message.system-message.secret-message {
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 0, 0, 0.3));
             border: 2px solid rgba(255, 215, 0, 0.5);
+        }
+
+        .chat-message.system-message.legendary-message {
+            background: rgba(155, 89, 182, 0.15);
+            border: 2px solid rgba(155, 89, 182, 0.5);
         }
 
         .chat-message .username {
@@ -732,6 +836,136 @@
             padding: 15px;
             border-radius: 8px;
             border: 2px solid #9C27B0;
+        }
+
+        .crafting-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .craft-recipe {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(0, 255, 247, 0.3);
+        }
+
+        .craft-recipe h4 {
+            color: var(--accent-primary);
+            margin-bottom: 15px;
+        }
+
+        .craft-ingredients {
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+
+        .craft-ingredients p {
+            margin: 5px 0;
+            color: #bcd;
+        }
+
+        .titles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .title-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid;
+            position: relative;
+        }
+
+        .title-card.walter-curse { border-left-color: #9B59B6; }
+        .title-card.banana-legend { border-left-color: #FFD700; }
+        .title-card.millionaire { border-left-color: #27ae60; }
+        .title-card.owner-title { border-left-color: var(--owner-gold); }
+
+        .title-card.equipped {
+            background: rgba(0, 255, 247, 0.1);
+            border: 2px solid var(--accent-primary);
+        }
+
+        .title-card.locked {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+
+        .settings-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .settings-section h3 {
+            color: var(--accent-primary);
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .rarity-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .rarity-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .admin-users-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .user-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .meteor-countdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 107, 0, 0.95);
+            padding: 40px 60px;
+            border-radius: 20px;
+            font-size: 4em;
+            font-weight: bold;
+            color: white;
+            z-index: var(--z-meteor);
+            box-shadow: 0 0 50px rgba(255, 107, 0, 0.8);
+            text-align: center;
         }
 
         .announcement, .event {
@@ -845,7 +1079,9 @@
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
+    <div id="meteor-overlay" class="meteor-overlay"></div>
     <div id="coin-rush-notification" class="coin-rush-notification hidden"></div>
+    <div id="disco-notification" class="disco-notification hidden"></div>
 
     <div id="home-page" class="container">
         <main class="home-main">
@@ -860,11 +1096,13 @@
             <div class="update-log">
                 <h3>Latest Updates</h3>
                 <div class="log-entry">
-                    <span class="date">09/11/25</span>
-                    <p>🎯 New Rarities</p>
-                    <p>🛍️ New Items</p>
-                    <p>🔮 New Secret Rarity</p>
-                    <p>🐛 Bug Fixes</p>
+                    <span class="date">17/11/25</span>
+                    <p>🎯 4 New Rarities Added</p>
+                    <p>🔨 Crafting System</p>
+                    <p>🏆 Title System</p>
+                    <p>☄️ Meteor & Disco Events</p>
+                    <p>⚙️ Settings & Stats</p>
+                    <p>👥 Enhanced Admin Panel</p>
                 </div>
             </div>
         </main>
@@ -917,7 +1155,7 @@
             <header class="game-header">
                 <h1>17 News RNG 2</h1>
                 <div class="user-info">
-                    <span>Welcome, <strong id="user-name">Player</strong><span id="owner-badge"></span></span>
+                    <span>Welcome, <strong id="user-name">Player</strong><span id="owner-badge"></span><span id="user-title"></span></span>
                     <span class="coins">Coins: <span id="coin-count">0</span></span>
                     <button id="admin-btn" class="btn hidden">Admin Panel</button>
                     <button id="logout-btn" class="btn">Logout</button>
@@ -937,7 +1175,10 @@
                         <button class="tab-btn active" data-tab="inventory">Inventory</button>
                         <button class="tab-btn" data-tab="chat">Chat</button>
                         <button class="tab-btn" data-tab="shop">Shop</button>
+                        <button class="tab-btn" data-tab="crafting">Crafting</button>
+                        <button class="tab-btn" data-tab="titles">Titles</button>
                         <button class="tab-btn" data-tab="codes">Codes</button>
+                        <button class="tab-btn" data-tab="settings">Settings</button>
                         <button class="tab-btn" data-tab="announcements">Announcements</button>
                         <button class="tab-btn" data-tab="events">Events</button>
                     </div>
@@ -995,12 +1236,50 @@
                         </div>
                     </div>
 
+                    <div class="tab-pane" id="crafting-tab">
+                        <h2>Crafting</h2>
+                        <p style="margin-bottom: 20px; color: #bcd;">Combine items and potions to create powerful new equipment!</p>
+                        <div class="crafting-grid" id="crafting-display"></div>
+                    </div>
+
+                    <div class="tab-pane" id="titles-tab">
+                        <h2>Titles</h2>
+                        <p style="margin-bottom: 20px; color: #bcd;">Unlock and equip titles to show off your achievements!</p>
+                        <div class="titles-grid" id="titles-display"></div>
+                    </div>
+
                     <div class="tab-pane" id="codes-tab">
                         <h2>Redeem Codes</h2>
                         <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
                             <input type="text" id="code-input" placeholder="Enter code here" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid rgba(52, 152, 219, 0.3); border-radius: 8px; background: rgba(10, 18, 25, 0.8); color: #e6f7ff; font-family: inherit;">
                             <button id="redeem-btn" class="btn">Redeem Code</button>
                             <div id="code-result" style="margin-top: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="settings-tab">
+                        <h2>Settings & Stats</h2>
+                        
+                        <div class="settings-section">
+                            <h3>Your Statistics</h3>
+                            <div class="stat-box">
+                                <p><strong>Total Spins:</strong> <span id="stat-spins">0</span></p>
+                                <p><strong>Account Created:</strong> <span id="stat-joined">-</span></p>
+                                <p><strong>Current Coins:</strong> <span id="stat-coins">0</span></p>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3>Rarity Chances</h3>
+                            <div class="rarity-list" id="rarity-chances"></div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h3>Game Info</h3>
+                            <div class="stat-box">
+                                <p><strong>Version:</strong> 2.1.0 - Update 4</p>
+                                <p><strong>Last Updated:</strong> 17/11/25</p>
+                            </div>
                         </div>
                     </div>
 
@@ -1040,9 +1319,30 @@
             </div>
 
             <div class="admin-event-section">
+                <h2 style="color: #FF6B00; margin-bottom: 15px;">☄️ Meteor Event</h2>
+                <p style="margin-bottom: 15px;">Launch a meteor strike! All online players get a Meteor Piece.</p>
+                <button id="start-meteor" class="btn">Launch Meteor (60s countdown)</button>
+            </div>
+
+            <div class="admin-event-section">
+                <h2 style="color: var(--legendary); margin-bottom: 15px;">🕺 Disco Mode</h2>
+                <p style="margin-bottom: 15px;">Activate disco mode! All players get 5x luck while active.</p>
+                <div class="coin-rush-controls">
+                    <button id="start-disco" class="btn">Start Disco Mode</button>
+                    <button id="stop-disco" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Stop Disco Mode</button>
+                </div>
+                <div id="disco-status" style="margin-top: 10px; font-weight: bold;"></div>
+            </div>
+
+            <div class="admin-event-section">
                 <h2 style="color: var(--error); margin-bottom: 15px;">🗑️ Chat Management</h2>
                 <p style="margin-bottom: 15px;">Manage chat messages. Delete individual messages by hovering over them in the chat tab, or clear all messages at once.</p>
                 <button id="clear-all-chat" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Clear All Chat Messages</button>
+            </div>
+
+            <div class="admin-users-section">
+                <h2 style="color: var(--accent-primary); margin-bottom: 15px;">👥 User Management</h2>
+                <div id="users-list"></div>
             </div>
 
             <h2 style="margin-top: 30px;">📢 Create Announcement</h2>
@@ -1083,13 +1383,82 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        console.log('🎮 17 News RNG 2 - Enhanced Edition v2.1');
+        console.log('🎮 17 News RNG 2 - Update 4 v2.1.0');
 
         let currentUser = null;
         let socket = null;
         let currentInventoryCategory = 'rarities';
         let shopTimerInterval = null;
         let coinRushActive = false;
+        let discoModeActive = false;
+
+        const CRAFT_RECIPES = [
+            {
+                id: 'speed2',
+                name: 'Speed Potion II',
+                description: 'Cooldown reduced to 0.5s for 3 minutes',
+                requires: { potions: { speed1: 3 }, items: { 'chromebook': 1 } },
+                result: { type: 'potion', key: 'speed2' }
+            },
+            {
+                id: 'luck3',
+                name: 'Luck Potion III',
+                description: '6x luck for 3 minutes',
+                requires: { potions: { luck2: 3 }, items: { 'microphone': 2, 'school-leader-badge': 1 } },
+                result: { type: 'potion', key: 'luck3' }
+            },
+            {
+                id: 'media-badge',
+                name: 'Media Team Badge',
+                description: 'Rare collectible item',
+                requires: { items: { 'house-leader-badge': 3, 'school-leader-badge': 1, 'chromebook': 1, 'microphone': 1 } },
+                result: { type: 'item', key: 'media-team-badge', name: 'Media Team Badge' }
+            }
+        ];
+
+        const TITLES = [
+            {
+                id: 'walter-curse',
+                name: 'The Walter Curse',
+                color: '#9B59B6',
+                requires: { rarities: { 'baxter-walter': 25, 'hudson-walter': 25 } }
+            },
+            {
+                id: 'banana-legend',
+                name: 'Banana Legend',
+                color: '#FFD700',
+                requires: { rarities: { 'cooper-metson': 150 } }
+            },
+            {
+                id: 'millionaire',
+                name: 'Millionaire Playboy',
+                color: '#27ae60',
+                requires: { coins: 1000000 }
+            },
+            {
+                id: 'owner',
+                name: 'Owner',
+                color: '#FFD700',
+                requires: { username: 'Mr_Fernanski' }
+            }
+        ];
+
+        const RARITIES = [
+            { name: '17 News', chance: 37, color: '#4CAF50' },
+            { name: '17 News Reborn', chance: 25, color: '#2196F3' },
+            { name: 'Hudson Walter', chance: 10, color: '#00BCD4' },
+            { name: 'Baxter Walter', chance: 10, color: '#FF5722' },
+            { name: 'Stanley Bowden', chance: 10, color: '#8B4513' },
+            { name: 'Iyo Tenedor', chance: 6, color: '#4B0082' },
+            { name: 'Atticus Lok', chance: 8, color: '#9C27B0' },
+            { name: 'The Great Ace', chance: 1, color: '#FFB6C1' },
+            { name: 'Delan Fernando', chance: 5, color: '#E91E63' },
+            { name: 'Cooper Metson', chance: 5, color: '#FF9800' },
+            { name: 'The Dark Knight', chance: 0.3, color: '#000' },
+            { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000' },
+            { name: 'Mrs Joseph Mcglashan', chance: 0.1, color: '#00FF88' },
+            { name: 'Lord Crinkle', chance: 0.01, color: '#FFD700' }
+        ];
 
         async function handleAPI(url, options = {}) {
             try {
@@ -1158,6 +1527,56 @@
             notification.classList.add('hidden');
         }
 
+        function showDiscoNotification() {
+            const notification = document.getElementById('disco-notification');
+            notification.textContent = '🕺 DISCO MODE! 5x Luck Active!';
+            notification.classList.remove('hidden');
+            document.body.classList.add('disco-mode');
+        }
+
+        function hideDiscoNotification() {
+            const notification = document.getElementById('disco-notification');
+            notification.classList.add('hidden');
+            document.body.classList.remove('disco-mode');
+        }
+
+        async function launchMeteor() {
+            const countdown = document.createElement('div');
+            countdown.className = 'meteor-countdown';
+            document.body.appendChild(countdown);
+
+            for (let i = 60; i > 0; i--) {
+                countdown.textContent = i;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            countdown.remove();
+
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor';
+            meteor.style.left = '50%';
+            meteor.style.top = '-100px';
+            document.body.appendChild(meteor);
+
+            meteor.style.animation = 'meteorFall 2s ease-in forwards';
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            meteor.remove();
+
+            const overlay = document.getElementById('meteor-overlay');
+            overlay.classList.add('active');
+
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
+            overlay.style.transition = 'opacity 2s';
+            overlay.style.opacity = '0';
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            overlay.classList.remove('active');
+            overlay.style.transition = '';
+            overlay.style.opacity = '';
+        }
+
         async function checkExistingSession() {
             try {
                 console.log('🔍 Checking session...');
@@ -1172,6 +1591,9 @@
                     updateActivePotions();
                     startShopTimer();
                     updateOwnerBadge();
+                    loadSettings();
+                    loadTitles();
+                    loadCrafting();
                     return true;
                 }
                 
@@ -1185,12 +1607,22 @@
 
         function updateOwnerBadge() {
             const badgeContainer = document.getElementById('owner-badge');
+            const titleContainer = document.getElementById('user-title');
             const adminBtn = document.getElementById('admin-btn');
             
             if (currentUser && currentUser.username === 'Mr_Fernanski') {
                 badgeContainer.innerHTML = '<span class="owner-badge">OWNER</span>';
             } else {
                 badgeContainer.innerHTML = '';
+            }
+
+            if (currentUser && currentUser.equippedTitle) {
+                const title = TITLES.find(t => t.id === currentUser.equippedTitle);
+                if (title) {
+                    titleContainer.innerHTML = `<span class="title-badge ${title.id}" style="background: linear-gradient(135deg, ${title.color}, ${title.color}99);">${title.name}</span>`;
+                }
+            } else {
+                titleContainer.innerHTML = '';
             }
             
             if (currentUser && currentUser.isAdmin) {
@@ -1284,9 +1716,282 @@
                     coinRushActive = true;
                     showCoinRushNotification(coinRush.coinsPerSecond);
                 }
+                const disco = data.adminEvents.find(e => e.type === 'disco' && e.active);
+                if (disco) {
+                    discoModeActive = true;
+                    showDiscoNotification();
+                }
+            }
+
+            if (data.allUsers && currentUser.isAdmin) {
+                loadAdminUsers(data.allUsers);
             }
 
             updateActivePotions();
+            loadSettings();
+            loadTitles();
+            loadCrafting();
+        }
+
+        function loadSettings() {
+            document.getElementById('stat-spins').textContent = currentUser.totalSpins || 0;
+            document.getElementById('stat-joined').textContent = currentUser.joinDate ? new Date(currentUser.joinDate).toLocaleDateString() : '-';
+            document.getElementById('stat-coins').textContent = currentUser.coins || 0;
+
+            const rarityChances = document.getElementById('rarity-chances');
+            if (rarityChances) {
+                rarityChances.innerHTML = '';
+                RARITIES.forEach(rarity => {
+                    const item = document.createElement('div');
+                    item.className = 'rarity-item';
+                    item.style.borderLeft = `3px solid ${rarity.color}`;
+                    item.innerHTML = `<strong>${rarity.name}</strong><br><span style="opacity: 0.8;">${rarity.chance}% chance</span>`;
+                    rarityChances.appendChild(item);
+                });
+            }
+        }
+
+        function loadTitles() {
+            const display = document.getElementById('titles-display');
+            if (!display) return;
+
+            display.innerHTML = '';
+
+            TITLES.forEach(title => {
+                const card = document.createElement('div');
+                card.className = `title-card ${title.id}`;
+                
+                let isUnlocked = false;
+                let progressText = '';
+
+                if (title.requires.username) {
+                    isUnlocked = currentUser.username === title.requires.username;
+                    progressText = isUnlocked ? 'Unlocked!' : 'Owner Only';
+                } else if (title.requires.coins) {
+                    isUnlocked = (currentUser.coins || 0) >= title.requires.coins;
+                    progressText = isUnlocked ? 'Unlocked!' : `Need ${title.requires.coins.toLocaleString()} coins`;
+                } else if (title.requires.rarities) {
+                    isUnlocked = true;
+                    const progressParts = [];
+                    for (const [rarityKey, required] of Object.entries(title.requires.rarities)) {
+                        const has = (currentUser.inventory.rarities && currentUser.inventory.rarities[rarityKey]) ? currentUser.inventory.rarities[rarityKey].count : 0;
+                        if (has < required) isUnlocked = false;
+                        progressParts.push(`${has}/${required} ${rarityKey.replace(/-/g, ' ')}`);
+                    }
+                    progressText = isUnlocked ? 'Unlocked!' : progressParts.join(', ');
+                }
+
+                if (!isUnlocked) {
+                    card.classList.add('locked');
+                }
+
+                if (currentUser.equippedTitle === title.id) {
+                    card.classList.add('equipped');
+                }
+
+                card.innerHTML = `
+                    <h4 style="color: ${title.color};">${title.name}</h4>
+                    <p style="font-size: 0.9rem; margin: 10px 0; opacity: 0.8;">${progressText}</p>
+                    ${isUnlocked ? `<button class="btn equip-title-btn" data-title="${title.id}">${currentUser.equippedTitle === title.id ? 'Equipped' : 'Equip'}</button>` : ''}
+                `;
+
+                display.appendChild(card);
+            });
+
+            display.querySelectorAll('.equip-title-btn').forEach(btn => {
+                btn.onclick = () => equipTitle(btn.dataset.title);
+            });
+        }
+
+        async function equipTitle(titleId) {
+            try {
+                const data = await handleAPI('/api/equip-title', {
+                    method: 'POST',
+                    body: JSON.stringify({ titleId })
+                });
+
+                if (data.success) {
+                    currentUser.equippedTitle = data.equippedTitle;
+                    showPopup('Title equipped!', '#9C27B0');
+                    updateOwnerBadge();
+                    loadTitles();
+                } else {
+                    showPopup(data.error || 'Failed to equip title', '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to equip title', '#e74c3c');
+            }
+        }
+
+        function loadCrafting() {
+            const display = document.getElementById('crafting-display');
+            if (!display) return;
+
+            display.innerHTML = '';
+
+            CRAFT_RECIPES.forEach(recipe => {
+                const card = document.createElement('div');
+                card.className = 'craft-recipe';
+
+                let canCraft = true;
+                const ingredientsList = [];
+
+                if (recipe.requires.potions) {
+                    for (const [key, count] of Object.entries(recipe.requires.potions)) {
+                        const has = (currentUser.inventory.potions && currentUser.inventory.potions[key]) || 0;
+                        ingredientsList.push(`${has}/${count} ${key.replace(/(\d+)/, ' $1')}`);
+                        if (has < count) canCraft = false;
+                    }
+                }
+
+                if (recipe.requires.items) {
+                    for (const [key, count] of Object.entries(recipe.requires.items)) {
+                        const itemData = currentUser.inventory.items && currentUser.inventory.items[key];
+                        const has = itemData ? itemData.count : 0;
+                        ingredientsList.push(`${has}/${count} ${key.replace(/-/g, ' ')}`);
+                        if (has < count) canCraft = false;
+                    }
+                }
+
+                card.innerHTML = `
+                    <h4>${recipe.name}</h4>
+                    <p style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 10px;">${recipe.description}</p>
+                    <div class="craft-ingredients">
+                        <strong>Required:</strong><br>
+                        ${ingredientsList.map(i => `<p>• ${i}</p>`).join('')}
+                    </div>
+                    <button class="btn craft-btn" data-recipe="${recipe.id}" ${!canCraft ? 'disabled' : ''}>Craft</button>
+                `;
+
+                display.appendChild(card);
+            });
+
+            display.querySelectorAll('.craft-btn').forEach(btn => {
+                btn.onclick = () => craftItem(btn.dataset.recipe);
+            });
+        }
+
+        async function craftItem(recipeId) {
+            try {
+                const data = await handleAPI('/api/craft', {
+                    method: 'POST',
+                    body: JSON.stringify({ recipeId })
+                });
+
+                if (data.success) {
+                    currentUser.inventory = data.inventory;
+                    showPopup('Crafted successfully!', '#27ae60');
+                    loadInventory(currentUser.inventory);
+                    loadCrafting();
+                } else {
+                    showPopup(data.error || 'Failed to craft', '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to craft', '#e74c3c');
+            }
+        }
+
+        function loadAdminUsers(users) {
+            const container = document.getElementById('users-list');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            users.forEach(user => {
+                const userCard = document.createElement('div');
+                userCard.className = 'user-card';
+                userCard.innerHTML = `
+                    <h4>${escapeHtml(user.username)} ${user.isAdmin ? '<span class="owner-badge">ADMIN</span>' : ''}</h4>
+                    <p>Coins: ${user.coins || 0} | Spins: ${user.totalSpins || 0}</p>
+                    <div class="user-actions">
+                        <button class="btn" onclick="setUserCoins('${user.username}')">Set Coins</button>
+                        <button class="btn" onclick="giveUserItem('${user.username}')">Give Item</button>
+                        <button class="btn" onclick="giveUserPotion('${user.username}')">Give Potion</button>
+                    </div>
+                `;
+                container.appendChild(userCard);
+            });
+        }
+
+        async function setUserCoins(username) {
+            const amount = prompt(`Set coins for ${username}:`);
+            if (!amount || isNaN(amount)) return;
+
+            try {
+                const data = await handleAPI('/api/admin/modify-user', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username,
+                        action: 'setCoins',
+                        value: parseInt(amount)
+                    })
+                });
+
+                if (data.success) {
+                    showPopup('Coins updated!', '#27ae60');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to update coins', '#e74c3c');
+            }
+        }
+
+        async function giveUserItem(username) {
+            const itemName = prompt(`Give item to ${username} (enter item name):`);
+            if (!itemName) return;
+
+            const count = prompt('How many?', '1');
+            if (!count || isNaN(count)) return;
+
+            try {
+                const data = await handleAPI('/api/admin/modify-user', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username,
+                        action: 'giveItem',
+                        itemName,
+                        count: parseInt(count)
+                    })
+                });
+
+                if (data.success) {
+                    showPopup('Item given!', '#27ae60');
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to give item', '#e74c3c');
+            }
+        }
+
+        async function giveUserPotion(username) {
+            const potionKey = prompt(`Give potion to ${username} (luck1, luck2, speed1):`);
+            if (!potionKey) return;
+
+            const count = prompt('How many?', '1');
+            if (!count || isNaN(count)) return;
+
+            try {
+                const data = await handleAPI('/api/admin/modify-user', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username,
+                        action: 'givePotion',
+                        potionKey,
+                        count: parseInt(count)
+                    })
+                });
+
+                if (data.success) {
+                    showPopup('Potion given!', '#27ae60');
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to give potion', '#e74c3c');
+            }
         }
 
         function addChatMessage(msg) {
@@ -1300,6 +2005,8 @@
                     messageClass += ' divine-message';
                 } else if (msg.rarityType === 'secret') {
                     messageClass += ' secret-message';
+                } else if (msg.rarityType === 'legendary') {
+                    messageClass += ' legendary-message';
                 }
             }
             
@@ -1308,6 +2015,14 @@
             
             const usernameClass = msg.username === 'Mr_Fernanski' ? 'username owner' : 'username';
             const ownerBadge = msg.username === 'Mr_Fernanski' ? '<span class="owner-badge">OWNER</span>' : '';
+            
+            let titleBadge = '';
+            if (msg.userTitle) {
+                const title = TITLES.find(t => t.id === msg.userTitle);
+                if (title) {
+                    titleBadge = `<span class="title-badge ${title.id}" style="background: linear-gradient(135deg, ${title.color}, ${title.color}99);">${title.name}</span>`;
+                }
+            }
             
             let adminActions = '';
             if (currentUser && currentUser.isAdmin && !msg.isSystem) {
@@ -1322,6 +2037,7 @@
                 let systemColor = '#FF0000';
                 if (msg.rarityType === 'divine') systemColor = '#00FF88';
                 else if (msg.rarityType === 'secret') systemColor = '#FFD700';
+                else if (msg.rarityType === 'legendary') systemColor = '#9B59B6';
                 
                 msgEl.innerHTML = `
                     <span style="font-weight: bold; color: ${systemColor};">⚡ ${escapeHtml(msg.message)}</span>
@@ -1330,7 +2046,7 @@
             } else {
                 msgEl.innerHTML = `
                     ${adminActions}
-                    <span class="${usernameClass}">${escapeHtml(msg.username)}${ownerBadge}:</span>
+                    <span class="${usernameClass}">${escapeHtml(msg.username)}${ownerBadge}${titleBadge}:</span>
                     <span>${escapeHtml(msg.message)}</span>
                     <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
                 `;
@@ -1411,7 +2127,9 @@
                 const potionNames = {
                     luck1: 'Luck Potion I',
                     luck2: 'Luck Potion II',
-                    speed1: 'Speed Potion I'
+                    luck3: 'Luck Potion III',
+                    speed1: 'Speed Potion I',
+                    speed2: 'Speed Potion II'
                 };
 
                 Object.entries(category).forEach(([key, count]) => {
@@ -1572,6 +2290,26 @@
                 showPopup('Coin Rush ended!', '#f39c12');
             });
 
+            socket.on('disco_start', () => {
+                console.log('🕺 Disco Mode started');
+                discoModeActive = true;
+                showDiscoNotification();
+                showPopup('DISCO MODE ACTIVATED! 5x Luck!', '#9B59B6');
+            });
+
+            socket.on('disco_stop', () => {
+                console.log('🕺 Disco Mode stopped');
+                discoModeActive = false;
+                hideDiscoNotification();
+                showPopup('Disco Mode ended!', '#f39c12');
+            });
+
+            socket.on('meteor_start', () => {
+                console.log('☄️ Meteor event started');
+                showPopup('METEOR INCOMING!', '#FF6B00');
+                launchMeteor();
+            });
+
             socket.on('new_announcement', (data) => {
                 console.log('📢 New announcement');
                 showPopup('New announcement: ' + data.title, '#f39c12');
@@ -1638,6 +2376,9 @@
                     updateActivePotions();
                     startShopTimer();
                     updateOwnerBadge();
+                    loadSettings();
+                    loadTitles();
+                    loadCrafting();
                     document.getElementById('spin-result').innerHTML = '';
                     e.target.reset();
                 } else {
@@ -1696,6 +2437,9 @@
                     updateActivePotions();
                     startShopTimer();
                     updateOwnerBadge();
+                    loadSettings();
+                    loadTitles();
+                    loadCrafting();
                     document.getElementById('spin-result').innerHTML = '';
                     e.target.reset();
                 } else {
@@ -1777,7 +2521,8 @@
             
             socket.emit('chat_message', {
                 username: currentUser.username,
-                message: message
+                message: message,
+                userTitle: currentUser.equippedTitle
             });
             
             input.value = '';
@@ -1987,6 +2732,56 @@
             }
         }
 
+        async function startMeteor() {
+            try {
+                const data = await handleAPI('/api/admin/meteor/start', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('Meteor launching!', '#FF6B00');
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to launch meteor', '#e74c3c');
+            }
+        }
+
+        async function startDisco() {
+            try {
+                const data = await handleAPI('/api/admin/disco/start', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('Disco Mode started!', '#9B59B6');
+                    document.getElementById('disco-status').innerHTML = '<span style="color: #9B59B6;">✅ Active</span>';
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to start disco mode', '#e74c3c');
+            }
+        }
+
+        async function stopDisco() {
+            try {
+                const data = await handleAPI('/api/admin/disco/stop', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('Disco Mode stopped!', '#f39c12');
+                    document.getElementById('disco-status').innerHTML = '<span style="color: #95a5a6;">⏸️ Inactive</span>';
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to stop disco mode', '#e74c3c');
+            }
+        }
+
         async function clearAllChat() {
             if (!confirm('Are you sure you want to clear ALL chat messages? This cannot be undone!')) {
                 return;
@@ -2083,7 +2878,9 @@
                 }
 
                 coinRushActive = false;
+                discoModeActive = false;
                 hideCoinRushNotification();
+                hideDiscoNotification();
                 
                 document.getElementById('inventory-display').innerHTML = '';
                 document.getElementById('spin-result').innerHTML = '';
@@ -2091,6 +2888,7 @@
                 document.getElementById('admin-btn').classList.add('hidden');
                 document.getElementById('active-potions').innerHTML = '';
                 document.getElementById('owner-badge').innerHTML = '';
+                document.getElementById('user-title').innerHTML = '';
                 
                 showPopup('Logged out successfully', '#f39c12');
                 showPage('home');
@@ -2135,6 +2933,9 @@
             document.getElementById('event-form').addEventListener('submit', handleAdminEvent);
             document.getElementById('start-coin-rush').onclick = startCoinRush;
             document.getElementById('stop-coin-rush').onclick = stopCoinRush;
+            document.getElementById('start-meteor').onclick = startMeteor;
+            document.getElementById('start-disco').onclick = startDisco;
+            document.getElementById('stop-disco').onclick = stopDisco;
             document.getElementById('clear-all-chat').onclick = clearAllChat;
 
             document.getElementById('logout-btn').onclick = handleLogout;
