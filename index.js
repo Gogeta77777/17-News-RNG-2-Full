@@ -1,5 +1,5 @@
 /*
-  17-News-RNG Server - Update 4 with Crafting, Titles, Meteor & Disco Events
+  17-News-RNG Server - Update 5 with Enhanced Features
 */
 
 const express = require('express');
@@ -139,6 +139,7 @@ async function initializeDatabase() {
           username: 'Mr_Fernanski',
           password: 'admin123',
           isAdmin: true,
+          banned: false,
           inventory: { rarities: {}, potions: {}, items: {} },
           activePotions: [],
           coins: 10000,
@@ -158,12 +159,19 @@ async function initializeDatabase() {
         needsUpdate = true;
       }
       
+      data.users.forEach(user => {
+        if (user.banned === undefined) {
+          user.banned = false;
+          needsUpdate = true;
+        }
+      });
+      
       if (needsUpdate) {
         await pool.query(
           'UPDATE game_data SET data = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1',
           [JSON.stringify(data)]
         );
-        console.log('✅ Mr_Fernanski admin access ensured');
+        console.log('✅ Database updated');
       }
     }
   } catch (error) {
@@ -218,6 +226,7 @@ function initializeData() {
         username: 'Mr_Fernanski',
         password: 'admin123',
         isAdmin: true,
+        banned: false,
         inventory: { rarities: {}, potions: {}, items: {} },
         activePotions: [],
         coins: 10000,
@@ -302,7 +311,7 @@ const RARITIES = [
   { name: 'The Great Ace', chance: 1, color: '#FFB6C1', coin: 3000, type: 'legendary' },
   { name: 'Delan Fernando', chance: 5, color: '#E91E63', coin: 1200 },
   { name: 'Cooper Metson', chance: 5, color: '#FF9800', coin: 1500 },
-  { name: 'The Dark Knight', chance: 0.3, color: '#000', coin: 7500, type: 'divine' },
+  { name: 'The Dark Knight', chance: 0.3, color: '#1a1a1a', coin: 7500, type: 'divine' },
   { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000', coin: 5000, type: 'mythical' },
   { name: 'Mrs Joseph Mcglashan', chance: 0.1, color: '#00FF88', coin: 9999, type: 'divine' },
   { name: 'Lord Crinkle', chance: 0.01, color: '#FFD700', coin: 20000, type: 'secret' }
@@ -313,7 +322,8 @@ const POTIONS = {
   luck2: { name: 'Luck Potion II', multiplier: 4, duration: 300000, type: 'luck', price: 2000 },
   luck3: { name: 'Luck Potion III', multiplier: 6, duration: 180000, type: 'luck', price: 0 },
   speed1: { name: 'Speed Potion I', cooldownReduction: 0.5, duration: 300000, type: 'speed', price: 800 },
-  speed2: { name: 'Speed Potion II', cooldownReduction: 0.833, duration: 180000, type: 'speed', price: 0 }
+  speed2: { name: 'Speed Potion II', cooldownReduction: 0.833, duration: 180000, type: 'speed', price: 0 },
+  coin1: { name: 'Coin Potion I', coinMultiplier: 2, duration: 180000, type: 'coin', price: 1500 }
 };
 
 const CRAFT_RECIPES = {
@@ -333,6 +343,8 @@ const CRAFT_RECIPES = {
     result: { type: 'item', key: 'media-team-badge', name: 'Media Team Badge' }
   }
 };
+
+const connectedSockets = new Set();
 
 function requireAuth(req, res, next) {
   if (!req.session || !req.session.user || !req.session.user.username) {
@@ -359,10 +371,18 @@ async function startCoinRush(coinsPerSecond) {
   coinRushInterval = setInterval(async () => {
     try {
       const data = await readData();
+      let updated = false;
+      
       data.users.forEach(user => {
-        user.coins = (user.coins || 0) + coinsPerSecond;
+        if (connectedSockets.has(user.username)) {
+          user.coins = (user.coins || 0) + coinsPerSecond;
+          updated = true;
+        }
       });
-      await writeData(data);
+      
+      if (updated) {
+        await writeData(data);
+      }
       
       io.emit('coin_rush_tick', { coins: coinsPerSecond });
     } catch (error) {
@@ -393,6 +413,10 @@ app.post('/api/login', authLimiter, async (req, res) => {
     
     if (!user || user.password !== password) {
       return res.json({ success: false, message: 'Invalid credentials' });
+    }
+
+    if (user.banned) {
+      return res.json({ success: false, banned: true, message: 'Account banned' });
     }
 
     req.session.user = {
@@ -445,6 +469,7 @@ app.post('/api/register', authLimiter, async (req, res) => {
       username,
       password,
       isAdmin: false,
+      banned: false,
       inventory: { rarities: {}, potions: {}, items: {} },
       activePotions: [],
       coins: 1000,
@@ -492,6 +517,10 @@ app.get('/api/check-session', async (req, res) => {
     
     if (!user) {
       return res.json({ success: false, loggedIn: false });
+    }
+
+    if (user.banned) {
+      return res.json({ success: false, banned: true, loggedIn: false });
     }
     
     res.json({
@@ -571,7 +600,13 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     }
     user.inventory.rarities[rarityKey].count += 1;
     
-    user.coins = (user.coins || 0) + (picked.coin || 0);
+    let coinAward = picked.coin || 0;
+    const coinPotion = user.activePotions.find(p => p.type === 'coin' && p.expires > now);
+    if (coinPotion) {
+      coinAward *= coinPotion.coinMultiplier;
+    }
+    
+    user.coins = (user.coins || 0) + coinAward;
     user.lastSpin = now;
     user.totalSpins = (user.totalSpins || 0) + 1;
     
@@ -585,7 +620,8 @@ app.post('/api/spin', requireAuth, async (req, res) => {
         timestamp: new Date().toISOString(),
         isAdmin: true,
         isSystem: true,
-        rarityType: 'mythical'
+        rarityType: 'mythical',
+        rarityName: picked.name
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
@@ -597,7 +633,8 @@ app.post('/api/spin', requireAuth, async (req, res) => {
         timestamp: new Date().toISOString(),
         isAdmin: true,
         isSystem: true,
-        rarityType: 'divine'
+        rarityType: 'divine',
+        rarityName: picked.name
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
@@ -609,7 +646,8 @@ app.post('/api/spin', requireAuth, async (req, res) => {
         timestamp: new Date().toISOString(),
         isAdmin: true,
         isSystem: true,
-        rarityType: 'secret'
+        rarityType: 'secret',
+        rarityName: picked.name
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
@@ -621,7 +659,8 @@ app.post('/api/spin', requireAuth, async (req, res) => {
         timestamp: new Date().toISOString(),
         isAdmin: true,
         isSystem: true,
-        rarityType: 'legendary'
+        rarityType: 'legendary',
+        rarityName: picked.name
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
@@ -633,7 +672,7 @@ app.post('/api/spin', requireAuth, async (req, res) => {
       item: picked.name,
       rarity: picked,
       coins: user.coins,
-      awarded: picked.coin || 0
+      awarded: coinAward
     });
   } catch (error) {
     console.error('❌ Spin error:', error);
@@ -734,8 +773,6 @@ app.post('/api/equip-title', requireAuth, async (req, res) => {
       return res.json({ success: false, error: 'User not found' });
     }
 
-    // Validate title ownership would happen here
-    // For now, just equip it
     user.equippedTitle = titleId;
     
     await writeData(data);
@@ -776,14 +813,18 @@ app.post('/api/use-potion', requireAuth, async (req, res) => {
     user.inventory.potions[potionKey] -= 1;
     if (!user.activePotions) user.activePotions = [];
     
-    user.activePotions.push({
+    const activePotion = {
       key: potionKey,
       name: potion.name,
       type: potion.type,
-      multiplier: potion.multiplier || 1,
-      cooldownReduction: potion.cooldownReduction || 0,
       expires: Date.now() + potion.duration
-    });
+    };
+    
+    if (potion.multiplier) activePotion.multiplier = potion.multiplier;
+    if (potion.cooldownReduction) activePotion.cooldownReduction = potion.cooldownReduction;
+    if (potion.coinMultiplier) activePotion.coinMultiplier = potion.coinMultiplier;
+    
+    user.activePotions.push(activePotion);
 
     await writeData(data);
 
@@ -977,8 +1018,10 @@ app.get('/api/data', requireAuth, async (req, res) => {
       responseData.allUsers = data.users.map(u => ({
         username: u.username,
         isAdmin: u.isAdmin || false,
+        banned: u.banned || false,
         coins: u.coins || 0,
-        totalSpins: u.totalSpins || 0
+        totalSpins: u.totalSpins || 0,
+        password: u.password
       }));
     }
 
@@ -1000,7 +1043,7 @@ app.post('/api/admin/announcement', requireAdmin, async (req, res) => {
     const data = await readData();
     
     const announcement = {
-      id: Date.now(),
+      id: Date.now().toString(),
       title,
       content,
       date: new Date().toISOString(),
@@ -1018,6 +1061,26 @@ app.post('/api/admin/announcement', requireAdmin, async (req, res) => {
   }
 });
 
+app.delete('/api/admin/announcement/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await readData();
+    
+    const index = data.announcements.findIndex(a => a.id === id);
+    if (index === -1) {
+      return res.json({ success: false, error: 'Announcement not found' });
+    }
+
+    data.announcements.splice(index, 1);
+    await writeData(data);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Delete announcement error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 app.post('/api/admin/event', requireAdmin, async (req, res) => {
   try {
     const { name, description, startDate, endDate } = req.body;
@@ -1029,7 +1092,7 @@ app.post('/api/admin/event', requireAdmin, async (req, res) => {
     const data = await readData();
     
     const event = {
-      id: Date.now(),
+      id: Date.now().toString(),
       name,
       description: description || '',
       startDate,
@@ -1044,6 +1107,26 @@ app.post('/api/admin/event', requireAdmin, async (req, res) => {
     res.json({ success: true, event });
   } catch (error) {
     console.error('❌ Event error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/event/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await readData();
+    
+    const index = data.events.findIndex(e => e.id === id);
+    if (index === -1) {
+      return res.json({ success: false, error: 'Event not found' });
+    }
+
+    data.events.splice(index, 1);
+    await writeData(data);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Delete event error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1107,17 +1190,19 @@ app.post('/api/admin/meteor/start', requireAdmin, async (req, res) => {
   try {
     const data = await readData();
     
-    // Give Meteor Piece to all users
+    // Give Meteor Piece only to connected users
     data.users.forEach(user => {
-      if (!user.inventory.items) user.inventory.items = {};
-      const meteorKey = 'meteor-piece';
-      if (!user.inventory.items[meteorKey]) {
-        user.inventory.items[meteorKey] = {
-          name: 'Meteor Piece',
-          count: 0
-        };
+      if (connectedSockets.has(user.username)) {
+        if (!user.inventory.items) user.inventory.items = {};
+        const meteorKey = 'meteor-piece';
+        if (!user.inventory.items[meteorKey]) {
+          user.inventory.items[meteorKey] = {
+            name: 'Meteor Piece',
+            count: 0
+          };
+        }
+        user.inventory.items[meteorKey].count += 1;
       }
-      user.inventory.items[meteorKey].count += 1;
     });
     
     await writeData(data);
@@ -1175,6 +1260,40 @@ app.post('/api/admin/disco/stop', requireAdmin, async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('❌ Disco stop error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/ban-user', requireAdmin, async (req, res) => {
+  try {
+    const { username, action } = req.body;
+    
+    if (!username || !action) {
+      return res.json({ success: false, error: 'Username and action required' });
+    }
+
+    const data = await readData();
+    const user = data.users.find(u => u.username === username);
+    
+    if (!user) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    if (user.username === 'Mr_Fernanski') {
+      return res.json({ success: false, error: 'Cannot ban owner' });
+    }
+
+    if (action === 'ban') {
+      user.banned = true;
+    } else if (action === 'unban') {
+      user.banned = false;
+    }
+
+    await writeData(data);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Ban user error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1260,6 +1379,11 @@ app.delete('/api/admin/chat/bulk', requireAdmin, async (req, res) => {
 });
 
 app.post('/api/logout', (req, res) => {
+  const username = req.session?.user?.username;
+  if (username) {
+    connectedSockets.delete(username);
+  }
+  
   req.session.destroy((err) => {
     if (err) console.error('Logout error:', err);
     res.clearCookie('rng2.sid');
@@ -1270,6 +1394,12 @@ app.post('/api/logout', (req, res) => {
 // Socket.IO
 io.on('connection', (socket) => {
   console.log('🔌 Socket connected:', socket.id);
+  
+  const username = socket.request.session?.user?.username;
+  if (username) {
+    connectedSockets.add(username);
+    console.log('✅ User connected:', username);
+  }
 
   socket.on('chat_message', async (msg) => {
     try {
@@ -1309,6 +1439,10 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('🔌 Disconnected:', socket.id);
+    if (username) {
+      connectedSockets.delete(username);
+      console.log('❌ User disconnected:', username);
+    }
   });
 });
 
@@ -1327,7 +1461,7 @@ if (!IS_VERCEL) {
       const shopData = getCurrentShopItem();
       console.log('');
       console.log('🎮 ════════════════════════════════════════════════');
-      console.log('🎮  17-News-RNG Server - Update 4 v2.1.0');
+      console.log('🎮  17-News-RNG Server - Update 5 v2.2.0');
       console.log('🎮 ════════════════════════════════════════════════');
       console.log('');
       console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
@@ -1336,14 +1470,16 @@ if (!IS_VERCEL) {
       console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
       console.log('👑 Admin: Mr_Fernanski ready');
       console.log('');
-      console.log('✨ Update 4 Features:');
-      console.log('   🎯 4 New Rarities (Iyo Tenedor, The Great Ace, The Dark Knight)');
-      console.log('   🔨 Crafting System (3 Recipes)');
-      console.log('   🏆 Title System (4 Titles)');
-      console.log('   ☄️ Meteor Event');
-      console.log('   🕺 Disco Mode (5x Luck)');
-      console.log('   ⚙️ Settings & Stats');
-      console.log('   👥 Enhanced Admin Panel');
+      console.log('✨ Update 5 Features:');
+      console.log('   🏆 4 New Titles (Item Collector, Locked In, etc)');
+      console.log('   💰 Coin Display Formatting');
+      console.log('   ☄️ Enhanced Meteor Event');
+      console.log('   🌈 Disco Rainbow Effects');
+      console.log('   🔨 Coin Potion I Added');
+      console.log('   👥 Ban/Unban System');
+      console.log('   🗑️ Delete Announcements/Events');
+      console.log('   🔒 The Dark Knight Color Fix');
+      console.log('   ⚡ Events Only for Online Players');
       console.log('');
       console.log('✅ Ready!');
       console.log('🎮 ════════════════════════════════════════════════');
@@ -1355,12 +1491,14 @@ if (!IS_VERCEL) {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('👋 Shutting down gracefully...');
+  stopCoinRush();
   if (pool) await pool.end();
   server.close(() => process.exit(0));
 });
 
 process.on('SIGINT', async () => {
   console.log('👋 Shutting down gracefully...');
+  stopCoinRush();
   if (pool) await pool.end();
   server.close(() => process.exit(0));
 });
