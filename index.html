@@ -22,6 +22,7 @@
             --owner-gold: #FFD700;
             --mythical: #FF0000;
             --divine: #00FF88;
+            --divine-dark: #1a1a1a;
             --secret: #FFD700;
             --legendary: #9B59B6;
             --z-base: 1;
@@ -32,6 +33,7 @@
             --z-popup: 1000;
             --z-coins: 9999;
             --z-meteor: 10000;
+            --z-rainbow: 9998;
         }
 
         * {
@@ -119,6 +121,11 @@
             50% { box-shadow: 0 0 40px var(--divine), 0 0 60px var(--divine); }
         }
 
+        @keyframes divineDarkGlow {
+            0%, 100% { box-shadow: 0 0 20px var(--divine-dark), 0 0 40px var(--divine-dark); }
+            50% { box-shadow: 0 0 40px var(--divine-dark), 0 0 60px var(--divine-dark); }
+        }
+
         @keyframes secretGlow {
             0%, 100% { 
                 box-shadow: 0 0 20px var(--secret), 0 0 40px var(--secret), 0 0 5px #000;
@@ -140,12 +147,12 @@
 
         @keyframes meteorFall {
             0% {
-                transform: translate(-50%, -200%) rotate(-45deg);
+                top: -300px;
                 opacity: 1;
             }
             100% {
-                transform: translate(50vw, 100vh) rotate(-45deg);
-                opacity: 0.8;
+                top: 100vh;
+                opacity: 0.9;
             }
         }
 
@@ -154,7 +161,35 @@
             50% { opacity: 1; }
         }
 
+        @keyframes rainbow {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
         .hidden { display: none !important; }
+
+        .rainbow-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: var(--z-rainbow);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+            background: linear-gradient(45deg, 
+                red, orange, yellow, green, blue, indigo, violet,
+                red, orange, yellow, green, blue, indigo, violet
+            );
+            background-size: 400% 400%;
+            animation: rainbow 3s linear infinite;
+            mix-blend-mode: screen;
+        }
+
+        .rainbow-overlay.active {
+            opacity: 0.3;
+        }
 
         .meteor-overlay {
             position: fixed;
@@ -182,24 +217,46 @@
 
         .meteor {
             position: fixed;
-            width: 100px;
-            height: 100px;
-            background: radial-gradient(circle, #ff6b00, #ff0000);
+            width: 200px;
+            height: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: radial-gradient(circle, #ff6b00, #ff0000, #8b0000);
             border-radius: 50%;
-            box-shadow: 0 0 50px #ff6b00, 0 0 100px #ff0000;
+            box-shadow: 
+                0 0 100px #ff6b00, 
+                0 0 200px #ff0000,
+                0 0 300px #ff0000,
+                inset 0 0 50px rgba(255, 255, 0, 0.5);
             z-index: var(--z-meteor);
             pointer-events: none;
+            animation: meteorFall 2s ease-in forwards;
         }
 
         .meteor::before {
             content: '';
             position: absolute;
-            width: 200px;
-            height: 50px;
-            background: linear-gradient(90deg, rgba(255,107,0,0.8), transparent);
-            top: 25px;
-            left: -200px;
-            transform: rotate(-10deg);
+            width: 300px;
+            height: 100px;
+            background: linear-gradient(90deg, rgba(255,107,0,0.9), transparent);
+            top: 50px;
+            left: -300px;
+            border-radius: 50%;
+        }
+
+        .meteor::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 0, 0.4), transparent);
+            border-radius: 50%;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         .disco-notification {
@@ -327,6 +384,26 @@
         .title-badge.millionaire {
             background: linear-gradient(135deg, #27ae60, #229954);
             box-shadow: 0 2px 4px rgba(39, 174, 96, 0.3);
+        }
+
+        .title-badge.item-collector {
+            background: linear-gradient(135deg, #C19A6B, #A67C52);
+            box-shadow: 0 2px 4px rgba(193, 154, 107, 0.3);
+        }
+
+        .title-badge.locked-in {
+            background: linear-gradient(135deg, #FF6B6B, #EE5A5A);
+            box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+        }
+
+        .title-badge.potion-master {
+            background: linear-gradient(135deg, #9B59B6, #8E44AD);
+            box-shadow: 0 2px 4px rgba(155, 89, 182, 0.3);
+        }
+
+        .title-badge.full-of-gold {
+            background: linear-gradient(135deg, #FFD700, #27ae60);
+            box-shadow: 0 2px 4px rgba(255, 215, 0, 0.5);
         }
 
         .auth-container {
@@ -643,7 +720,7 @@
         .rarity-the-great-ace { border-left-color: #FFB6C1; animation: legendaryGlow 2s infinite; }
         .rarity-delan-fernando { border-left-color: #E91E63; }
         .rarity-cooper-metson { border-left-color: #FF9800; }
-        .rarity-the-dark-knight { border-left-color: #000; animation: divineGlow 2s infinite; }
+        .rarity-the-dark-knight { border-left-color: #1a1a1a; animation: divineDarkGlow 2s infinite; }
         .rarity-mr-fernanski { 
             border-left-color: #FF0000; 
             animation: mythicalGlow 2s infinite;
@@ -722,6 +799,11 @@
         .chat-message.system-message.divine-message {
             background: rgba(0, 255, 136, 0.15);
             border: 2px solid rgba(0, 255, 136, 0.5);
+        }
+
+        .chat-message.system-message.divine-dark-message {
+            background: rgba(26, 26, 26, 0.5);
+            border: 2px solid rgba(26, 26, 26, 0.9);
         }
 
         .chat-message.system-message.secret-message {
@@ -886,6 +968,10 @@
         .title-card.banana-legend { border-left-color: #FFD700; }
         .title-card.millionaire { border-left-color: #27ae60; }
         .title-card.owner-title { border-left-color: var(--owner-gold); }
+        .title-card.item-collector { border-left-color: #C19A6B; }
+        .title-card.locked-in { border-left-color: #FF6B6B; }
+        .title-card.potion-master { border-left-color: #9B59B6; }
+        .title-card.full-of-gold { border-left-color: #FFD700; }
 
         .title-card.equipped {
             background: rgba(0, 255, 247, 0.1);
@@ -945,6 +1031,11 @@
             border-left: 3px solid var(--accent-primary);
         }
 
+        .user-card.banned {
+            opacity: 0.6;
+            border-left-color: var(--error);
+        }
+
         .user-actions {
             display: flex;
             gap: 10px;
@@ -974,6 +1065,27 @@
             border-radius: 8px;
             margin-bottom: 15px;
             border-left: 4px solid var(--accent-secondary);
+            position: relative;
+        }
+
+        .delete-item-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .announcement:hover .delete-item-btn,
+        .event:hover .delete-item-btn {
+            opacity: 1;
         }
 
         .admin-event-section {
@@ -1061,6 +1173,34 @@
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        .banned-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .banned-screen h1 {
+            color: var(--error);
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .banned-screen p {
+            color: #fff;
+            font-size: 1.2em;
+            text-align: center;
+            max-width: 600px;
+        }
+
         @media (max-width: 768px) {
             .container { padding: 16px; }
             .button-group { flex-direction: column; width: 100%; }
@@ -1079,6 +1219,7 @@
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
+    <div id="rainbow-overlay" class="rainbow-overlay"></div>
     <div id="meteor-overlay" class="meteor-overlay"></div>
     <div id="coin-rush-notification" class="coin-rush-notification hidden"></div>
     <div id="disco-notification" class="disco-notification hidden"></div>
@@ -1096,13 +1237,14 @@
             <div class="update-log">
                 <h3>Latest Updates</h3>
                 <div class="log-entry">
-                    <span class="date">17/11/25</span>
-                    <p>🎯 4 New Rarities Added</p>
-                    <p>🔨 Crafting System</p>
-                    <p>🏆 Title System</p>
-                    <p>☄️ Meteor & Disco Events</p>
-                    <p>⚙️ Settings & Stats</p>
-                    <p>👥 Enhanced Admin Panel</p>
+                    <span class="date">18/11/25</span>
+                    <p>🏆 4 New Titles</p>
+                    <p>💰 Coin Display Format</p>
+                    <p>☄️ Enhanced Meteor Event</p>
+                    <p>🌈 Disco Rainbow Effects</p>
+                    <p>🔨 Coin Potion I Added</p>
+                    <p>👥 Admin: Ban/Unban Users</p>
+                    <p>🗑️ Delete Announcements/Events</p>
                 </div>
             </div>
         </main>
@@ -1155,7 +1297,7 @@
             <header class="game-header">
                 <h1>17 News RNG 2</h1>
                 <div class="user-info">
-                    <span>Welcome, <strong id="user-name">Player</strong><span id="owner-badge"></span><span id="user-title"></span></span>
+                    <span>Welcome, <strong id="user-name">Player</strong><span id="user-title"></span></span>
                     <span class="coins">Coins: <span id="coin-count">0</span></span>
                     <button id="admin-btn" class="btn hidden">Admin Panel</button>
                     <button id="logout-btn" class="btn">Logout</button>
@@ -1232,6 +1374,12 @@
                                     <p style="color: #f1c40f; margin: 10px 0;">2000 coins</p>
                                     <button class="btn buy-potion-btn" data-potion="luck2">Buy</button>
                                 </div>
+                                <div class="potion-shop-item">
+                                    <h4>Coin Potion I</h4>
+                                    <p style="font-size: 0.9rem; opacity: 0.8;">2x coins for 3 minutes</p>
+                                    <p style="color: #f1c40f; margin: 10px 0;">1500 coins</p>
+                                    <button class="btn buy-potion-btn" data-potion="coin1">Buy</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1277,8 +1425,8 @@
                         <div class="settings-section">
                             <h3>Game Info</h3>
                             <div class="stat-box">
-                                <p><strong>Version:</strong> 2.1.0 - Update 4</p>
-                                <p><strong>Last Updated:</strong> 17/11/25</p>
+                                <p><strong>Version:</strong> 2.2.0 - Update 5</p>
+                                <p><strong>Last Updated:</strong> 18/11/25</p>
                             </div>
                         </div>
                     </div>
@@ -1309,7 +1457,7 @@
         <div class="main-content">
             <div class="admin-event-section">
                 <h2 style="color: var(--owner-gold); margin-bottom: 15px;">💰 Coin Rush Event</h2>
-                <p style="margin-bottom: 15px;">Activate a server-wide coin rush! All players receive coins every second.</p>
+                <p style="margin-bottom: 15px;">Activate a server-wide coin rush! All online players receive coins every second.</p>
                 <div class="coin-rush-controls">
                     <input type="number" id="coin-rush-amount" placeholder="Coins per second (1-1000)" min="1" max="1000" value="10">
                     <button id="start-coin-rush" class="btn">Start Coin Rush</button>
@@ -1326,7 +1474,7 @@
 
             <div class="admin-event-section">
                 <h2 style="color: var(--legendary); margin-bottom: 15px;">🕺 Disco Mode</h2>
-                <p style="margin-bottom: 15px;">Activate disco mode! All players get 5x luck while active.</p>
+                <p style="margin-bottom: 15px;">Activate disco mode! All online players get 5x luck while active.</p>
                 <div class="coin-rush-controls">
                     <button id="start-disco" class="btn">Start Disco Mode</button>
                     <button id="stop-disco" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Stop Disco Mode</button>
@@ -1383,7 +1531,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        console.log('🎮 17 News RNG 2 - Update 4 v2.1.0');
+        console.log('🎮 17 News RNG 2 - Update 5 v2.2.0');
 
         let currentUser = null;
         let socket = null;
@@ -1436,10 +1584,28 @@
                 requires: { coins: 1000000 }
             },
             {
-                id: 'owner',
-                name: 'Owner',
+                id: 'item-collector',
+                name: 'Item Collector',
+                color: '#C19A6B',
+                requires: { items: 50 }
+            },
+            {
+                id: 'locked-in',
+                name: 'Locked In',
+                color: '#FF6B6B',
+                requires: { spins: 1000 }
+            },
+            {
+                id: 'potion-master',
+                name: 'Potion Master',
+                color: '#9B59B6',
+                requires: { potions: 100 }
+            },
+            {
+                id: 'full-of-gold',
+                name: 'Full Of Gold',
                 color: '#FFD700',
-                requires: { username: 'Mr_Fernanski' }
+                requires: { coins: 10000000 }
             }
         ];
 
@@ -1454,11 +1620,15 @@
             { name: 'The Great Ace', chance: 1, color: '#FFB6C1' },
             { name: 'Delan Fernando', chance: 5, color: '#E91E63' },
             { name: 'Cooper Metson', chance: 5, color: '#FF9800' },
-            { name: 'The Dark Knight', chance: 0.3, color: '#000' },
+            { name: 'The Dark Knight', chance: 0.3, color: '#1a1a1a' },
             { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000' },
             { name: 'Mrs Joseph Mcglashan', chance: 0.1, color: '#00FF88' },
             { name: 'Lord Crinkle', chance: 0.01, color: '#FFD700' }
         ];
+
+        function formatCoins(num) {
+            return num.toLocaleString();
+        }
 
         async function handleAPI(url, options = {}) {
             try {
@@ -1532,12 +1702,14 @@
             notification.textContent = '🕺 DISCO MODE! 5x Luck Active!';
             notification.classList.remove('hidden');
             document.body.classList.add('disco-mode');
+            document.getElementById('rainbow-overlay').classList.add('active');
         }
 
         function hideDiscoNotification() {
             const notification = document.getElementById('disco-notification');
             notification.classList.add('hidden');
             document.body.classList.remove('disco-mode');
+            document.getElementById('rainbow-overlay').classList.remove('active');
         }
 
         async function launchMeteor() {
@@ -1554,11 +1726,7 @@
 
             const meteor = document.createElement('div');
             meteor.className = 'meteor';
-            meteor.style.left = '50%';
-            meteor.style.top = '-100px';
             document.body.appendChild(meteor);
-
-            meteor.style.animation = 'meteorFall 2s ease-in forwards';
 
             await new Promise(resolve => setTimeout(resolve, 2000));
             meteor.remove();
@@ -1582,6 +1750,11 @@
                 console.log('🔍 Checking session...');
                 const data = await handleAPI('/api/check-session');
                 
+                if (data.banned) {
+                    showBannedScreen();
+                    return false;
+                }
+                
                 if (data.success && data.loggedIn && data.user) {
                     console.log('✅ Session found:', data.user.username, 'Admin:', data.user.isAdmin);
                     currentUser = data.user;
@@ -1590,7 +1763,7 @@
                     initSocket();
                     updateActivePotions();
                     startShopTimer();
-                    updateOwnerBadge();
+                    updateUserDisplay();
                     loadSettings();
                     loadTitles();
                     loadCrafting();
@@ -1605,16 +1778,23 @@
             }
         }
 
-        function updateOwnerBadge() {
-            const badgeContainer = document.getElementById('owner-badge');
+        function showBannedScreen() {
+            const bannedDiv = document.createElement('div');
+            bannedDiv.className = 'banned-screen';
+            bannedDiv.innerHTML = `
+                <h1>🚫 YOU HAVE BEEN BANNED</h1>
+                <p>Your account has been banned from 17 News RNG 2.</p>
+                <p style="margin-top: 20px;">To appeal this ban, please contact the owner: <strong>Mr_Fernanski</strong></p>
+            `;
+            document.body.appendChild(bannedDiv);
+        }
+
+        function updateUserDisplay() {
             const titleContainer = document.getElementById('user-title');
             const adminBtn = document.getElementById('admin-btn');
             
-            if (currentUser && currentUser.username === 'Mr_Fernanski') {
-                badgeContainer.innerHTML = '<span class="owner-badge">OWNER</span>';
-            } else {
-                badgeContainer.innerHTML = '';
-            }
+            document.getElementById('user-name').textContent = currentUser.username || 'Player';
+            document.getElementById('coin-count').textContent = formatCoins(currentUser.coins || 0);
 
             if (currentUser && currentUser.equippedTitle) {
                 const title = TITLES.find(t => t.id === currentUser.equippedTitle);
@@ -1655,9 +1835,7 @@
             }
             
             currentUser = data.user;
-            document.getElementById('user-name').textContent = currentUser.username || 'Player';
-            document.getElementById('coin-count').textContent = currentUser.coins || 0;
-            updateOwnerBadge();
+            updateUserDisplay();
 
             loadInventory(currentUser.inventory || { rarities: {}, potions: {}, items: {} });
 
@@ -1671,6 +1849,7 @@
                         const annEl = document.createElement('div');
                         annEl.className = 'announcement';
                         annEl.innerHTML = `
+                            ${currentUser.isAdmin ? `<button class="delete-item-btn" onclick="deleteAnnouncement('${ann.id}')">Delete</button>` : ''}
                             <h3>${escapeHtml(ann.title)}</h3>
                             <p>${escapeHtml(ann.content)}</p>
                             <small style="opacity: 0.7;">By ${escapeHtml(ann.author)} on ${new Date(ann.date).toLocaleString()}</small>
@@ -1690,6 +1869,7 @@
                         const evtEl = document.createElement('div');
                         evtEl.className = 'event';
                         evtEl.innerHTML = `
+                            ${currentUser.isAdmin ? `<button class="delete-item-btn" onclick="deleteEvent('${evt.id}')">Delete</button>` : ''}
                             <h3>${escapeHtml(evt.name)}</h3>
                             <p>${escapeHtml(evt.description)}</p>
                             <small style="opacity: 0.7;">${new Date(evt.startDate).toLocaleString()} - ${new Date(evt.endDate).toLocaleString()}</small>
@@ -1734,9 +1914,9 @@
         }
 
         function loadSettings() {
-            document.getElementById('stat-spins').textContent = currentUser.totalSpins || 0;
+            document.getElementById('stat-spins').textContent = formatCoins(currentUser.totalSpins || 0);
             document.getElementById('stat-joined').textContent = currentUser.joinDate ? new Date(currentUser.joinDate).toLocaleDateString() : '-';
-            document.getElementById('stat-coins').textContent = currentUser.coins || 0;
+            document.getElementById('stat-coins').textContent = formatCoins(currentUser.coins || 0);
 
             const rarityChances = document.getElementById('rarity-chances');
             if (rarityChances) {
@@ -1764,12 +1944,20 @@
                 let isUnlocked = false;
                 let progressText = '';
 
-                if (title.requires.username) {
-                    isUnlocked = currentUser.username === title.requires.username;
-                    progressText = isUnlocked ? 'Unlocked!' : 'Owner Only';
-                } else if (title.requires.coins) {
+                if (title.requires.coins) {
                     isUnlocked = (currentUser.coins || 0) >= title.requires.coins;
-                    progressText = isUnlocked ? 'Unlocked!' : `Need ${title.requires.coins.toLocaleString()} coins`;
+                    progressText = isUnlocked ? 'Unlocked!' : `Need ${formatCoins(title.requires.coins)} coins`;
+                } else if (title.requires.spins) {
+                    isUnlocked = (currentUser.totalSpins || 0) >= title.requires.spins;
+                    progressText = isUnlocked ? 'Unlocked!' : `Need ${formatCoins(title.requires.spins)} spins`;
+                } else if (title.requires.items) {
+                    const totalItems = Object.values(currentUser.inventory.items || {}).reduce((sum, item) => sum + item.count, 0);
+                    isUnlocked = totalItems >= title.requires.items;
+                    progressText = isUnlocked ? 'Unlocked!' : `${totalItems}/${title.requires.items} items`;
+                } else if (title.requires.potions) {
+                    const totalPotions = Object.values(currentUser.inventory.potions || {}).reduce((sum, count) => sum + count, 0);
+                    isUnlocked = totalPotions >= title.requires.potions;
+                    progressText = isUnlocked ? 'Unlocked!' : `${totalPotions}/${title.requires.potions} potions`;
                 } else if (title.requires.rarities) {
                     isUnlocked = true;
                     const progressParts = [];
@@ -1813,7 +2001,7 @@
                 if (data.success) {
                     currentUser.equippedTitle = data.equippedTitle;
                     showPopup('Title equipped!', '#9C27B0');
-                    updateOwnerBadge();
+                    updateUserDisplay();
                     loadTitles();
                 } else {
                     showPopup(data.error || 'Failed to equip title', '#e74c3c');
@@ -1899,14 +2087,19 @@
 
             users.forEach(user => {
                 const userCard = document.createElement('div');
-                userCard.className = 'user-card';
+                userCard.className = 'user-card' + (user.banned ? ' banned' : '');
                 userCard.innerHTML = `
-                    <h4>${escapeHtml(user.username)} ${user.isAdmin ? '<span class="owner-badge">ADMIN</span>' : ''}</h4>
-                    <p>Coins: ${user.coins || 0} | Spins: ${user.totalSpins || 0}</p>
+                    <h4>${escapeHtml(user.username)} ${user.isAdmin ? '<span class="owner-badge">ADMIN</span>' : ''} ${user.banned ? '<span style="color: #e74c3c; margin-left: 8px;">⛔ BANNED</span>' : ''}</h4>
+                    <p>Coins: ${formatCoins(user.coins || 0)} | Spins: ${formatCoins(user.totalSpins || 0)}</p>
+                    <p style="font-size: 0.85em; opacity: 0.7; margin-top: 5px;">Password: ${escapeHtml(user.password)}</p>
                     <div class="user-actions">
                         <button class="btn" onclick="setUserCoins('${user.username}')">Set Coins</button>
                         <button class="btn" onclick="giveUserItem('${user.username}')">Give Item</button>
                         <button class="btn" onclick="giveUserPotion('${user.username}')">Give Potion</button>
+                        ${user.banned ? 
+                            `<button class="btn" style="background: linear-gradient(135deg, #27ae60, #229954);" onclick="unbanUser('${user.username}')">Unban</button>` :
+                            `<button class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);" onclick="banUser('${user.username}')">Ban</button>`
+                        }
                     </div>
                 `;
                 container.appendChild(userCard);
@@ -1967,7 +2160,7 @@
         }
 
         async function giveUserPotion(username) {
-            const potionKey = prompt(`Give potion to ${username} (luck1, luck2, speed1):`);
+            const potionKey = prompt(`Give potion to ${username} (luck1, luck2, speed1, coin1):`);
             if (!potionKey) return;
 
             const count = prompt('How many?', '1');
@@ -1994,6 +2187,82 @@
             }
         }
 
+        async function banUser(username) {
+            if (!confirm(`Ban ${username}? They will be unable to log in.`)) return;
+
+            try {
+                const data = await handleAPI('/api/admin/ban-user', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, action: 'ban' })
+                });
+
+                if (data.success) {
+                    showPopup(`${username} has been banned`, '#e74c3c');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to ban user', '#e74c3c');
+            }
+        }
+
+        async function unbanUser(username) {
+            try {
+                const data = await handleAPI('/api/admin/ban-user', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, action: 'unban' })
+                });
+
+                if (data.success) {
+                    showPopup(`${username} has been unbanned`, '#27ae60');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to unban user', '#e74c3c');
+            }
+        }
+
+        async function deleteAnnouncement(announcementId) {
+            if (!confirm('Delete this announcement?')) return;
+
+            try {
+                const data = await handleAPI(`/api/admin/announcement/${announcementId}`, {
+                    method: 'DELETE'
+                });
+
+                if (data.success) {
+                    showPopup('Announcement deleted', '#27ae60');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to delete announcement', '#e74c3c');
+            }
+        }
+
+        async function deleteEvent(eventId) {
+            if (!confirm('Delete this event?')) return;
+
+            try {
+                const data = await handleAPI(`/api/admin/event/${eventId}`, {
+                    method: 'DELETE'
+                });
+
+                if (data.success) {
+                    showPopup('Event deleted', '#27ae60');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to delete event', '#e74c3c');
+            }
+        }
+
         function addChatMessage(msg) {
             const chatMessages = document.getElementById('chat-messages');
             const msgEl = document.createElement('div');
@@ -2002,7 +2271,7 @@
             if (msg.isSystem) {
                 messageClass += ' system-message';
                 if (msg.rarityType === 'divine') {
-                    messageClass += ' divine-message';
+                    messageClass += msg.rarityName === 'The Dark Knight' ? ' divine-dark-message' : ' divine-message';
                 } else if (msg.rarityType === 'secret') {
                     messageClass += ' secret-message';
                 } else if (msg.rarityType === 'legendary') {
@@ -2014,7 +2283,6 @@
             msgEl.dataset.messageId = msg.timestamp;
             
             const usernameClass = msg.username === 'Mr_Fernanski' ? 'username owner' : 'username';
-            const ownerBadge = msg.username === 'Mr_Fernanski' ? '<span class="owner-badge">OWNER</span>' : '';
             
             let titleBadge = '';
             if (msg.userTitle) {
@@ -2035,7 +2303,7 @@
             
             if (msg.isSystem) {
                 let systemColor = '#FF0000';
-                if (msg.rarityType === 'divine') systemColor = '#00FF88';
+                if (msg.rarityType === 'divine') systemColor = msg.rarityName === 'The Dark Knight' ? '#1a1a1a' : '#00FF88';
                 else if (msg.rarityType === 'secret') systemColor = '#FFD700';
                 else if (msg.rarityType === 'legendary') systemColor = '#9B59B6';
                 
@@ -2046,7 +2314,7 @@
             } else {
                 msgEl.innerHTML = `
                     ${adminActions}
-                    <span class="${usernameClass}">${escapeHtml(msg.username)}${ownerBadge}${titleBadge}:</span>
+                    <span class="${usernameClass}">${escapeHtml(msg.username)}${titleBadge}:</span>
                     <span>${escapeHtml(msg.message)}</span>
                     <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
                 `;
@@ -2106,7 +2374,7 @@
                     const rarityClass = item.name.toLowerCase().replace(/\s+/g, '-');
                     itemEl.className = `inventory-item rarity-${rarityClass}`;
                     itemEl.innerHTML = `
-                        <div class="item-count">x${item.count}</div>
+                        <div class="item-count">x${formatCoins(item.count)}</div>
                         <span class="item-name" style="color: ${item.color}; font-weight: bold;">${escapeHtml(item.name)}</span>
                     `;
                     grid.appendChild(itemEl);
@@ -2129,7 +2397,8 @@
                     luck2: 'Luck Potion II',
                     luck3: 'Luck Potion III',
                     speed1: 'Speed Potion I',
-                    speed2: 'Speed Potion II'
+                    speed2: 'Speed Potion II',
+                    coin1: 'Coin Potion I'
                 };
 
                 Object.entries(category).forEach(([key, count]) => {
@@ -2137,7 +2406,7 @@
                         const itemEl = document.createElement('div');
                         itemEl.className = 'inventory-item potion-item';
                         itemEl.innerHTML = `
-                            <div class="item-count">x${count}</div>
+                            <div class="item-count">x${formatCoins(count)}</div>
                             <span class="item-name" style="font-weight: bold;">${potionNames[key] || key}</span>
                             <button class="btn use-potion-btn" data-potion="${key}">Use</button>
                         `;
@@ -2164,7 +2433,7 @@
                     const itemEl = document.createElement('div');
                     itemEl.className = 'inventory-item';
                     itemEl.innerHTML = `
-                        <div class="item-count">x${item.count}</div>
+                        <div class="item-count">x${formatCoins(item.count)}</div>
                         <span class="item-name" style="font-weight: bold;">${escapeHtml(item.name)}</span>
                     `;
                     grid.appendChild(itemEl);
@@ -2278,7 +2547,8 @@
                     createFallingCoin();
                     if (currentUser) {
                         currentUser.coins = (currentUser.coins || 0) + data.coins;
-                        document.getElementById('coin-count').textContent = currentUser.coins;
+                        document.getElementById('coin-count').textContent = formatCoins(currentUser.coins);
+                        document.getElementById('stat-coins').textContent = formatCoins(currentUser.coins);
                     }
                 }
             });
@@ -2366,6 +2636,14 @@
                     body: JSON.stringify({ username, password })
                 });
 
+                if (data.banned) {
+                    errorDiv.textContent = 'Your account has been banned';
+                    errorDiv.classList.remove('hidden');
+                    button.disabled = false;
+                    button.innerHTML = 'Login';
+                    return;
+                }
+
                 if (data.success && data.user) {
                     currentUser = data.user;
                     console.log('✅ Logged in as:', currentUser.username, 'Admin:', currentUser.isAdmin);
@@ -2375,7 +2653,7 @@
                     initSocket();
                     updateActivePotions();
                     startShopTimer();
-                    updateOwnerBadge();
+                    updateUserDisplay();
                     loadSettings();
                     loadTitles();
                     loadCrafting();
@@ -2436,7 +2714,7 @@
                     initSocket();
                     updateActivePotions();
                     startShopTimer();
-                    updateOwnerBadge();
+                    updateUserDisplay();
                     loadSettings();
                     loadTitles();
                     loadCrafting();
@@ -2466,10 +2744,12 @@
                 const data = await handleAPI('/api/spin', { method: 'POST' });
 
                 if (data.success) {
-                    document.getElementById('coin-count').textContent = data.coins;
+                    currentUser.coins = data.coins;
+                    document.getElementById('coin-count').textContent = formatCoins(data.coins);
+                    document.getElementById('stat-coins').textContent = formatCoins(data.coins);
                     
                     const rarityColor = data.rarity.color || '#9c27b0';
-                    const awardText = data.awarded > 0 ? `<br><span style="color: #f1c40f;">+${data.awarded} coins</span>` : '';
+                    const awardText = data.awarded > 0 ? `<br><span style="color: #f1c40f;">+${formatCoins(data.awarded)} coins</span>` : '';
                     
                     result.innerHTML = `
                         <div style="animation: fadeIn 0.5s;">
@@ -2548,7 +2828,8 @@
                     resultDiv.innerHTML = '<span style="color: #27ae60;">Code redeemed successfully!</span>';
                     input.value = '';
                     showPopup('Code redeemed!', '#27ae60');
-                    document.getElementById('coin-count').textContent = data.coins;
+                    document.getElementById('coin-count').textContent = formatCoins(data.coins);
+                    document.getElementById('stat-coins').textContent = formatCoins(data.coins);
                     await refreshGameData();
                 } else {
                     resultDiv.innerHTML = `<span style="color: #e74c3c;">${escapeHtml(data.error)}</span>`;
@@ -2583,7 +2864,7 @@
                             <div>
                                 <strong style="color: ${itemColor}; font-size: 1.1em;">${escapeHtml(data.item.name)}</strong>
                                 <div style="color: #bdc3c7; font-size: 0.9rem; margin-top: 5px;">Type: ${escapeHtml(data.item.type)}</div>
-                                <div style="color: #f1c40f; margin-top: 8px; font-weight: bold;">${data.item.price} coins</div>
+                                <div style="color: #f1c40f; margin-top: 8px; font-weight: bold;">${formatCoins(data.item.price)} coins</div>
                             </div>
                             <button class="btn" id="buy-shop-item">Buy Now</button>
                         </div>
@@ -2641,7 +2922,8 @@
 
                 if (data.success) {
                     showPopup('Purchase successful!', '#27ae60');
-                    document.getElementById('coin-count').textContent = data.coins;
+                    document.getElementById('coin-count').textContent = formatCoins(data.coins);
+                    document.getElementById('stat-coins').textContent = formatCoins(data.coins);
                     if (data.inventory) {
                         currentUser.inventory = data.inventory;
                         loadInventory(currentUser.inventory);
@@ -2673,7 +2955,8 @@
 
                     if (data.success) {
                         showPopup('Potion purchased!', '#27ae60');
-                        document.getElementById('coin-count').textContent = data.coins;
+                        document.getElementById('coin-count').textContent = formatCoins(data.coins);
+                        document.getElementById('stat-coins').textContent = formatCoins(data.coins);
                         if (data.inventory) {
                             currentUser.inventory = data.inventory;
                             loadInventory(currentUser.inventory);
@@ -2887,7 +3170,6 @@
                 document.getElementById('chat-messages').innerHTML = '';
                 document.getElementById('admin-btn').classList.add('hidden');
                 document.getElementById('active-potions').innerHTML = '';
-                document.getElementById('owner-badge').innerHTML = '';
                 document.getElementById('user-title').innerHTML = '';
                 
                 showPopup('Logged out successfully', '#f39c12');
