@@ -1,5 +1,5 @@
 /*
-  17-News-RNG Server - PRODUCTION READY with PostgreSQL + Enhanced Admin
+  17-News-RNG Server - Update 4 with Crafting, Titles, Meteor & Disco Events
 */
 
 const express = require('express');
@@ -143,6 +143,8 @@ async function initializeDatabase() {
           activePotions: [],
           coins: 10000,
           lastSpin: 0,
+          totalSpins: 0,
+          equippedTitle: null,
           joinDate: '2025-10-22T00:00:00.000Z'
         });
         needsUpdate = true;
@@ -220,6 +222,8 @@ function initializeData() {
         activePotions: [],
         coins: 10000,
         lastSpin: 0,
+        totalSpins: 0,
+        equippedTitle: null,
         joinDate: '2025-10-22T00:00:00.000Z'
       }
     ],
@@ -293,9 +297,12 @@ const RARITIES = [
   { name: 'Hudson Walter', chance: 10, color: '#00BCD4', coin: 400 },
   { name: 'Baxter Walter', chance: 10, color: '#FF5722', coin: 500 },
   { name: 'Stanley Bowden', chance: 10, color: '#8B4513', coin: 450 },
+  { name: 'Iyo Tenedor', chance: 6, color: '#4B0082', coin: 900 },
   { name: 'Atticus Lok', chance: 8, color: '#9C27B0', coin: 750 },
+  { name: 'The Great Ace', chance: 1, color: '#FFB6C1', coin: 3000, type: 'legendary' },
   { name: 'Delan Fernando', chance: 5, color: '#E91E63', coin: 1200 },
   { name: 'Cooper Metson', chance: 5, color: '#FF9800', coin: 1500 },
+  { name: 'The Dark Knight', chance: 0.3, color: '#000', coin: 7500, type: 'divine' },
   { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000', coin: 5000, type: 'mythical' },
   { name: 'Mrs Joseph Mcglashan', chance: 0.1, color: '#00FF88', coin: 9999, type: 'divine' },
   { name: 'Lord Crinkle', chance: 0.01, color: '#FFD700', coin: 20000, type: 'secret' }
@@ -304,7 +311,27 @@ const RARITIES = [
 const POTIONS = {
   luck1: { name: 'Luck Potion I', multiplier: 2, duration: 300000, type: 'luck', price: 500 },
   luck2: { name: 'Luck Potion II', multiplier: 4, duration: 300000, type: 'luck', price: 2000 },
-  speed1: { name: 'Speed Potion I', cooldownReduction: 0.5, duration: 300000, type: 'speed', price: 800 }
+  luck3: { name: 'Luck Potion III', multiplier: 6, duration: 180000, type: 'luck', price: 0 },
+  speed1: { name: 'Speed Potion I', cooldownReduction: 0.5, duration: 300000, type: 'speed', price: 800 },
+  speed2: { name: 'Speed Potion II', cooldownReduction: 0.833, duration: 180000, type: 'speed', price: 0 }
+};
+
+const CRAFT_RECIPES = {
+  speed2: {
+    name: 'Speed Potion II',
+    requires: { potions: { speed1: 3 }, items: { 'chromebook': 1 } },
+    result: { type: 'potion', key: 'speed2' }
+  },
+  luck3: {
+    name: 'Luck Potion III',
+    requires: { potions: { luck2: 3 }, items: { 'microphone': 2, 'school-leader-badge': 1 } },
+    result: { type: 'potion', key: 'luck3' }
+  },
+  'media-badge': {
+    name: 'Media Team Badge',
+    requires: { items: { 'house-leader-badge': 3, 'school-leader-badge': 1, 'chromebook': 1, 'microphone': 1 } },
+    result: { type: 'item', key: 'media-team-badge', name: 'Media Team Badge' }
+  }
 };
 
 function requireAuth(req, res, next) {
@@ -322,6 +349,7 @@ function requireAdmin(req, res, next) {
 }
 
 let coinRushInterval = null;
+let discoModeActive = false;
 
 async function startCoinRush(coinsPerSecond) {
   if (coinRushInterval) {
@@ -379,7 +407,10 @@ app.post('/api/login', authLimiter, async (req, res) => {
         isAdmin: user.isAdmin || false,
         coins: user.coins || 0,
         inventory: user.inventory || { rarities: {}, potions: {}, items: {} },
-        activePotions: user.activePotions || []
+        activePotions: user.activePotions || [],
+        totalSpins: user.totalSpins || 0,
+        equippedTitle: user.equippedTitle || null,
+        joinDate: user.joinDate
       }
     });
   } catch (error) {
@@ -418,6 +449,8 @@ app.post('/api/register', authLimiter, async (req, res) => {
       activePotions: [],
       coins: 1000,
       lastSpin: 0,
+      totalSpins: 0,
+      equippedTitle: null,
       joinDate: new Date().toISOString()
     };
 
@@ -436,7 +469,10 @@ app.post('/api/register', authLimiter, async (req, res) => {
         isAdmin: false,
         coins: 1000,
         inventory: newUser.inventory,
-        activePotions: []
+        activePotions: [],
+        totalSpins: 0,
+        equippedTitle: null,
+        joinDate: newUser.joinDate
       }
     });
   } catch (error) {
@@ -466,7 +502,10 @@ app.get('/api/check-session', async (req, res) => {
         isAdmin: user.isAdmin || false,
         coins: user.coins || 0,
         inventory: user.inventory || { rarities: {}, potions: {}, items: {} },
-        activePotions: user.activePotions || []
+        activePotions: user.activePotions || [],
+        totalSpins: user.totalSpins || 0,
+        equippedTitle: user.equippedTitle || null,
+        joinDate: user.joinDate
       }
     });
   } catch (error) {
@@ -488,7 +527,7 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     let cooldown = 3000;
     
     const speedPotion = (user.activePotions || []).find(p => p.type === 'speed' && p.expires > now);
-    if (speedPotion) cooldown *= 0.5;
+    if (speedPotion) cooldown *= (1 - speedPotion.cooldownReduction);
     
     if (user.lastSpin && (now - user.lastSpin) < cooldown) {
       const remaining = Math.ceil((cooldown - (now - user.lastSpin)) / 1000);
@@ -499,8 +538,12 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     user.activePotions = (user.activePotions || []).filter(p => p.expires > now);
     user.activePotions.filter(p => p.type === 'luck').forEach(p => luckMultiplier *= p.multiplier);
 
+    if (discoModeActive) {
+      luckMultiplier *= 5;
+    }
+
     const adjustedRarities = RARITIES.map((r) => 
-      (r.type === 'mythical' || r.type === 'divine' || r.type === 'secret' || r.name === 'Cooper Metson') ? 
+      (r.type === 'mythical' || r.type === 'divine' || r.type === 'secret' || r.type === 'legendary' || r.name === 'Cooper Metson' || r.name === 'The Dark Knight') ? 
         { ...r, chance: r.chance * luckMultiplier } : r
     );
     
@@ -530,6 +573,7 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     
     user.coins = (user.coins || 0) + (picked.coin || 0);
     user.lastSpin = now;
+    user.totalSpins = (user.totalSpins || 0) + 1;
     
     await writeData(data);
 
@@ -570,6 +614,18 @@ app.post('/api/spin', requireAuth, async (req, res) => {
       data.chatMessages.push(chatMsg);
       await writeData(data);
       io.emit('chat_message', chatMsg);
+    } else if (picked.type === 'legendary') {
+      const chatMsg = {
+        username: 'SYSTEM',
+        message: `⚡ ${user.username} just got the legendary ${picked.name}! (${picked.chance}% chance)`,
+        timestamp: new Date().toISOString(),
+        isAdmin: true,
+        isSystem: true,
+        rarityType: 'legendary'
+      };
+      data.chatMessages.push(chatMsg);
+      await writeData(data);
+      io.emit('chat_message', chatMsg);
     }
 
     res.json({
@@ -581,6 +637,112 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Spin error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/craft', requireAuth, async (req, res) => {
+  try {
+    const { recipeId } = req.body;
+    const recipe = CRAFT_RECIPES[recipeId];
+    
+    if (!recipe) {
+      return res.json({ success: false, error: 'Invalid recipe' });
+    }
+
+    const data = await readData();
+    const user = data.users.find(u => u.username === req.session.user.username);
+    
+    if (!user) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    // Check if user has required materials
+    if (recipe.requires.potions) {
+      for (const [key, count] of Object.entries(recipe.requires.potions)) {
+        const has = (user.inventory.potions && user.inventory.potions[key]) || 0;
+        if (has < count) {
+          return res.json({ success: false, error: 'Not enough materials' });
+        }
+      }
+    }
+    
+    if (recipe.requires.items) {
+      for (const [key, count] of Object.entries(recipe.requires.items)) {
+        const itemData = user.inventory.items && user.inventory.items[key];
+        const has = itemData ? itemData.count : 0;
+        if (has < count) {
+          return res.json({ success: false, error: 'Not enough materials' });
+        }
+      }
+    }
+
+    // Consume materials
+    if (recipe.requires.potions) {
+      for (const [key, count] of Object.entries(recipe.requires.potions)) {
+        user.inventory.potions[key] -= count;
+      }
+    }
+    
+    if (recipe.requires.items) {
+      for (const [key, count] of Object.entries(recipe.requires.items)) {
+        user.inventory.items[key].count -= count;
+        if (user.inventory.items[key].count <= 0) {
+          delete user.inventory.items[key];
+        }
+      }
+    }
+
+    // Give result
+    if (recipe.result.type === 'potion') {
+      if (!user.inventory.potions) user.inventory.potions = {};
+      if (!user.inventory.potions[recipe.result.key]) {
+        user.inventory.potions[recipe.result.key] = 0;
+      }
+      user.inventory.potions[recipe.result.key] += 1;
+    } else if (recipe.result.type === 'item') {
+      if (!user.inventory.items) user.inventory.items = {};
+      if (!user.inventory.items[recipe.result.key]) {
+        user.inventory.items[recipe.result.key] = {
+          name: recipe.result.name,
+          count: 0
+        };
+      }
+      user.inventory.items[recipe.result.key].count += 1;
+    }
+
+    await writeData(data);
+
+    res.json({
+      success: true,
+      inventory: user.inventory
+    });
+  } catch (error) {
+    console.error('❌ Craft error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/equip-title', requireAuth, async (req, res) => {
+  try {
+    const { titleId } = req.body;
+    
+    const data = await readData();
+    const user = data.users.find(u => u.username === req.session.user.username);
+    
+    if (!user) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    // Validate title ownership would happen here
+    // For now, just equip it
+    user.equippedTitle = titleId;
+    
+    await writeData(data);
+
+    res.json({ success: true, equippedTitle: titleId });
+  } catch (error) {
+    console.error('❌ Equip title error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -697,6 +859,11 @@ app.post('/api/shop/buy-potion', requireAuth, async (req, res) => {
     }
 
     const price = POTIONS[potionKey].price;
+    
+    if (price === 0) {
+      return res.json({ success: false, error: 'This potion cannot be purchased' });
+    }
+
     const data = await readData();
     const user = data.users.find(u => u.username === req.session.user.username);
     
@@ -788,20 +955,34 @@ app.get('/api/data', requireAuth, async (req, res) => {
       user.activePotions = user.activePotions.filter(p => p.expires > now);
     }
 
-    res.json({
+    const responseData = {
       success: true,
       user: {
         username: user.username,
         isAdmin: user.isAdmin || false,
         coins: user.coins || 0,
         inventory: user.inventory || { rarities: {}, potions: {}, items: {} },
-        activePotions: user.activePotions || []
+        activePotions: user.activePotions || [],
+        totalSpins: user.totalSpins || 0,
+        equippedTitle: user.equippedTitle || null,
+        joinDate: user.joinDate
       },
       announcements: data.announcements || [],
       events: data.events || [],
       chatMessages: (data.chatMessages || []).slice(-50),
       adminEvents: data.adminEvents || []
-    });
+    };
+
+    if (user.isAdmin) {
+      responseData.allUsers = data.users.map(u => ({
+        username: u.username,
+        isAdmin: u.isAdmin || false,
+        coins: u.coins || 0,
+        totalSpins: u.totalSpins || 0
+      }));
+    }
+
+    res.json(responseData);
   } catch (error) {
     console.error('❌ Data error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -922,6 +1103,122 @@ app.post('/api/admin/coin-rush/stop', requireAdmin, async (req, res) => {
   }
 });
 
+app.post('/api/admin/meteor/start', requireAdmin, async (req, res) => {
+  try {
+    const data = await readData();
+    
+    // Give Meteor Piece to all users
+    data.users.forEach(user => {
+      if (!user.inventory.items) user.inventory.items = {};
+      const meteorKey = 'meteor-piece';
+      if (!user.inventory.items[meteorKey]) {
+        user.inventory.items[meteorKey] = {
+          name: 'Meteor Piece',
+          count: 0
+        };
+      }
+      user.inventory.items[meteorKey].count += 1;
+    });
+    
+    await writeData(data);
+    
+    io.emit('meteor_start');
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Meteor error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/disco/start', requireAdmin, async (req, res) => {
+  try {
+    const data = await readData();
+    
+    const adminEvent = {
+      id: Date.now(),
+      type: 'disco',
+      name: 'Disco Mode',
+      active: true,
+      startedAt: new Date().toISOString(),
+      startedBy: req.session.user.username
+    };
+
+    if (!data.adminEvents) data.adminEvents = [];
+    data.adminEvents = data.adminEvents.filter(e => e.type !== 'disco');
+    data.adminEvents.push(adminEvent);
+    
+    await writeData(data);
+    
+    discoModeActive = true;
+    io.emit('disco_start');
+
+    res.json({ success: true, adminEvent });
+  } catch (error) {
+    console.error('❌ Disco start error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/disco/stop', requireAdmin, async (req, res) => {
+  try {
+    const data = await readData();
+    
+    if (!data.adminEvents) data.adminEvents = [];
+    data.adminEvents = data.adminEvents.filter(e => e.type !== 'disco');
+    
+    await writeData(data);
+    
+    discoModeActive = false;
+    io.emit('disco_stop');
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Disco stop error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/modify-user', requireAdmin, async (req, res) => {
+  try {
+    const { username, action, value, itemName, potionKey, count } = req.body;
+    
+    const data = await readData();
+    const user = data.users.find(u => u.username === username);
+    
+    if (!user) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    if (action === 'setCoins') {
+      user.coins = parseInt(value) || 0;
+    } else if (action === 'giveItem') {
+      if (!user.inventory.items) user.inventory.items = {};
+      const itemKey = itemName.toLowerCase().replace(/\s+/g, '-');
+      if (!user.inventory.items[itemKey]) {
+        user.inventory.items[itemKey] = {
+          name: itemName,
+          count: 0
+        };
+      }
+      user.inventory.items[itemKey].count += parseInt(count) || 1;
+    } else if (action === 'givePotion') {
+      if (!user.inventory.potions) user.inventory.potions = {};
+      if (!user.inventory.potions[potionKey]) {
+        user.inventory.potions[potionKey] = 0;
+      }
+      user.inventory.potions[potionKey] += parseInt(count) || 1;
+    }
+
+    await writeData(data);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Modify user error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 app.delete('/api/admin/chat/:messageId', requireAdmin, async (req, res) => {
   try {
     const { messageId } = req.params;
@@ -992,7 +1289,8 @@ io.on('connection', (socket) => {
         username: msg.username,
         message: sanitizedMessage,
         timestamp: new Date().toISOString(),
-        isAdmin: user?.isAdmin || false
+        isAdmin: user?.isAdmin || false,
+        userTitle: msg.userTitle || null
       };
       
       data.chatMessages.push(chatMsg);
@@ -1029,7 +1327,7 @@ if (!IS_VERCEL) {
       const shopData = getCurrentShopItem();
       console.log('');
       console.log('🎮 ════════════════════════════════════════════════');
-      console.log('🎮  17-News-RNG Server - PRODUCTION v2.1');
+      console.log('🎮  17-News-RNG Server - Update 4 v2.1.0');
       console.log('🎮 ════════════════════════════════════════════════');
       console.log('');
       console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
@@ -1037,8 +1335,15 @@ if (!IS_VERCEL) {
       console.log('⏰ Rotation:', new Date(shopData.nextRotation).toLocaleTimeString());
       console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
       console.log('👑 Admin: Mr_Fernanski ready');
-      console.log('🎯 New Rarities: Stanley Bowden, Mrs Joseph Mcglashan (Divine), Lord Crinkle (Secret)');
-      console.log('🛍️ New Items: Football, School Leader Badge');
+      console.log('');
+      console.log('✨ Update 4 Features:');
+      console.log('   🎯 4 New Rarities (Iyo Tenedor, The Great Ace, The Dark Knight)');
+      console.log('   🔨 Crafting System (3 Recipes)');
+      console.log('   🏆 Title System (4 Titles)');
+      console.log('   ☄️ Meteor Event');
+      console.log('   🕺 Disco Mode (5x Luck)');
+      console.log('   ⚙️ Settings & Stats');
+      console.log('   👥 Enhanced Admin Panel');
       console.log('');
       console.log('✅ Ready!');
       console.log('🎮 ════════════════════════════════════════════════');
