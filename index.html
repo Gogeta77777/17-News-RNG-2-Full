@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
-    <title>17 News RNG 2</title>
+    <title>17 News RNG 2 - Update 4.5</title>
     
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -25,6 +25,9 @@
             --divine-dark: #1a1a1a;
             --secret: #FFD700;
             --legendary: #9B59B6;
+            --focus-red: #8B0000;
+            --admin-silver: #C0C0C0;
+            --wealth-blue: #00BFFF;
             --z-base: 1;
             --z-content: 100;
             --z-buttons: 500;
@@ -34,6 +37,7 @@
             --z-coins: 9999;
             --z-meteor: 10000;
             --z-rainbow: 9998;
+            --z-blackhole: 10001;
         }
 
         * {
@@ -111,6 +115,28 @@
             }
         }
 
+        @keyframes bananaFall {
+            0% {
+                transform: translateY(-100px) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes coinRush2Fall {
+            0% {
+                transform: translateY(-150px) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(1080deg) scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
         @keyframes mythicalGlow {
             0%, 100% { box-shadow: 0 0 20px var(--mythical), 0 0 40px var(--mythical); }
             50% { box-shadow: 0 0 40px var(--mythical), 0 0 60px var(--mythical); }
@@ -148,12 +174,25 @@
         @keyframes meteorFall {
             0% {
                 top: -300px;
+                transform: translateX(-50%) rotate(-45deg);
                 opacity: 1;
             }
             100% {
                 top: 100vh;
+                transform: translateX(-50%) rotate(-45deg);
                 opacity: 0.9;
             }
+        }
+
+        @keyframes meteorTrail {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes meteorImpact {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(3); opacity: 0.8; }
+            100% { transform: scale(5); opacity: 0; }
         }
 
         @keyframes staticFlicker {
@@ -164,6 +203,70 @@
         @keyframes rainbow {
             0% { filter: hue-rotate(0deg); }
             100% { filter: hue-rotate(360deg); }
+        }
+
+        @keyframes blackholePull {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1) rotate(720deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes suckIn {
+            0% {
+                transform: translate(var(--tx), var(--ty)) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(calc(50vw - var(--x)), calc(50vh - var(--y))) scale(0) rotate(1080deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes returnNormal {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        @keyframes blackholeRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes blackholeRingPulse {
+            0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        @keyframes discoGlow {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes popupIn {
+            from { opacity: 0; transform: translate(-50%, 10px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
         }
 
         .hidden { display: none !important; }
@@ -220,43 +323,182 @@
             width: 200px;
             height: 200px;
             left: 50%;
-            transform: translateX(-50%);
-            background: radial-gradient(circle, #ff6b00, #ff0000, #8b0000);
-            border-radius: 50%;
-            box-shadow: 
-                0 0 100px #ff6b00, 
-                0 0 200px #ff0000,
-                0 0 300px #ff0000,
-                inset 0 0 50px rgba(255, 255, 0, 0.5);
+            transform: translateX(-50%) rotate(-45deg);
             z-index: var(--z-meteor);
             pointer-events: none;
             animation: meteorFall 2s ease-in forwards;
         }
 
-        .meteor::before {
+        .meteor-core {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 30%, #fff, #ff6b00, #ff0000, #8b0000);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 100px #ff6b00, 
+                0 0 200px #ff0000,
+                0 0 300px #ff0000,
+                inset -30px -30px 50px rgba(0, 0, 0, 0.5),
+                inset 20px 20px 50px rgba(255, 255, 0, 0.5);
+            position: relative;
+        }
+
+        .meteor-core::before {
             content: '';
             position: absolute;
-            width: 300px;
-            height: 100px;
-            background: linear-gradient(90deg, rgba(255,107,0,0.9), transparent);
-            top: 50px;
-            left: -300px;
+            top: 20%;
+            left: 20%;
+            width: 40%;
+            height: 40%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.9), transparent);
             border-radius: 50%;
         }
 
-        .meteor::after {
-            content: '';
+        .meteor-trail {
+            position: absolute;
+            width: 400px;
+            height: 80px;
+            background: linear-gradient(90deg, 
+                rgba(255, 107, 0, 0.9) 0%,
+                rgba(255, 107, 0, 0.7) 30%,
+                rgba(255, 0, 0, 0.5) 60%,
+                transparent 100%
+            );
+            top: 60px;
+            left: -400px;
+            border-radius: 50%;
+            filter: blur(10px);
+            animation: meteorTrail 0.5s ease infinite;
+        }
+
+        .meteor-particles {
             position: absolute;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, rgba(255, 255, 0, 0.4), transparent);
-            border-radius: 50%;
-            animation: pulse 0.5s infinite;
+            top: 0;
+            left: 0;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+        .meteor-particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff6b00;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #ff6b00;
+            animation: meteorTrail 0.3s ease infinite;
+        }
+
+        .meteor-impact {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 1), rgba(255, 107, 0, 0.8), transparent);
+            border-radius: 50%;
+            z-index: var(--z-meteor);
+            pointer-events: none;
+            animation: meteorImpact 1s ease-out forwards;
+        }
+
+        .blackhole-countdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #000000, #1a1a1a, #000000);
+            padding: 50px 70px;
+            border-radius: 20px;
+            font-size: 5em;
+            font-weight: bold;
+            color: white;
+            z-index: var(--z-blackhole);
+            box-shadow: 
+                0 0 100px rgba(0, 0, 0, 0.9),
+                inset 0 0 50px rgba(255, 255, 255, 0.1);
+            text-align: center;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            text-shadow: 0 0 20px #fff, 0 0 40px #00f;
+        }
+
+        .blackhole {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 300px;
+            height: 300px;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: var(--z-blackhole);
+            pointer-events: none;
+            animation: blackholePull 3s ease-out forwards;
+        }
+
+        .blackhole-core {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, 
+                #000000 0%, 
+                #1a1a1a 20%,
+                #4a0080 50%,
+                #8000ff 70%,
+                transparent 100%
+            );
+            border-radius: 50%;
+            box-shadow: 
+                0 0 100px rgba(128, 0, 255, 0.8),
+                0 0 200px rgba(74, 0, 128, 0.6),
+                inset 0 0 100px rgba(0, 0, 0, 1);
+            animation: blackholeRotate 2s linear infinite;
+        }
+
+        .blackhole-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 3px solid rgba(128, 0, 255, 0.6);
+            animation: blackholeRingPulse 1s ease-in-out infinite;
+        }
+
+        .blackhole-ring:nth-child(1) {
+            width: 110%;
+            height: 110%;
+        }
+
+        .blackhole-ring:nth-child(2) {
+            width: 130%;
+            height: 130%;
+            animation-delay: 0.3s;
+        }
+
+        .blackhole-ring:nth-child(3) {
+            width: 150%;
+            height: 150%;
+            animation-delay: 0.6s;
+        }
+
+        .blackhole-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: var(--z-blackhole);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 2s;
+        }
+
+        .blackhole-overlay.active {
+            opacity: 1;
+        }
+
+        .suck-animation {
+            animation: suckIn 2s ease-in forwards !important;
         }
 
         .disco-notification {
@@ -273,11 +515,6 @@
             z-index: var(--z-banner);
             box-shadow: 0 8px 24px rgba(155, 89, 182, 0.5);
             animation: fadeIn 0.5s ease, discoGlow 1s infinite;
-        }
-
-        @keyframes discoGlow {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
         }
 
         .container {
@@ -404,6 +641,36 @@
         .title-badge.full-of-gold {
             background: linear-gradient(135deg, #FFD700, #27ae60);
             box-shadow: 0 2px 4px rgba(255, 215, 0, 0.5);
+        }
+
+        .title-badge.focus-key {
+            background: linear-gradient(135deg, var(--focus-red), #660000);
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(139, 0, 0, 0.5);
+        }
+
+        .title-badge.owner-title {
+            background: linear-gradient(135deg, var(--owner-gold), #FFD700, var(--owner-gold));
+            background-size: 200% 200%;
+            animation: shimmer 2s linear infinite;
+            color: #000;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.8);
+        }
+
+        .title-badge.admin-title {
+            background: linear-gradient(135deg, var(--admin-silver), #FFFFFF, var(--admin-silver));
+            background-size: 200% 200%;
+            animation: shimmer 2s linear infinite;
+            color: #000;
+            box-shadow: 0 2px 8px rgba(192, 192, 192, 0.8);
+        }
+
+        .title-badge.universal-wealth {
+            background: linear-gradient(135deg, var(--wealth-blue), #1E90FF, var(--wealth-blue));
+            background-size: 200% 200%;
+            animation: shimmer 2s linear infinite;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 191, 255, 0.8);
         }
 
         .auth-container {
@@ -573,6 +840,11 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
+            gap: 16px;
+
+            /* CONTINUATION OF CSS FROM PART 1 */
+
+        .game-header {
             gap: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             position: relative;
@@ -972,6 +1244,9 @@
         .title-card.locked-in { border-left-color: #FF6B6B; }
         .title-card.potion-master { border-left-color: #9B59B6; }
         .title-card.full-of-gold { border-left-color: #FFD700; }
+        .title-card.focus-key { border-left-color: var(--focus-red); }
+        .title-card.admin-title { border-left-color: var(--admin-silver); }
+        .title-card.universal-wealth { border-left-color: var(--wealth-blue); }
 
         .title-card.equipped {
             background: rgba(0, 255, 247, 0.1);
@@ -1131,11 +1406,6 @@
             max-width: 90%;
         }
 
-        @keyframes popupIn {
-            from { opacity: 0; transform: translate(-50%, 10px); }
-            to { opacity: 1; transform: translate(-50%, 0); }
-        }
-
         .coin-rush-notification {
             position: fixed;
             top: 80px;
@@ -1152,12 +1422,39 @@
             animation: fadeIn 0.5s ease;
         }
 
-        .falling-coin {
+        .coin-rush-2-notification {
+            position: fixed;
+            top: 160px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #FFD700, #f39c12);
+            color: #000;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.2em;
+            z-index: var(--z-banner);
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.5);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .falling-coin, .falling-banana, .falling-coin-rush2 {
             position: fixed;
             font-size: 2em;
             z-index: var(--z-coins);
             pointer-events: none;
+        }
+
+        .falling-coin {
             animation: coinFall 3s linear forwards;
+        }
+
+        .falling-banana {
+            animation: bananaFall 4s linear forwards;
+        }
+
+        .falling-coin-rush2 {
+            animation: coinRush2Fall 3.5s linear forwards;
         }
 
         .loading-spinner {
@@ -1170,8 +1467,6 @@
             animation: spin 0.8s linear infinite;
             margin-right: 8px;
         }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
 
         .banned-screen {
             position: fixed;
@@ -1215,13 +1510,15 @@
 </head>
 <body>
     <div class="announcement-bar" id="announcement-bar">
-        <span>🎮 Welcome to 17 News RNG 2!</span>
+        <span>🎮 Welcome to 17 News RNG 2 - Update 4.5!</span>
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
     <div id="rainbow-overlay" class="rainbow-overlay"></div>
     <div id="meteor-overlay" class="meteor-overlay"></div>
+    <div id="blackhole-overlay" class="blackhole-overlay"></div>
     <div id="coin-rush-notification" class="coin-rush-notification hidden"></div>
+    <div id="coin-rush-2-notification" class="coin-rush-2-notification hidden"></div>
     <div id="disco-notification" class="disco-notification hidden"></div>
 
     <div id="home-page" class="container">
@@ -1237,19 +1534,20 @@
             <div class="update-log">
                 <h3>Latest Updates</h3>
                 <div class="log-entry">
-                    <span class="date">17/11/25</span>
-                    <p>🏆 7 Titles</p>
-                    <p>💰 New Coin Display Format</p>
-                    <p>☄️ Meteor Event (WIP)</p>
-                    <p>🌈 Disco Event</p>
-                    <p>🔨 New Crafting Feature</p>
-                    <p>👥 Ban Features</p>
-                    <p>👥 Settings Added</p>
+                    <span class="date">19/11/25 - Update 4.5</span>
+                    <p>🏆 4 New Titles (Focus, Owner, Admin, Universal Wealth)</p>
+                    <p>👑 Admin Role System with Limited Privileges</p>
+                    <p>☄️ Enhanced Meteor Event with Better Graphics</p>
+                    <p>🕳️ Blackhole Event (60s countdown)</p>
+                    <p>🍌 Banana Rain Event</p>
+                    <p>💰 Coin Rush 2.0 with 2x Multiplier</p>
+                    <p>🎨 Chat Name Colors Match Titles</p>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- LOGIN PAGE -->
     <div id="login-page" class="auth-container hidden">
         <div class="auth-card">
             <h1>Login</h1>
@@ -1271,6 +1569,7 @@
         </div>
     </div>
 
+    <!-- REGISTER PAGE -->
     <div id="register-page" class="auth-container hidden">
         <div class="auth-card">
             <h1>Register</h1>
@@ -1291,7 +1590,10 @@
             </p>
         </div>
     </div>
+<!-- TO BE CONTINUED IN PART 3 WITH GAME PAGE, ADMIN PANEL, AND JAVASCRIPT -->
+    <!-- CONTINUATION FROM PART 2 -->
 
+    <!-- GAME PAGE -->
     <div id="game-page" class="hidden">
         <div class="container">
             <header class="game-header">
@@ -1425,8 +1727,8 @@
                         <div class="settings-section">
                             <h3>Game Info</h3>
                             <div class="stat-box">
-                                <p><strong>Version:</strong> 2.2.0 - Update 4</p>
-                                <p><strong>Last Updated:</strong> 17/11/25</p>
+                                <p><strong>Version:</strong> 2.3.0 - Update 4.5</p>
+                                <p><strong>Last Updated:</strong> 19/11/25</p>
                             </div>
                         </div>
                     </div>
@@ -1445,6 +1747,7 @@
         </div>
     </div>
 
+    <!-- ADMIN PANEL -->
     <div id="admin-panel" class="container hidden">
         <header class="game-header">
             <h1>Admin Panel</h1>
@@ -1483,61 +1786,82 @@
             </div>
 
             <div class="admin-event-section">
+                <h2 style="color: #000; margin-bottom: 15px;">🕳️ Blackhole Event</h2>
+                <p style="margin-bottom: 15px;">Create a blackhole! 60s countdown, sucks everything in, then returns to normal.</p>
+                <button id="start-blackhole" class="btn">Start Blackhole</button>
+            </div>
+
+            <div class="admin-event-section">
+                <h2 style="color: #FFD700; margin-bottom: 15px;">🍌 Banana Rain</h2>
+                <p style="margin-bottom: 15px;">Make it rain bananas! A fun visual event for all online players.</p>
+                <button id="start-banana-rain" class="btn">Start Banana Rain</button>
+            </div>
+
+            <div class="admin-event-section">
+                <h2 style="color: #f39c12; margin-bottom: 15px;">💰 Coin Rush 2.0</h2>
+                <p style="margin-bottom: 15px;">Ultimate coin rush! Coins rain down and players get 2x coins for 30 seconds!</p>
+                <button id="start-coin-rush-2" class="btn">Start Coin Rush 2.0</button>
+            </div>
+
+            <div class="admin-event-section">
                 <h2 style="color: var(--error); margin-bottom: 15px;">🗑️ Chat Management</h2>
                 <p style="margin-bottom: 15px;">Manage chat messages. Delete individual messages by hovering over them in the chat tab, or clear all messages at once.</p>
                 <button id="clear-all-chat" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Clear All Chat Messages</button>
             </div>
 
-            <div class="admin-users-section">
+            <div class="admin-users-section" id="full-admin-section">
                 <h2 style="color: var(--accent-primary); margin-bottom: 15px;">👥 User Management</h2>
                 <div id="users-list"></div>
             </div>
 
-            <h2 style="margin-top: 30px;">📢 Create Announcement</h2>
-            <form id="announcement-form">
-                <div class="form-group">
-                    <label>Title</label>
-                    <input type="text" id="announcement-title" required>
-                </div>
-                <div class="form-group">
-                    <label>Content</label>
-                    <textarea id="announcement-content" required style="min-height: 100px;"></textarea>
-                </div>
-                <button type="submit" class="btn">Publish Announcement</button>
-            </form>
+            <div id="full-admin-forms">
+                <h2 style="margin-top: 30px;">📢 Create Announcement</h2>
+                <form id="announcement-form">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="announcement-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Content</label>
+                        <textarea id="announcement-content" required style="min-height: 100px;"></textarea>
+                    </div>
+                    <button type="submit" class="btn">Publish Announcement</button>
+                </form>
 
-            <h2 style="margin-top: 30px;">🎉 Create Event</h2>
-            <form id="event-form">
-                <div class="form-group">
-                    <label>Event Name</label>
-                    <input type="text" id="event-name" required>
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="event-description" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Start Date</label>
-                    <input type="datetime-local" id="event-start" required>
-                </div>
-                <div class="form-group">
-                    <label>End Date</label>
-                    <input type="datetime-local" id="event-end" required>
-                </div>
-                <button type="submit" class="btn">Create Event</button>
-            </form>
+                <h2 style="margin-top: 30px;">🎉 Create Event</h2>
+                <form id="event-form">
+                    <div class="form-group">
+                        <label>Event Name</label>
+                        <input type="text" id="event-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="event-description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="datetime-local" id="event-start" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Date</label>
+                        <input type="datetime-local" id="event-end" required>
+                    </div>
+                    <button type="submit" class="btn">Create Event</button>
+                </form>
+            </div>
         </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        console.log('🎮 17 News RNG 2 - Update 5 v2.2.0');
+        console.log('🎮 17 News RNG 2 - Update 4.5 v2.3.0');
 
         let currentUser = null;
         let socket = null;
         let currentInventoryCategory = 'rarities';
         let shopTimerInterval = null;
         let coinRushActive = false;
+        let coinRush2Active = false;
         let discoModeActive = false;
 
         const CRAFT_RECIPES = [
@@ -1606,6 +1930,30 @@
                 name: 'Full Of Gold',
                 color: '#FFD700',
                 requires: { coins: 10000000 }
+            },
+            {
+                id: 'focus-key',
+                name: 'Focus is key',
+                color: '#8B0000',
+                requires: { spins: 10000 }
+            },
+            {
+                id: 'owner-title',
+                name: 'Owner',
+                color: '#FFD700',
+                requires: { owner: true }
+            },
+            {
+                id: 'admin-title',
+                name: 'Admin',
+                color: '#C0C0C0',
+                requires: { adminRole: true }
+            },
+            {
+                id: 'universal-wealth',
+                name: 'Universal Wealth',
+                color: '#00BFFF',
+                requires: { coins: 100000000 }
             }
         ];
 
@@ -1686,6 +2034,26 @@
             setTimeout(() => coin.remove(), 3000);
         }
 
+        function createFallingBanana() {
+            const banana = document.createElement('div');
+            banana.className = 'falling-banana';
+            banana.textContent = '🍌';
+            banana.style.left = Math.random() * 100 + '%';
+            document.body.appendChild(banana);
+            setTimeout(() => banana.remove(), 4000);
+        }
+
+        function createFallingCoinRush2() {
+            const items = ['🪙', '💰', '💸'];
+            const coin = document.createElement('div');
+            coin.className = 'falling-coin-rush2';
+            coin.textContent = items[Math.floor(Math.random() * items.length)];
+            coin.style.left = Math.random() * 100 + '%';
+            coin.style.fontSize = (1 + Math.random() * 1.5) + 'em';
+            document.body.appendChild(coin);
+            setTimeout(() => coin.remove(), 3500);
+        }
+
         function showCoinRushNotification(coinsPerSecond) {
             const notification = document.getElementById('coin-rush-notification');
             notification.textContent = `💰 COIN RUSH! +${coinsPerSecond} coins/sec`;
@@ -1694,6 +2062,17 @@
 
         function hideCoinRushNotification() {
             const notification = document.getElementById('coin-rush-notification');
+            notification.classList.add('hidden');
+        }
+
+        function showCoinRush2Notification() {
+            const notification = document.getElementById('coin-rush-2-notification');
+            notification.textContent = '💰💸 COIN RUSH 2.0! 2x Coins Active!';
+            notification.classList.remove('hidden');
+        }
+
+        function hideCoinRush2Notification() {
+            const notification = document.getElementById('coin-rush-2-notification');
             notification.classList.add('hidden');
         }
 
@@ -1726,10 +2105,40 @@
 
             const meteor = document.createElement('div');
             meteor.className = 'meteor';
+            
+            const core = document.createElement('div');
+            core.className = 'meteor-core';
+            
+            const trail = document.createElement('div');
+            trail.className = 'meteor-trail';
+            
+            const particles = document.createElement('div');
+            particles.className = 'meteor-particles';
+            
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'meteor-particle';
+                particle.style.left = (Math.random() * 100) + '%';
+                particle.style.top = (Math.random() * 100) + '%';
+                particle.style.animationDelay = (Math.random() * 0.5) + 's';
+                particles.appendChild(particle);
+            }
+            
+            core.appendChild(particles);
+            meteor.appendChild(core);
+            meteor.appendChild(trail);
             document.body.appendChild(meteor);
 
             await new Promise(resolve => setTimeout(resolve, 2000));
+
+            const impact = document.createElement('div');
+            impact.className = 'meteor-impact';
+            document.body.appendChild(impact);
+
             meteor.remove();
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            impact.remove();
 
             const overlay = document.getElementById('meteor-overlay');
             overlay.classList.add('active');
@@ -1745,6 +2154,201 @@
             overlay.style.opacity = '';
         }
 
+        async function launchBlackhole() {
+            const countdown = document.createElement('div');
+            countdown.className = 'blackhole-countdown';
+            document.body.appendChild(countdown);
+
+            for (let i = 60; i > 0; i--) {
+                countdown.textContent = i;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            countdown.remove();
+
+            const blackhole = document.createElement('div');
+            blackhole.className = 'blackhole';
+            
+            const core = document.createElement('div');
+            core.className = 'blackhole-core';
+            
+            for (let i = 0; i < 3; i++) {
+                const ring = document.createElement('div');
+                ring.className = 'blackhole-ring';
+                blackhole.appendChild(ring);
+            }
+            
+            blackhole.appendChild(core);
+            document.body.appendChild(blackhole);
+
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            const elements = document.querySelectorAll('.container, button, .game-header, .main-content, .spin-section, .tab-btn, .inventory-grid, .chat-messages');
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                el.style.setProperty('--x', rect.left + rect.width / 2 + 'px');
+                el.style.setProperty('--y', rect.top + rect.height / 2 + 'px');
+                el.style.setProperty('--tx', '0px');
+                el.style.setProperty('--ty', '0px');
+                el.classList.add('suck-animation');
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            const overlay = document.getElementById('blackhole-overlay');
+            overlay.classList.add('active');
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            blackhole.remove();
+            overlay.classList.remove('active');
+
+            elements.forEach(el => {
+                el.classList.remove('suck-animation');
+                el.style.animation = 'returnNormal 1s ease forwards';
+            });
+
+            setTimeout(() => {
+                elements.forEach(el => {
+                    el.style.animation = '';
+                });
+            }, 1000);
+        }
+
+        async function launchBananaRain() {
+            showPopup('🍌 BANANA RAIN!', '#FFD700');
+            
+            const duration = 15000;
+            const interval = setInterval(() => {
+                for (let i = 0; i < 3; i++) {
+                    createFallingBanana();
+                }
+            }, 200);
+
+            setTimeout(() => {
+                clearInterval(interval);
+            }, duration);
+        }
+
+        async function launchCoinRush2() {
+            showPopup('💰 COIN RUSH 2.0! 2x COINS!', '#f39c12');
+            showCoinRush2Notification();
+            coinRush2Active = true;
+            
+            const duration = 30000;
+            const interval = setInterval(() => {
+                for (let i = 0; i < 5; i++) {
+                    createFallingCoinRush2();
+                }
+            }, 150);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                coinRush2Active = false;
+                hideCoinRush2Notification();
+                showPopup('Coin Rush 2.0 ended!', '#f39c12');
+            }, duration);
+        }
+
+        // CONTINUE IN NEXT MESSAGE DUE TO LENGTH...
+        // CONTINUATION FROM PART 2 - FINAL SECTION
+
+        async function launchBlackhole() {
+            const countdown = document.createElement('div');
+            countdown.className = 'blackhole-countdown';
+            document.body.appendChild(countdown);
+
+            for (let i = 60; i > 0; i--) {
+                countdown.textContent = i;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            countdown.remove();
+
+            const blackhole = document.createElement('div');
+            blackhole.className = 'blackhole';
+            
+            const core = document.createElement('div');
+            core.className = 'blackhole-core';
+            
+            for (let i = 0; i < 3; i++) {
+                const ring = document.createElement('div');
+                ring.className = 'blackhole-ring';
+                blackhole.appendChild(ring);
+            }
+            
+            blackhole.appendChild(core);
+            document.body.appendChild(blackhole);
+
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            const elements = document.querySelectorAll('.container, button, .game-header, .main-content, .spin-section, .tab-btn, .inventory-grid, .chat-messages');
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                el.style.setProperty('--x', rect.left + rect.width / 2 + 'px');
+                el.style.setProperty('--y', rect.top + rect.height / 2 + 'px');
+                el.style.setProperty('--tx', '0px');
+                el.style.setProperty('--ty', '0px');
+                el.classList.add('suck-animation');
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            const overlay = document.getElementById('blackhole-overlay');
+            overlay.classList.add('active');
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            blackhole.remove();
+            overlay.classList.remove('active');
+
+            elements.forEach(el => {
+                el.classList.remove('suck-animation');
+                el.style.animation = 'returnNormal 1s ease forwards';
+            });
+
+            setTimeout(() => {
+                elements.forEach(el => {
+                    el.style.animation = '';
+                });
+            }, 1000);
+        }
+
+        async function launchBananaRain() {
+            showPopup('🍌 BANANA RAIN!', '#FFD700');
+            
+            const duration = 15000;
+            const interval = setInterval(() => {
+                for (let i = 0; i < 3; i++) {
+                    createFallingBanana();
+                }
+            }, 200);
+
+            setTimeout(() => {
+                clearInterval(interval);
+            }, duration);
+        }
+
+        async function launchCoinRush2() {
+            showPopup('💰 COIN RUSH 2.0! 2x COINS!', '#f39c12');
+            showCoinRush2Notification();
+            coinRush2Active = true;
+            
+            const duration = 30000;
+            const interval = setInterval(() => {
+                for (let i = 0; i < 5; i++) {
+                    createFallingCoinRush2();
+                }
+            }, 150);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                coinRush2Active = false;
+                hideCoinRush2Notification();
+                showPopup('Coin Rush 2.0 ended!', '#f39c12');
+            }, duration);
+        }
+
         async function checkExistingSession() {
             try {
                 console.log('🔍 Checking session...');
@@ -1756,7 +2360,7 @@
                 }
                 
                 if (data.success && data.loggedIn && data.user) {
-                    console.log('✅ Session found:', data.user.username, 'Admin:', data.user.isAdmin);
+                    console.log('✅ Session found:', data.user.username, 'Admin:', data.user.isAdmin, 'Admin Role:', data.user.hasAdminRole);
                     currentUser = data.user;
                     await loadFullGameData();
                     showPage('game');
@@ -1805,7 +2409,7 @@
                 titleContainer.innerHTML = '';
             }
             
-            if (currentUser && currentUser.isAdmin) {
+            if (currentUser && (currentUser.isAdmin || currentUser.hasAdminRole)) {
                 console.log('✅ Showing admin button for:', currentUser.username);
                 adminBtn.classList.remove('hidden');
             } else {
@@ -1907,6 +2511,18 @@
                 loadAdminUsers(data.allUsers);
             }
 
+            // Show/hide admin sections based on permissions
+            const fullAdminSection = document.getElementById('full-admin-section');
+            const fullAdminForms = document.getElementById('full-admin-forms');
+            
+            if (currentUser.isAdmin) {
+                if (fullAdminSection) fullAdminSection.style.display = 'block';
+                if (fullAdminForms) fullAdminForms.style.display = 'block';
+            } else {
+                if (fullAdminSection) fullAdminSection.style.display = 'none';
+                if (fullAdminForms) fullAdminForms.style.display = 'none';
+            }
+
             updateActivePotions();
             loadSettings();
             loadTitles();
@@ -1944,7 +2560,13 @@
                 let isUnlocked = false;
                 let progressText = '';
 
-                if (title.requires.coins) {
+                if (title.requires.owner) {
+                    isUnlocked = currentUser.username === 'Mr_Fernanski';
+                    progressText = isUnlocked ? 'Unlocked!' : 'Owner Only';
+                } else if (title.requires.adminRole) {
+                    isUnlocked = currentUser.hasAdminRole || currentUser.isAdmin;
+                    progressText = isUnlocked ? 'Unlocked!' : 'Admin Only';
+                } else if (title.requires.coins) {
                     isUnlocked = (currentUser.coins || 0) >= title.requires.coins;
                     progressText = isUnlocked ? 'Unlocked!' : `Need ${formatCoins(title.requires.coins)} coins`;
                 } else if (title.requires.spins) {
@@ -2088,22 +2710,76 @@
             users.forEach(user => {
                 const userCard = document.createElement('div');
                 userCard.className = 'user-card' + (user.banned ? ' banned' : '');
+                
+                let adminBadge = '';
+                if (user.isAdmin) {
+                    adminBadge = '<span class="owner-badge">OWNER</span>';
+                } else if (user.hasAdminRole) {
+                    adminBadge = '<span class="title-badge admin-title" style="background: linear-gradient(135deg, #C0C0C0, #A9A9A9);">ADMIN</span>';
+                }
+                
                 userCard.innerHTML = `
-                    <h4>${escapeHtml(user.username)} ${user.isAdmin ? '<span class="owner-badge">ADMIN</span>' : ''} ${user.banned ? '<span style="color: #e74c3c; margin-left: 8px;">⛔ BANNED</span>' : ''}</h4>
+                    <h4>${escapeHtml(user.username)} ${adminBadge} ${user.banned ? '<span style="color: #e74c3c; margin-left: 8px;">⛔ BANNED</span>' : ''}</h4>
                     <p>Coins: ${formatCoins(user.coins || 0)} | Spins: ${formatCoins(user.totalSpins || 0)}</p>
                     <p style="font-size: 0.85em; opacity: 0.7; margin-top: 5px;">Password: ${escapeHtml(user.password)}</p>
                     <div class="user-actions">
                         <button class="btn" onclick="setUserCoins('${user.username}')">Set Coins</button>
                         <button class="btn" onclick="giveUserItem('${user.username}')">Give Item</button>
                         <button class="btn" onclick="giveUserPotion('${user.username}')">Give Potion</button>
+                        ${!user.isAdmin && !user.hasAdminRole ? 
+                            `<button class="btn" style="background: linear-gradient(135deg, #C0C0C0, #A9A9A9);" onclick="giveAdminRole('${user.username}')">Give Admin Role</button>` :
+                            user.hasAdminRole ? 
+                            `<button class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);" onclick="removeAdminRole('${user.username}')">Remove Admin Role</button>` :
+                            ''
+                        }
                         ${user.banned ? 
                             `<button class="btn" style="background: linear-gradient(135deg, #27ae60, #229954);" onclick="unbanUser('${user.username}')">Unban</button>` :
-                            `<button class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);" onclick="banUser('${user.username}')">Ban</button>`
+                            !user.isAdmin ? `<button class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);" onclick="banUser('${user.username}')">Ban</button>` : ''
                         }
                     </div>
                 `;
                 container.appendChild(userCard);
             });
+        }
+
+        async function giveAdminRole(username) {
+            if (!confirm(`Give Admin Role to ${username}? They will have limited admin privileges.`)) return;
+
+            try {
+                const data = await handleAPI('/api/admin/give-admin-role', {
+                    method: 'POST',
+                    body: JSON.stringify({ username })
+                });
+
+                if (data.success) {
+                    showPopup(`${username} has been given Admin Role`, '#27ae60');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to give admin role', '#e74c3c');
+            }
+        }
+
+        async function removeAdminRole(username) {
+            if (!confirm(`Remove Admin Role from ${username}?`)) return;
+
+            try {
+                const data = await handleAPI('/api/admin/remove-admin-role', {
+                    method: 'POST',
+                    body: JSON.stringify({ username })
+                });
+
+                if (data.success) {
+                    showPopup(`${username}'s Admin Role has been removed`, '#f39c12');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to remove admin role', '#e74c3c');
+            }
         }
 
         async function setUserCoins(username) {
@@ -2282,7 +2958,16 @@
             msgEl.className = messageClass;
             msgEl.dataset.messageId = msg.timestamp;
             
-            const usernameClass = msg.username === 'Mr_Fernanski' ? 'username owner' : 'username';
+            // Get title color for username
+            let usernameColor = 'var(--accent-secondary)';
+            if (msg.username === 'Mr_Fernanski') {
+                usernameColor = 'var(--owner-gold)';
+            } else if (msg.userTitle) {
+                const title = TITLES.find(t => t.id === msg.userTitle);
+                if (title) {
+                    usernameColor = title.color;
+                }
+            }
             
             let titleBadge = '';
             if (msg.userTitle) {
@@ -2293,7 +2978,7 @@
             }
             
             let adminActions = '';
-            if (currentUser && currentUser.isAdmin && !msg.isSystem) {
+            if (currentUser && (currentUser.isAdmin || currentUser.hasAdminRole) && !msg.isSystem) {
                 adminActions = `
                     <div class="chat-message-actions">
                         <button class="delete-message-btn" onclick="deleteMessage('${msg.timestamp}')">Delete</button>
@@ -2314,7 +2999,7 @@
             } else {
                 msgEl.innerHTML = `
                     ${adminActions}
-                    <span class="${usernameClass}">${escapeHtml(msg.username)}${titleBadge}:</span>
+                    <span class="username" style="color: ${usernameColor}; font-weight: bold;">${escapeHtml(msg.username)}${titleBadge}:</span>
                     <span>${escapeHtml(msg.message)}</span>
                     <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
                 `;
@@ -2580,6 +3265,22 @@
                 launchMeteor();
             });
 
+            socket.on('blackhole_start', () => {
+                console.log('🕳️ Blackhole event started');
+                showPopup('BLACKHOLE FORMING!', '#000000');
+                launchBlackhole();
+            });
+
+            socket.on('banana_rain_start', () => {
+                console.log('🍌 Banana Rain started');
+                launchBananaRain();
+            });
+
+            socket.on('coin_rush_2_start', () => {
+                console.log('💰 Coin Rush 2.0 started');
+                launchCoinRush2();
+            });
+
             socket.on('new_announcement', (data) => {
                 console.log('📢 New announcement');
                 showPopup('New announcement: ' + data.title, '#f39c12');
@@ -2646,7 +3347,7 @@
 
                 if (data.success && data.user) {
                     currentUser = data.user;
-                    console.log('✅ Logged in as:', currentUser.username, 'Admin:', currentUser.isAdmin);
+                    console.log('✅ Logged in as:', currentUser.username, 'Admin:', currentUser.isAdmin, 'Admin Role:', currentUser.hasAdminRole);
                     await loadFullGameData();
                     showPopup('Welcome back, ' + currentUser.username + '!', '#27ae60');
                     showPage('game');
@@ -2748,8 +3449,13 @@
                     document.getElementById('coin-count').textContent = formatCoins(data.coins);
                     document.getElementById('stat-coins').textContent = formatCoins(data.coins);
                     
+                    let coinAward = data.awarded;
+                    if (coinRush2Active) {
+                        coinAward *= 2;
+                    }
+                    
                     const rarityColor = data.rarity.color || '#9c27b0';
-                    const awardText = data.awarded > 0 ? `<br><span style="color: #f1c40f;">+${formatCoins(data.awarded)} coins</span>` : '';
+                    const awardText = coinAward > 0 ? `<br><span style="color: #f1c40f;">+${formatCoins(coinAward)} coins${coinRush2Active ? ' (2x)' : ''}</span>` : '';
                     
                     result.innerHTML = `
                         <div style="animation: fadeIn 0.5s;">
@@ -3031,6 +3737,54 @@
             }
         }
 
+        async function startBlackhole() {
+            try {
+                const data = await handleAPI('/api/admin/blackhole/start', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('Blackhole forming!', '#000000');
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to start blackhole', '#e74c3c');
+            }
+        }
+
+        async function startBananaRain() {
+            try {
+                const data = await handleAPI('/api/admin/banana-rain/start', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('Banana Rain started!', '#FFD700');
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to start banana rain', '#e74c3c');
+            }
+        }
+
+        async function startCoinRush2() {
+            try {
+                const data = await handleAPI('/api/admin/coin-rush-2/start', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('Coin Rush 2.0 started!', '#f39c12');
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to start coin rush 2.0', '#e74c3c');
+            }
+        }
+
         async function startDisco() {
             try {
                 const data = await handleAPI('/api/admin/disco/start', {
@@ -3161,8 +3915,10 @@
                 }
 
                 coinRushActive = false;
+                coinRush2Active = false;
                 discoModeActive = false;
                 hideCoinRushNotification();
+                hideCoinRush2Notification();
                 hideDiscoNotification();
                 
                 document.getElementById('inventory-display').innerHTML = '';
@@ -3216,6 +3972,9 @@
             document.getElementById('start-coin-rush').onclick = startCoinRush;
             document.getElementById('stop-coin-rush').onclick = stopCoinRush;
             document.getElementById('start-meteor').onclick = startMeteor;
+            document.getElementById('start-blackhole').onclick = startBlackhole;
+            document.getElementById('start-banana-rain').onclick = startBananaRain;
+            document.getElementById('start-coin-rush-2').onclick = startCoinRush2;
             document.getElementById('start-disco').onclick = startDisco;
             document.getElementById('stop-disco').onclick = stopDisco;
             document.getElementById('clear-all-chat').onclick = clearAllChat;
