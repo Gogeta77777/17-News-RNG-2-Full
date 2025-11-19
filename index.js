@@ -1,5 +1,5 @@
 /*
-  17-News-RNG Server - Update 5 with Enhanced Features
+  17-News-RNG Server - Update 4.5 v2.3.0
 */
 
 const express = require('express');
@@ -140,6 +140,7 @@ async function initializeDatabase() {
           password: 'admin123',
           isAdmin: true,
           banned: false,
+          hasAdminRole: false,
           inventory: { rarities: {}, potions: {}, items: {} },
           activePotions: [],
           coins: 10000,
@@ -162,6 +163,10 @@ async function initializeDatabase() {
       data.users.forEach(user => {
         if (user.banned === undefined) {
           user.banned = false;
+          needsUpdate = true;
+        }
+        if (user.hasAdminRole === undefined) {
+          user.hasAdminRole = false;
           needsUpdate = true;
         }
       });
@@ -227,6 +232,7 @@ function initializeData() {
         password: 'admin123',
         isAdmin: true,
         banned: false,
+        hasAdminRole: false,
         inventory: { rarities: {}, potions: {}, items: {} },
         activePotions: [],
         coins: 10000,
@@ -354,8 +360,15 @@ function requireAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  if (!req.session || !req.session.user || !req.session.user.isAdmin) {
+  if (!req.session || !req.session.user || (!req.session.user.isAdmin && !req.session.user.hasAdminRole)) {
     return res.status(401).json({ success: false, error: 'Admin required' });
+  }
+  next();
+}
+
+function requireFullAdmin(req, res, next) {
+  if (!req.session || !req.session.user || !req.session.user.isAdmin) {
+    return res.status(401).json({ success: false, error: 'Full admin required' });
   }
   next();
 }
@@ -421,7 +434,8 @@ app.post('/api/login', authLimiter, async (req, res) => {
 
     req.session.user = {
       username: user.username,
-      isAdmin: user.isAdmin || false
+      isAdmin: user.isAdmin || false,
+      hasAdminRole: user.hasAdminRole || false
     };
 
     res.json({
@@ -429,6 +443,7 @@ app.post('/api/login', authLimiter, async (req, res) => {
       user: {
         username: user.username,
         isAdmin: user.isAdmin || false,
+        hasAdminRole: user.hasAdminRole || false,
         coins: user.coins || 0,
         inventory: user.inventory || { rarities: {}, potions: {}, items: {} },
         activePotions: user.activePotions || [],
@@ -470,6 +485,7 @@ app.post('/api/register', authLimiter, async (req, res) => {
       password,
       isAdmin: false,
       banned: false,
+      hasAdminRole: false,
       inventory: { rarities: {}, potions: {}, items: {} },
       activePotions: [],
       coins: 1000,
@@ -484,7 +500,8 @@ app.post('/api/register', authLimiter, async (req, res) => {
 
     req.session.user = {
       username: newUser.username,
-      isAdmin: false
+      isAdmin: false,
+      hasAdminRole: false
     };
 
     res.json({
@@ -492,6 +509,7 @@ app.post('/api/register', authLimiter, async (req, res) => {
       user: {
         username: newUser.username,
         isAdmin: false,
+        hasAdminRole: false,
         coins: 1000,
         inventory: newUser.inventory,
         activePotions: [],
@@ -529,6 +547,7 @@ app.get('/api/check-session', async (req, res) => {
       user: {
         username: user.username,
         isAdmin: user.isAdmin || false,
+        hasAdminRole: user.hasAdminRole || false,
         coins: user.coins || 0,
         inventory: user.inventory || { rarities: {}, potions: {}, items: {} },
         activePotions: user.activePotions || [],
@@ -615,52 +634,56 @@ app.post('/api/spin', requireAuth, async (req, res) => {
     // Broadcast special pulls
     if (picked.type === 'mythical') {
       const chatMsg = {
-        username: 'SYSTEM',
+        username: user.username,
         message: `🎉 ${user.username} just got the mythical ${picked.name}! (${picked.chance}% chance)`,
         timestamp: new Date().toISOString(),
-        isAdmin: true,
+        isAdmin: user.isAdmin || false,
         isSystem: true,
         rarityType: 'mythical',
-        rarityName: picked.name
+        rarityName: picked.name,
+        userTitle: user.equippedTitle || null
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
       io.emit('chat_message', chatMsg);
     } else if (picked.type === 'divine') {
       const chatMsg = {
-        username: 'SYSTEM',
+        username: user.username,
         message: `✨ ${user.username} just got the divine ${picked.name}! (${picked.chance}% chance)`,
         timestamp: new Date().toISOString(),
-        isAdmin: true,
+        isAdmin: user.isAdmin || false,
         isSystem: true,
         rarityType: 'divine',
-        rarityName: picked.name
+        rarityName: picked.name,
+        userTitle: user.equippedTitle || null
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
       io.emit('chat_message', chatMsg);
     } else if (picked.type === 'secret') {
       const chatMsg = {
-        username: 'SYSTEM',
+        username: user.username,
         message: `🌟 ${user.username} just got the secret ${picked.name}! (${picked.chance}% chance)`,
         timestamp: new Date().toISOString(),
-        isAdmin: true,
+        isAdmin: user.isAdmin || false,
         isSystem: true,
         rarityType: 'secret',
-        rarityName: picked.name
+        rarityName: picked.name,
+        userTitle: user.equippedTitle || null
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
       io.emit('chat_message', chatMsg);
     } else if (picked.type === 'legendary') {
       const chatMsg = {
-        username: 'SYSTEM',
+        username: user.username,
         message: `⚡ ${user.username} just got the legendary ${picked.name}! (${picked.chance}% chance)`,
         timestamp: new Date().toISOString(),
-        isAdmin: true,
+        isAdmin: user.isAdmin || false,
         isSystem: true,
         rarityType: 'legendary',
-        rarityName: picked.name
+        rarityName: picked.name,
+        userTitle: user.equippedTitle || null
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
@@ -1001,6 +1024,7 @@ app.get('/api/data', requireAuth, async (req, res) => {
       user: {
         username: user.username,
         isAdmin: user.isAdmin || false,
+        hasAdminRole: user.hasAdminRole || false,
         coins: user.coins || 0,
         inventory: user.inventory || { rarities: {}, potions: {}, items: {} },
         activePotions: user.activePotions || [],
@@ -1018,6 +1042,7 @@ app.get('/api/data', requireAuth, async (req, res) => {
       responseData.allUsers = data.users.map(u => ({
         username: u.username,
         isAdmin: u.isAdmin || false,
+        hasAdminRole: u.hasAdminRole || false,
         banned: u.banned || false,
         coins: u.coins || 0,
         totalSpins: u.totalSpins || 0,
@@ -1061,7 +1086,7 @@ app.post('/api/admin/announcement', requireAdmin, async (req, res) => {
   }
 });
 
-app.delete('/api/admin/announcement/:id', requireAdmin, async (req, res) => {
+app.delete('/api/admin/announcement/:id', requireFullAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const data = await readData();
@@ -1111,7 +1136,7 @@ app.post('/api/admin/event', requireAdmin, async (req, res) => {
   }
 });
 
-app.delete('/api/admin/event/:id', requireAdmin, async (req, res) => {
+app.delete('/api/admin/event/:id', requireFullAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const data = await readData();
@@ -1216,6 +1241,102 @@ app.post('/api/admin/meteor/start', requireAdmin, async (req, res) => {
   }
 });
 
+app.post('/api/admin/blackhole/start', requireAdmin, async (req, res) => {
+  try {
+    io.emit('blackhole_start');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Blackhole error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/banana-rain/start', requireAdmin, async (req, res) => {
+  try {
+    io.emit('banana_rain_start');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Banana rain error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/coin-rush-2/start', requireAdmin, async (req, res) => {
+  try {
+    const data = await readData();
+    
+    // Give coins to all connected users
+    const coinsAmount = 500;
+    data.users.forEach(user => {
+      if (connectedSockets.has(user.username)) {
+        user.coins = (user.coins || 0) + coinsAmount;
+      }
+    });
+    
+    await writeData(data);
+    
+    io.emit('coin_rush_2_start');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Coin rush 2.0 error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/give-admin-role', requireFullAdmin, async (req, res) => {
+  try {
+    const { username } = req.body;
+    
+    if (!username) {
+      return res.json({ success: false, error: 'Username required' });
+    }
+
+    const data = await readData();
+    const user = data.users.find(u => u.username === username);
+    
+    if (!user) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    if (user.username === 'Mr_Fernanski') {
+      return res.json({ success: false, error: 'Cannot modify owner' });
+    }
+
+    user.hasAdminRole = true;
+    await writeData(data);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Give admin role error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/remove-admin-role', requireFullAdmin, async (req, res) => {
+  try {
+    const { username } = req.body;
+    
+    if (!username) {
+      return res.json({ success: false, error: 'Username required' });
+    }
+
+    const data = await readData();
+    const user = data.users.find(u => u.username === username);
+    
+    if (!user) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    user.hasAdminRole = false;
+    await writeData(data);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Remove admin role error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 app.post('/api/admin/disco/start', requireAdmin, async (req, res) => {
   try {
     const data = await readData();
@@ -1264,7 +1385,7 @@ app.post('/api/admin/disco/stop', requireAdmin, async (req, res) => {
   }
 });
 
-app.post('/api/admin/ban-user', requireAdmin, async (req, res) => {
+app.post('/api/admin/ban-user', requireFullAdmin, async (req, res) => {
   try {
     const { username, action } = req.body;
     
@@ -1298,7 +1419,7 @@ app.post('/api/admin/ban-user', requireAdmin, async (req, res) => {
   }
 });
 
-app.post('/api/admin/modify-user', requireAdmin, async (req, res) => {
+app.post('/api/admin/modify-user', requireFullAdmin, async (req, res) => {
   try {
     const { username, action, value, itemName, potionKey, count } = req.body;
     
@@ -1361,7 +1482,7 @@ app.delete('/api/admin/chat/:messageId', requireAdmin, async (req, res) => {
   }
 });
 
-app.delete('/api/admin/chat/bulk', requireAdmin, async (req, res) => {
+app.delete('/api/admin/chat/bulk', requireFullAdmin, async (req, res) => {
   try {
     const data = await readData();
     const deletedCount = data.chatMessages.length;
@@ -1461,7 +1582,7 @@ if (!IS_VERCEL) {
       const shopData = getCurrentShopItem();
       console.log('');
       console.log('🎮 ════════════════════════════════════════════════');
-      console.log('🎮  17-News-RNG Server - Update 5 v2.2.0');
+      console.log('🎮  17-News-RNG Server - Update 4.5 v2.3.0');
       console.log('🎮 ════════════════════════════════════════════════');
       console.log('');
       console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
@@ -1470,16 +1591,14 @@ if (!IS_VERCEL) {
       console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
       console.log('👑 Admin: Mr_Fernanski ready');
       console.log('');
-      console.log('✨ Update 5 Features:');
-      console.log('   🏆 4 New Titles (Item Collector, Locked In, etc)');
-      console.log('   💰 Coin Display Formatting');
-      console.log('   ☄️ Enhanced Meteor Event');
-      console.log('   🌈 Disco Rainbow Effects');
-      console.log('   🔨 Coin Potion I Added');
-      console.log('   👥 Ban/Unban System');
-      console.log('   🗑️ Delete Announcements/Events');
-      console.log('   🔒 The Dark Knight Color Fix');
-      console.log('   ⚡ Events Only for Online Players');
+      console.log('✨ Update 4.5 Features:');
+      console.log('   🏆 4 New Titles (Focus, Owner, Admin, Universal Wealth)');
+      console.log('   👑 Admin Role System with Limited Privileges');
+      console.log('   ☄️ Enhanced Meteor Event with Better Graphics');
+      console.log('   🕳️ Blackhole Event (60s countdown)');
+      console.log('   🍌 Banana Rain Event');
+      console.log('   💰 Coin Rush 2.0 with 2x Multiplier');
+      console.log('   🎨 Chat Name Colors Match Titles');
       console.log('');
       console.log('✅ Ready!');
       console.log('🎮 ════════════════════════════════════════════════');
