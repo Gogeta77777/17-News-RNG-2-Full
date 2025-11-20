@@ -137,7 +137,7 @@ async function initializeDatabase() {
       if (!mrF) {
         data.users.push({
           username: 'Mr_Fernanski',
-          password: 'admin123',
+          password: 'loopdev2012',
           isAdmin: true,
           banned: false,
           hasAdminRole: false,
