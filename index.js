@@ -1459,6 +1459,39 @@ app.post('/api/admin/modify-user', requireFullAdmin, async (req, res) => {
   }
 });
 
+app.post('/api/admin/change-password', requireFullAdmin, async (req, res) => {
+  try {
+    const { username, newPassword } = req.body;
+    
+    if (!username || !newPassword) {
+      return res.json({ success: false, error: 'Username and password required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.json({ success: false, error: 'Password must be at least 6 characters' });
+    }
+
+    const data = await readData();
+    const user = data.users.find(u => u.username === username);
+    
+    if (!user) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    // Update password
+    user.password = newPassword;
+    
+    await writeData(data);
+
+    console.log(`✅ Password changed for ${username} by ${req.session.user.username}`);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Change password error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 app.delete('/api/admin/chat/:messageId', requireAdmin, async (req, res) => {
   try {
     const { messageId } = req.params;
