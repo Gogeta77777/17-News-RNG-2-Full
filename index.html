@@ -2721,6 +2721,7 @@
                         <button class="btn" onclick="setUserCoins('${user.username}')">Set Coins</button>
                         <button class="btn" onclick="giveUserItem('${user.username}')">Give Item</button>
                         <button class="btn" onclick="giveUserPotion('${user.username}')">Give Potion</button>
+                        <button class="btn" onclick="changeUserPassword('${user.username}')" style="background: linear-gradient(135deg, #3498db, #2980b9);">Change Password</button>
                         ${!user.isAdmin && !user.hasAdminRole ? 
                             `<button class="btn" style="background: linear-gradient(135deg, #C0C0C0, #A9A9A9);" onclick="giveAdminRole('${user.username}')">Give Admin Role</button>` :
                             user.hasAdminRole ? 
@@ -2857,6 +2858,42 @@
                 showPopup('Failed to give potion', '#e74c3c');
             }
         }
+
+        async function changeUserPassword(username) {
+    const newPassword = prompt(`Enter new password for ${username}:\n(Must be at least 6 characters)`);
+    
+    if (!newPassword) {
+        return; // User cancelled
+    }
+
+    if (newPassword.length < 6) {
+        showPopup('Password must be at least 6 characters', '#e74c3c');
+        return;
+    }
+
+    if (!confirm(`Change password for ${username} to:\n"${newPassword}"?`)) {
+        return;
+    }
+
+    try {
+        const data = await handleAPI('/api/admin/change-password', {
+            method: 'POST',
+            body: JSON.stringify({
+                username,
+                newPassword
+            })
+        });
+
+        if (data.success) {
+            showPopup(`Password changed for ${username}!`, '#27ae60');
+            await loadFullGameData();
+        } else {
+            showPopup(data.error, '#e74c3c');
+        }
+    } catch (err) {
+        showPopup('Failed to change password', '#e74c3c');
+    }
+}
 
         async function banUser(username) {
             if (!confirm(`Ban ${username}? They will be unable to log in.`)) return;
