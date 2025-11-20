@@ -843,21 +843,28 @@
             gap: 16px;
 
             /* CONTINUATION OF CSS FROM PART 1 */
+          .game-header {
+          background: rgba(10, 18, 25, 0.95);
+          padding: 20px;
+          border-radius: 15px;
+          margin-bottom: 30px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 16px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+          position: relative;
+          z-index: var(--z-content);
+          }
 
-        .game-header {
-            gap: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: var(--z-content);
-        }
-
-        .user-info {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
+          .user-info {
+          display: flex;
+          gap: 15px;
+          align-items: center;
+          flex-wrap: wrap;
+          }
+            
         .coins {
             background: linear-gradient(135deg, #f1c40f, #f39c12);
             padding: 8px 16px;
