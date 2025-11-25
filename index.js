@@ -321,6 +321,8 @@ const RARITIES = [
   { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000', coin: 5000, type: 'mythical' },
   { name: 'Mrs Joseph Mcglashan', chance: 0.1, color: '#00FF88', coin: 9999, type: 'divine' },
   { name: 'Lord Crinkle', chance: 0.01, color: '#FFD700', coin: 20000, type: 'secret' }
+  ,
+  { name: 'Lord Finn', chance: 0.0001, color: '#FFFFFF', coin: 1000000, type: 'lord-finn' }
 ];
 
 const POTIONS = {
@@ -330,6 +332,9 @@ const POTIONS = {
   speed1: { name: 'Speed Potion I', cooldownReduction: 0.5, duration: 300000, type: 'speed', price: 800 },
   speed2: { name: 'Speed Potion II', cooldownReduction: 0.833, duration: 180000, type: 'speed', price: 0 },
   coin1: { name: 'Coin Potion I', coinMultiplier: 2, duration: 180000, type: 'coin', price: 1500 }
+  ,
+  coin2: { name: 'Coin Potion II', coinMultiplier: 4, duration: 180000, type: 'coin', price: 0 },
+  finale: { name: 'Finale Elixir', luckMultiplier: 100, singleUse: true, type: 'finale', price: 0 }
 };
 
 const CRAFT_RECIPES = {
@@ -348,6 +353,30 @@ const CRAFT_RECIPES = {
     requires: { items: { 'house-leader-badge': 3, 'school-leader-badge': 1, 'chromebook': 1, 'microphone': 1 } },
     result: { type: 'item', key: 'media-team-badge', name: 'Media Team Badge' }
   }
+
+  ,
+'coin2': {
+    name: 'Coin Potion II',
+    requires: { 
+        potions: { coin1: 25 }, 
+        items: { 'school-leader-badge': 5, 'media-team-badge': 2 } 
+    },
+    result: { type: 'potion', key: 'coin2' }
+},
+'finale': {
+    name: 'Finale Elixir',
+    requires: { 
+        items: { 
+            'house-leader-badge': 10, 
+            'school-leader-badge': 5, 
+            'media-team-badge': 5,
+            'meteor-piece': 5
+        },
+        coins: 500000
+    },
+    result: { type: 'potion', key: 'finale' }
+}
+
 };
 
 const connectedSockets = new Set();
@@ -590,6 +619,12 @@ app.post('/api/spin', requireAuth, async (req, res) => {
       luckMultiplier *= 5;
     }
 
+    // Check for Finale Elixir
+if (user.finaleElixirReady) {
+    luckMultiplier *= 100;
+    user.finaleElixirReady = false; // Consume it
+}
+
     const adjustedRarities = RARITIES.map((r) => 
       (r.type === 'mythical' || r.type === 'divine' || r.type === 'secret' || r.type === 'legendary' || r.name === 'Cooper Metson' || r.name === 'The Dark Knight') ? 
         { ...r, chance: r.chance * luckMultiplier } : r
@@ -608,16 +643,32 @@ app.post('/api/spin', requireAuth, async (req, res) => {
       }
     }
 
-    const rarityKey = picked.name.toLowerCase().replace(/\s+/g, '-');
-    if (!user.inventory.rarities) user.inventory.rarities = {};
-    if (!user.inventory.rarities[rarityKey]) {
-      user.inventory.rarities[rarityKey] = {
+const rarityKey = picked.name.toLowerCase().replace(/\s+/g, '-');
+if (!user.inventory.rarities) user.inventory.rarities = {};
+if (!user.inventory.rarities[rarityKey]) {
+    user.inventory.rarities[rarityKey] = {
         name: picked.name,
         count: 0,
-        color: picked.color
-      };
-    }
-    user.inventory.rarities[rarityKey].count += 1;
+        color: picked.color,
+        serialNumbers: []
+    };
+}
+
+// Lord Finn serial number tracking
+let serialNumber = null;
+if (picked.type === 'lord-finn') {
+    // Count total Lord Finn pulls across all users
+    let totalLordFinns = 0;
+    data.users.forEach(u => {
+        if (u.inventory.rarities && u.inventory.rarities['lord-finn']) {
+            totalLordFinns += u.inventory.rarities['lord-finn'].count;
+        }
+    });
+    serialNumber = totalLordFinns + 1;
+    user.inventory.rarities[rarityKey].serialNumbers.push(serialNumber);
+}
+
+user.inventory.rarities[rarityKey].count += 1;
     
     let coinAward = picked.coin || 0;
     const coinPotion = user.activePotions.find(p => p.type === 'coin' && p.expires > now);
@@ -690,12 +741,36 @@ app.post('/api/spin', requireAuth, async (req, res) => {
       io.emit('chat_message', chatMsg);
     }
 
+    } else if (picked.type === 'lord-finn') {
+    const chatMsg = {
+        username: user.username,
+        message: `⭐ ${user.username} JUST OBTAINED LORD FINN! Serial #${serialNumber} (0.0001% chance)`,
+        timestamp: new Date().toISOString(),
+        isAdmin: user.isAdmin || false,
+        isSystem: true,
+        rarityType: 'lord-finn',
+        rarityName: picked.name,
+        userTitle: user.equippedTitle || null,
+        serialNumber: serialNumber
+    };
+    data.chatMessages.push(chatMsg);
+    await writeData(data);
+    io.emit('chat_message', chatMsg);
+    
+    // Broadcast banner event
+    io.emit('lord_finn_pulled', {
+        username: user.username,
+        serialNumber: serialNumber
+    });
+}
+
     res.json({
       success: true,
       item: picked.name,
       rarity: picked,
       coins: user.coins,
       awarded: coinAward
+      serialNumber: serialNumber
     });
   } catch (error) {
     console.error('❌ Spin error:', error);
@@ -728,6 +803,13 @@ app.post('/api/craft', requireAuth, async (req, res) => {
         }
       }
     }
+
+    // Check coins requirement
+if (recipe.requires.coins) {
+    if ((user.coins || 0) < recipe.requires.coins) {
+        return res.json({ success: false, error: `Not enough coins (need ${recipe.requires.coins})` });
+    }
+}
     
     if (recipe.requires.items) {
       for (const [key, count] of Object.entries(recipe.requires.items)) {
@@ -754,6 +836,11 @@ app.post('/api/craft', requireAuth, async (req, res) => {
         }
       }
     }
+
+    // Consume coins if required
+if (recipe.requires.coins) {
+    user.coins -= recipe.requires.coins;
+}
 
     // Give result
     if (recipe.result.type === 'potion') {
@@ -829,9 +916,55 @@ app.post('/api/use-potion', requireAuth, async (req, res) => {
 
     const potion = POTIONS[potionKey];
     
-    if ((user.activePotions || []).find(p => p.key === potionKey)) {
-      return res.json({ success: false, error: 'Potion already active' });
+// Check for Finale Elixir (single use)
+if (potionKey === 'finale') {
+    // Finale Elixir is used immediately, not added to active potions
+    if (!user.finaleElixirReady) {
+        user.finaleElixirReady = true;
+    } else {
+        return res.json({ success: false, error: 'Finale Elixir already prepared' });
     }
+} else {
+    if ((user.activePotions || []).find(p => p.key === potionKey)) {
+        return res.json({ success: false, error: 'Potion already active' });
+    }
+
+  user.inventory.potions[potionKey] -= 1;
+
+if (potionKey === 'finale') {
+    // Finale Elixir doesn't go into active potions
+    user.finaleElixirReady = true;
+    await writeData(data);
+    return res.json({
+        success: true,
+        message: 'Finale Elixir prepared! Your next spin will have 100x luck!',
+        finaleReady: true
+    });
+}
+
+if (!user.activePotions) user.activePotions = [];
+
+const activePotion = {
+    key: potionKey,
+    name: potion.name,
+    type: potion.type,
+    expires: Date.now() + potion.duration
+};
+
+if (potion.multiplier) activePotion.multiplier = potion.multiplier;
+if (potion.cooldownReduction) activePotion.cooldownReduction = potion.cooldownReduction;
+if (potion.coinMultiplier) activePotion.coinMultiplier = potion.coinMultiplier;
+
+user.activePotions.push(activePotion);
+    
+    // Check for coin potion conflicts
+    if (potion.type === 'coin') {
+        const existingCoinPotion = (user.activePotions || []).find(p => p.type === 'coin');
+        if (existingCoinPotion) {
+            return res.json({ success: false, error: 'Another coin potion is active' });
+        }
+    }
+}
 
     user.inventory.potions[potionKey] -= 1;
     if (!user.activePotions) user.activePotions = [];
@@ -1615,7 +1748,7 @@ if (!IS_VERCEL) {
       const shopData = getCurrentShopItem();
       console.log('');
       console.log('🎮 ════════════════════════════════════════════════');
-      console.log('🎮  17-News-RNG Server - Update 4.5 v2.3.0');
+      console.log('🎮  17-News-RNG Server - Update 5.0 v2.4.0 - FINAL NOVEMBER UPDATE');
       console.log('🎮 ════════════════════════════════════════════════');
       console.log('');
       console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
@@ -1624,14 +1757,13 @@ if (!IS_VERCEL) {
       console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
       console.log('👑 Admin: Mr_Fernanski ready');
       console.log('');
-      console.log('✨ Update 4.5 Features:');
-      console.log('   🏆 4 New Titles (Focus, Owner, Admin, Universal Wealth)');
-      console.log('   👑 Admin Role System with Limited Privileges');
-      console.log('   ☄️ Enhanced Meteor Event with Better Graphics');
-      console.log('   🕳️ Blackhole Event (60s countdown)');
-      console.log('   🍌 Banana Rain Event');
-      console.log('   💰 Coin Rush 2.0 with 2x Multiplier');
-      console.log('   🎨 Chat Name Colors Match Titles');
+      console.log('✨ Update 5.0 Features:');
+      console.log('   ⭐ NEW RARITY: Lord Finn (0.0001% - 1M coins!)');
+      console.log('   🎨 Chroma Effects & Serial Numbers');
+      console.log('   🏆 2 New Titles (The Darkest Knight & Chosen One)');
+      console.log('   🧪 2 New Potions (Coin Potion II & Finale Elixir)');
+      console.log('   💫 Finale Elixir: 100x Luck for ONE spin!');
+      console.log('   🎯 New Crafting Recipes');
       console.log('');
       console.log('✅ Ready!');
       console.log('🎮 ════════════════════════════════════════════════');
