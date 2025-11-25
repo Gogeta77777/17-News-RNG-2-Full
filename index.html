@@ -1632,7 +1632,7 @@
 </head>
 <body>
     <div class="announcement-bar" id="announcement-bar">
-        <span>🎮 Welcome to 17 News RNG 2 - Update 5.0 - FINAL NOVEMBER UPDATE!</span>
+        <span>🎮 Welcome to 17 News RNG 2 - Update 5.0 v2.4.0 - FINAL NOVEMBER UPDATE! 🌟 New: Lord Finn! 🧪 New Potions! 🏆 New Titles!</span>
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
@@ -1656,15 +1656,15 @@
             <div class="update-log">
                 <h3>Latest Updates</h3>
                 <div class="log-entry">
-                    <div class="log-entry">
-                    <span class="date">26/11/25 - Update 5.0 (FINAL NOVEMBER UPDATE)</span>
-                    <p>⭐ NEW RARITY: Lord Finn (0.0001% - 1M coins!)</p>
-                    <p>🎨 Chroma Effects & Serial Numbers for Lord Finn</p>
-                    <p>🏆 2 New Titles (The Darkest Knight & Chosen One)</p>
-                    <p>🧪 2 New Potions (Coin Potion II & Finale Elixir)</p>
-                    <p>💫 Finale Elixir: 100x Luck for ONE spin!</p>
-                    <p>🎯 New Crafting Recipes Added</p>
-                    </div>
+                    <span class="date">25/11/25 - Update 5.0 (FINAL NOVEMBER UPDATE) v2.4.0</span>
+                    <p>⭐ NEW RARITY: Lord Finn (0.0001% chance - 1,000,000 coins!) with Serial Numbers</p>
+                    <p>🎨 Chroma Text Effects for Lord Finn & Chosen One Title</p>
+                    <p>🏆 2 New Titles: "The Darkest Knight" (15x Dark Knight) & "Chosen One" (1x Lord Finn)</p>
+                    <p>🧪 2 New Potions: Coin Potion II (4x multiplier) & Finale Elixir (100x luck ONE spin)</p>
+                    <p>🎁 2 New Crafting Recipes: Coin Potion II & Finale Elixir</p>
+                    <p>💫 Finale Elixir: Ultimate power - 100x luck boost for your next spin only!</p>
+                    <p>🌟 Serial number tracking for Lord Finn pulls across all players</p>
+                    <p>🐛 Bug Fixes: Fixed crafting system, syntax errors, and UI updates</p>
                 </div>
             </div>
         </main>
@@ -1850,7 +1850,7 @@
                         <div class="settings-section">
                             <h3>Game Info</h3>
                             <div class="stat-box">
-                                <p><strong>Version:</strong> 2.3.0 - Update 4.5</p>
+                                <p><strong>Version:</strong> 2.4.0 - Update 5.0 (FINAL NOVEMBER UPDATE)</p>
                                 <p><strong>Last Updated:</strong> 19/11/25</p>
                             </div>
                         </div>
@@ -1977,7 +1977,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        console.log('🎮 17 News RNG 2 - Update 4.5 v2.3.0');
+        console.log('🎮 17 News RNG 2 - Update 5.0 v2.4.0 - FINAL NOVEMBER UPDATE');
 
         let currentUser = null;
         let socket = null;
@@ -2008,6 +2008,20 @@
                 description: 'Rare collectible item',
                 requires: { items: { 'house-leader-badge': 3, 'school-leader-badge': 1, 'chromebook': 1, 'microphone': 1 } },
                 result: { type: 'item', key: 'media-team-badge', name: 'Media Team Badge' }
+            },
+            {
+                id: 'coin2',
+                name: 'Coin Potion II',
+                description: '4x coin multiplier for 3 minutes (NEW)',
+                requires: { potions: { coin1: 25 }, items: { 'school-leader-badge': 5, 'media-team-badge': 2 } },
+                result: { type: 'potion', key: 'coin2' }
+            },
+            {
+                id: 'finale',
+                name: 'Finale Elixir',
+                description: '100x luck for ONE spin! ULTIMATE RARITY! (NEW)',
+                requires: { items: { 'house-leader-badge': 10, 'school-leader-badge': 5, 'media-team-badge': 5, 'meteor-piece': 5 }, coins: 500000 },
+                result: { type: 'potion', key: 'finale' }
             }
         ];
 
@@ -2793,7 +2807,9 @@
 
             display.innerHTML = '';
 
-            CRAFT_RECIPES.forEach(recipe => {
+            const recipes = Array.isArray(CRAFT_RECIPES) ? CRAFT_RECIPES : Object.values(CRAFT_RECIPES);
+
+            recipes.forEach(recipe => {
                 const card = document.createElement('div');
                 card.className = 'craft-recipe';
 
@@ -2815,6 +2831,12 @@
                         ingredientsList.push(`${has}/${count} ${key.replace(/-/g, ' ')}`);
                         if (has < count) canCraft = false;
                     }
+                }
+
+                if (recipe.requires.coins) {
+                    const has = currentUser.coins || 0;
+                    ingredientsList.push(`${formatCoins(has)}/${formatCoins(recipe.requires.coins)} coins`);
+                    if (has < recipe.requires.coins) canCraft = false;
                 }
 
                 card.innerHTML = `
