@@ -739,10 +739,8 @@ user.inventory.rarities[rarityKey].count += 1;
       data.chatMessages.push(chatMsg);
       await writeData(data);
       io.emit('chat_message', chatMsg);
-    }
-
     } else if (picked.type === 'lord-finn') {
-    const chatMsg = {
+      const chatMsg = {
         username: user.username,
         message: `⭐ ${user.username} JUST OBTAINED LORD FINN! Serial #${serialNumber} (0.0001% chance)`,
         timestamp: new Date().toISOString(),
@@ -752,24 +750,24 @@ user.inventory.rarities[rarityKey].count += 1;
         rarityName: picked.name,
         userTitle: user.equippedTitle || null,
         serialNumber: serialNumber
-    };
-    data.chatMessages.push(chatMsg);
-    await writeData(data);
-    io.emit('chat_message', chatMsg);
-    
-    // Broadcast banner event
-    io.emit('lord_finn_pulled', {
+      };
+      data.chatMessages.push(chatMsg);
+      await writeData(data);
+      io.emit('chat_message', chatMsg);
+      
+      // Broadcast banner event
+      io.emit('lord_finn_pulled', {
         username: user.username,
         serialNumber: serialNumber
-    });
-}
+      });
+    }
 
     res.json({
       success: true,
       item: picked.name,
       rarity: picked,
       coins: user.coins,
-      awarded: coinAward
+      awarded: coinAward,
       serialNumber: serialNumber
     });
   } catch (error) {
