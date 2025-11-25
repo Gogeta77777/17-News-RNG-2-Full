@@ -3483,6 +3483,11 @@
                 launchCoinRush2();
             });
 
+            socket.on('lord_finn_pulled', (data) => {
+    console.log('⭐ LORD FINN PULLED!');
+    showLordFinnBanner(data.username, data.serialNumber);
+});
+
             socket.on('new_announcement', (data) => {
                 console.log('📢 New announcement');
                 showPopup('New announcement: ' + data.title, '#f39c12');
