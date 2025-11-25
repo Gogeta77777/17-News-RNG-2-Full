@@ -1,5 +1,5 @@
 /*
-  17-News-RNG Server - Update 4.5 v2.3.0
+  17-News-RNG Server - Update 5.0 v2.4.0 - FINAL NOVEMBER UPDATE
 */
 
 const express = require('express');
