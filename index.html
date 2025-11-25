@@ -2109,7 +2109,7 @@
             { name: 'The Dark Knight', chance: 0.3, color: '#1a1a1a' },
             { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000' },
             { name: 'Mrs Joseph Mcglashan', chance: 0.1, color: '#00FF88' },
-            { name: 'Lord Crinkle', chance: 0.01, color: '#FFD700' }
+            { name: 'Lord Crinkle', chance: 0.01, color: '#FFD700' },
             { name: 'Lord Finn', chance: 0.0001, color: '#FFFFFF', coin: 1000000, type: 'lord-finn' }
         ];
 
@@ -3143,11 +3143,9 @@
                     messageClass += ' secret-message';
                 } else if (msg.rarityType === 'legendary') {
                     messageClass += ' legendary-message';
+                } else if (msg.rarityType === 'lord-finn') {
+                    messageClass += ' lord-finn-message';
                 }
-
-                else if (msg.rarityType === 'lord-finn') {
-    messageClass += ' lord-finn-message';
-}
             }
             
             msgEl.className = messageClass;
@@ -3188,17 +3186,17 @@
                 else if (msg.rarityType === 'legendary') systemColor = '#9B59B6';
                 
                 if (msg.rarityType === 'lord-finn') {
-    msgEl.innerHTML = `
-        <span class="chroma-text" style="font-weight: bold;">⭐ ${escapeHtml(msg.message)}</span>
-        <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
-    `;
-} else {
-    msgEl.innerHTML = `
-        <span style="font-weight: bold; color: ${systemColor};">⚡ ${escapeHtml(msg.message)}</span>
-        <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
-    `;
-}
-              else {
+                    msgEl.innerHTML = `
+                        <span class="chroma-text" style="font-weight: bold;">⭐ ${escapeHtml(msg.message)}</span>
+                        <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
+                    `;
+                } else {
+                    msgEl.innerHTML = `
+                        <span style="font-weight: bold; color: ${systemColor};">⚡ ${escapeHtml(msg.message)}</span>
+                        <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
+                    `;
+                }
+            } else {
                 msgEl.innerHTML = `
                     ${adminActions}
                     <span class="username" style="color: ${usernameColor}; font-weight: bold;">${escapeHtml(msg.username)}${titleBadge}:</span>
