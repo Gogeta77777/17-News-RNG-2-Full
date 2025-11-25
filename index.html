@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
-    <title>17 News RNG 2 - Update 4.5</title>
+    <title>17 News RNG 2 - Update 5.0</title>
     
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -170,6 +170,44 @@
             0%, 100% { box-shadow: 0 0 20px #2196F3, 0 0 40px #2196F3; }
             50% { box-shadow: 0 0 40px #2196F3, 0 0 60px #2196F3; }
         }
+
+        @keyframes lordFinnGlow {
+    0%, 100% { 
+        box-shadow: 0 0 30px #FFFFFF, 0 0 60px #FFFFFF, 0 0 90px #FFFFFF;
+        filter: hue-rotate(0deg) brightness(1.5);
+    }
+    50% { 
+        box-shadow: 0 0 60px #FFFFFF, 0 0 90px #FFFFFF, 0 0 120px #FFFFFF;
+        filter: hue-rotate(180deg) brightness(2);
+    }
+}
+
+@keyframes chromaText {
+    0% { color: #FF0000; text-shadow: 0 0 20px #FF0000; }
+    16% { color: #FF7F00; text-shadow: 0 0 20px #FF7F00; }
+    33% { color: #FFFF00; text-shadow: 0 0 20px #FFFF00; }
+    50% { color: #00FF00; text-shadow: 0 0 20px #00FF00; }
+    66% { color: #0000FF; text-shadow: 0 0 20px #0000FF; }
+    83% { color: #8B00FF; text-shadow: 0 0 20px #8B00FF; }
+    100% { color: #FF0000; text-shadow: 0 0 20px #FF0000; }
+}
+
+@keyframes chromaBorder {
+    0% { border-color: #FF0000; box-shadow: 0 0 30px #FF0000; }
+    16% { border-color: #FF7F00; box-shadow: 0 0 30px #FF7F00; }
+    33% { border-color: #FFFF00; box-shadow: 0 0 30px #FFFF00; }
+    50% { border-color: #00FF00; box-shadow: 0 0 30px #00FF00; }
+    66% { border-color: #0000FF; box-shadow: 0 0 30px #0000FF; }
+    83% { border-color: #8B00FF; box-shadow: 0 0 30px #8B00FF; }
+    100% { border-color: #FF0000; box-shadow: 0 0 30px #FF0000; }
+}
+
+@keyframes lordFinnBanner {
+    0% { transform: translateY(-100px) scale(0.8); opacity: 0; }
+    10% { transform: translateY(0) scale(1.1); opacity: 1; }
+    90% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-100px) scale(0.8); opacity: 0; }
+}
 
         @keyframes meteorFall {
             0% {
@@ -1001,6 +1039,42 @@
             animation: secretGlow 2s infinite;
         }
 
+        .rarity-lord-finn {
+    border-left-color: #FFFFFF;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+    animation: lordFinnGlow 2s infinite;
+}
+
+.title-badge.darkest-knight {
+    background: linear-gradient(135deg, #000000, #FFD700, #000000);
+    background-size: 200% 200%;
+    animation: shimmer 2s linear infinite;
+    color: #FFD700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.title-badge.chosen-one {
+    background: linear-gradient(90deg, 
+        #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #8B00FF, #FF0000
+    );
+    background-size: 400% 400%;
+    animation: rainbow 3s linear infinite;
+    color: #FFFFFF;
+    font-weight: bold;
+    box-shadow: 0 2px 12px rgba(255, 255, 255, 0.8);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.title-card.darkest-knight { 
+    border-left-color: #000000;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.title-card.chosen-one { 
+    border-left-color: #FFFFFF;
+    animation: chromaBorder 3s linear infinite;
+}
+
         .item-count {
             position: absolute;
             top: 10px;
@@ -1082,6 +1156,59 @@
             background: rgba(155, 89, 182, 0.15);
             border: 2px solid rgba(155, 89, 182, 0.5);
         }
+
+        .chat-message.system-message.lord-finn-message {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+    border: 3px solid #FFFFFF;
+    animation: lordFinnGlow 2s infinite;
+}
+
+.chat-message.system-message.lord-finn-message .chroma-text {
+    animation: chromaText 2s linear infinite;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.lord-finn-banner {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.95),
+        rgba(230, 230, 230, 0.95),
+        rgba(255, 255, 255, 0.95)
+    );
+    padding: 40px 60px;
+    border-radius: 20px;
+    z-index: var(--z-popup);
+    box-shadow: 
+        0 0 100px rgba(255, 255, 255, 0.8),
+        0 0 200px rgba(255, 255, 255, 0.6),
+        inset 0 0 50px rgba(255, 255, 255, 0.3);
+    border: 5px solid;
+    animation: lordFinnBanner 3s ease-out forwards, chromaBorder 2s linear infinite;
+    text-align: center;
+}
+
+.lord-finn-banner h1 {
+    font-size: 3em;
+    margin: 0 0 20px 0;
+    animation: chromaText 2s linear infinite;
+}
+
+.lord-finn-banner p {
+    font-size: 1.5em;
+    color: #000;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.lord-finn-banner .serial {
+    font-size: 2em;
+    animation: chromaText 2s linear infinite;
+    margin-top: 20px;
+}
 
         .chat-message .username {
             font-weight: bold;
@@ -1505,7 +1632,7 @@
 </head>
 <body>
     <div class="announcement-bar" id="announcement-bar">
-        <span>🎮 Welcome to 17 News RNG 2 - Update 4.5!</span>
+        <span>🎮 Welcome to 17 News RNG 2 - Update 5.0 - FINAL NOVEMBER UPDATE!</span>
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
@@ -1529,14 +1656,15 @@
             <div class="update-log">
                 <h3>Latest Updates</h3>
                 <div class="log-entry">
-                    <span class="date">19/11/25 - Update 4.5</span>
-                    <p>🏆 4 New Titles (Focus, Owner, Admin, Universal Wealth)</p>
-                    <p>👑 Admin Role System with Limited Privileges</p>
-                    <p>☄️ Enhanced Meteor Event with Better Graphics</p>
-                    <p>🕳️ Blackhole Event (60s countdown)</p>
-                    <p>🍌 Banana Rain Event</p>
-                    <p>💰 Coin Rush 2.0 with 2x Multiplier</p>
-                    <p>🎨 Chat Name Colors Match Titles</p>
+                    <div class="log-entry">
+                    <span class="date">26/11/25 - Update 5.0 (FINAL NOVEMBER UPDATE)</span>
+                    <p>⭐ NEW RARITY: Lord Finn (0.0001% - 1M coins!)</p>
+                    <p>🎨 Chroma Effects & Serial Numbers for Lord Finn</p>
+                    <p>🏆 2 New Titles (The Darkest Knight & Chosen One)</p>
+                    <p>🧪 2 New Potions (Coin Potion II & Finale Elixir)</p>
+                    <p>💫 Finale Elixir: 100x Luck for ONE spin!</p>
+                    <p>🎯 New Crafting Recipes Added</p>
+                    </div>
                 </div>
             </div>
         </main>
@@ -1950,6 +2078,21 @@
                 color: '#00BFFF',
                 requires: { coins: 100000000 }
             }
+
+            ,
+{
+    id: 'darkest-knight',
+    name: 'The Darkest Knight',
+    color: '#000000',
+    requires: { rarities: { 'the-dark-knight': 15 } }
+},
+{
+    id: 'chosen-one',
+    name: 'Chosen One',
+    color: '#FFFFFF',
+    requires: { rarities: { 'lord-finn': 1 } }
+}
+            
         ];
 
         const RARITIES = [
@@ -1967,6 +2110,7 @@
             { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000' },
             { name: 'Mrs Joseph Mcglashan', chance: 0.1, color: '#00FF88' },
             { name: 'Lord Crinkle', chance: 0.01, color: '#FFD700' }
+            { name: 'Lord Finn', chance: 0.0001, color: '#FFFFFF', coin: 1000000, type: 'lord-finn' }
         ];
 
         function formatCoins(num) {
@@ -2048,6 +2192,21 @@
             document.body.appendChild(coin);
             setTimeout(() => coin.remove(), 3500);
         }
+
+        function showLordFinnBanner(username, serialNumber) {
+    const banner = document.createElement('div');
+    banner.className = 'lord-finn-banner';
+    banner.innerHTML = `
+        <h1>🌟 LORD FINN OBTAINED! 🌟</h1>
+        <p><strong>${username}</strong> just pulled the ULTIMATE rarity!</p>
+        <p class="serial">Serial #${serialNumber}</p>
+    `;
+    document.body.appendChild(banner);
+    
+    setTimeout(() => {
+        banner.remove();
+    }, 3000);
+}
 
         function showCoinRushNotification(coinsPerSecond) {
             const notification = document.getElementById('coin-rush-notification');
@@ -2985,6 +3144,10 @@
                 } else if (msg.rarityType === 'legendary') {
                     messageClass += ' legendary-message';
                 }
+
+                else if (msg.rarityType === 'lord-finn') {
+    messageClass += ' lord-finn-message';
+}
             }
             
             msgEl.className = messageClass;
@@ -3024,11 +3187,18 @@
                 else if (msg.rarityType === 'secret') systemColor = '#FFD700';
                 else if (msg.rarityType === 'legendary') systemColor = '#9B59B6';
                 
-                msgEl.innerHTML = `
-                    <span style="font-weight: bold; color: ${systemColor};">⚡ ${escapeHtml(msg.message)}</span>
-                    <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
-                `;
-            } else {
+                if (msg.rarityType === 'lord-finn') {
+    msgEl.innerHTML = `
+        <span class="chroma-text" style="font-weight: bold;">⭐ ${escapeHtml(msg.message)}</span>
+        <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
+    `;
+} else {
+    msgEl.innerHTML = `
+        <span style="font-weight: bold; color: ${systemColor};">⚡ ${escapeHtml(msg.message)}</span>
+        <br><small style="opacity: 0.7;">${new Date(msg.timestamp).toLocaleTimeString()}</small>
+    `;
+}
+              else {
                 msgEl.innerHTML = `
                     ${adminActions}
                     <span class="username" style="color: ${usernameColor}; font-weight: bold;">${escapeHtml(msg.username)}${titleBadge}:</span>
