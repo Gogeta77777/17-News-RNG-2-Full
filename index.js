@@ -334,7 +334,7 @@ const POTIONS = {
   coin1: { name: 'Coin Potion I', coinMultiplier: 2, duration: 180000, type: 'coin', price: 1500 }
   ,
   coin2: { name: 'Coin Potion II', coinMultiplier: 4, duration: 180000, type: 'coin', price: 0 },
-  finale: { name: 'Finale Elixir', luckMultiplier: 100, singleUse: true, type: 'finale', price: 0 }
+  finale: { name: 'Final Elixir', luckMultiplier: 100, singleUse: true, type: 'finale', price: 0 }
 };
 
 const CRAFT_RECIPES = {
@@ -364,7 +364,7 @@ const CRAFT_RECIPES = {
     result: { type: 'potion', key: 'coin2' }
 },
 'finale': {
-    name: 'Finale Elixir',
+  name: 'Final Elixir',
     requires: { 
         items: { 
             'house-leader-badge': 10, 
@@ -396,7 +396,8 @@ function requireAdmin(req, res, next) {
 }
 
 function requireFullAdmin(req, res, next) {
-  if (!req.session || !req.session.user || !req.session.user.isAdmin) {
+  // Treat the owner username as full admin as well for backward compatibility
+  if (!req.session || !req.session.user || !(req.session.user.isAdmin || req.session.user.username === 'Mr_Fernanski')) {
     return res.status(401).json({ success: false, error: 'Full admin required' });
   }
   next();
@@ -777,7 +778,8 @@ user.inventory.rarities[rarityKey].count += 1;
       rarity: picked,
       coins: user.coins,
       awarded: coinAward,
-      serialNumber: serialNumber
+      serialNumber: serialNumber,
+      finaleUsed: isFinaleElixir || false
     });
   } catch (error) {
     console.error('❌ Spin error:', error);
@@ -936,7 +938,7 @@ app.post('/api/use-potion', requireAuth, async (req, res) => {
       await writeData(data);
       return res.json({
         success: true,
-        message: 'Finale Elixir prepared! Your next spin will have 100x luck!',
+        message: 'Final Elixir prepared! Your next spin will have 100x luck!',
         finaleReady: true,
         activePotions: user.activePotions || []
       });
@@ -1387,23 +1389,31 @@ app.post('/api/admin/coin-rush-2/start', requireAdmin, async (req, res) => {
   }
 });
 
-app.post('/api/admin/return-to-zero/start', requireAdmin, async (req, res) => {
+app.post('/api/admin/return-to-zero/start', requireFullAdmin, async (req, res) => {
   try {
     const data = await readData();
-    
-    // Reset all users to zero coins and clear inventories
-    data.users.forEach(user => {
-      user.coins = 0;
-      user.inventory = { rarities: {}, potions: {}, items: {} };
-      user.activePotions = [];
-      user.totalSpins = 0;
-      user.finaleElixirReady = false;
-    });
-    
+
+    // Non-destructive 'Return to Zero' event.
+    // Create an admin event and broadcast it to clients so they can play the visual effect.
+    const adminEvent = {
+      id: Date.now(),
+      type: 'return_to_zero',
+      name: 'Return to Zero (visual event)',
+      active: true,
+      startedAt: new Date().toISOString(),
+      startedBy: req.session.user.username
+    };
+
+    if (!data.adminEvents) data.adminEvents = [];
+    // keep only one active return_to_zero event
+    data.adminEvents = data.adminEvents.filter(e => e.type !== 'return_to_zero');
+    data.adminEvents.push(adminEvent);
+
     await writeData(data);
-    
-    io.emit('return_to_zero_start');
-    res.json({ success: true });
+
+    // Broadcast event to all connected clients — clients will display visuals but not reset data
+    io.emit('return_to_zero_start', { startedBy: req.session.user.username });
+    res.json({ success: true, adminEvent });
   } catch (error) {
     console.error('❌ Return to Zero error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1784,8 +1794,8 @@ if (!IS_VERCEL) {
       console.log('   ⭐ NEW RARITY: Lord Finn (0.0001% - 1M coins!)');
       console.log('   🎨 Chroma Effects & Serial Numbers');
       console.log('   🏆 2 New Titles (The Darkest Knight & Chosen One)');
-      console.log('   🧪 2 New Potions (Coin Potion II & Finale Elixir)');
-      console.log('   💫 Finale Elixir: 100x Luck for ONE spin!');
+      console.log('   🧪 2 New Potions (Coin Potion II & Final Elixir)');
+      console.log('   💫 Final Elixir: 100x Luck for ONE spin!');
       console.log('   🎯 New Crafting Recipes');
       console.log('');
       console.log('✅ Ready!');
