@@ -619,26 +619,35 @@ app.post('/api/spin', requireAuth, async (req, res) => {
       luckMultiplier *= 5;
     }
 
-    // Check for Finale Elixir
-if (user.finaleElixirReady) {
-    luckMultiplier *= 100;
-    user.finaleElixirReady = false; // Consume it
-}
+    // Check for Finale Elixir - guarantees rare pulls
+    let isFinaleElixir = false;
+    if (user.finaleElixirReady) {
+      isFinaleElixir = true;
+      luckMultiplier *= 100;
+      user.finaleElixirReady = false; // Consume it
+    }
 
-    const adjustedRarities = RARITIES.map((r) => 
-      (r.type === 'mythical' || r.type === 'divine' || r.type === 'secret' || r.type === 'legendary' || r.name === 'Cooper Metson' || r.name === 'The Dark Knight') ? 
+    // If Finale Elixir is active, filter to only rare/epic rarities (exclude common ones)
+    let rarityPool = RARITIES;
+    if (isFinaleElixir) {
+      // Only include rarities with 5% chance or less (rare+)
+      rarityPool = RARITIES.filter(r => r.chance <= 5 || r.type === 'mythical' || r.type === 'divine' || r.type === 'secret' || r.type === 'legendary' || r.type === 'lord-finn');
+    }
+
+    const adjustedRarities = rarityPool.map((r) => 
+      (r.type === 'mythical' || r.type === 'divine' || r.type === 'secret' || r.type === 'legendary' || r.name === 'Cooper Metson' || r.name === 'The Dark Knight' || isFinaleElixir) ? 
         { ...r, chance: r.chance * luckMultiplier } : r
     );
     
     const total = adjustedRarities.reduce((s, r) => s + r.chance, 0);
     const roll = Math.random() * total;
     let cursor = 0;
-    let picked = RARITIES[RARITIES.length - 1];
+    let picked = rarityPool[rarityPool.length - 1];
     
     for (const rarity of adjustedRarities) {
       cursor += rarity.chance;
       if (roll <= cursor) {
-        picked = RARITIES.find(r => r.name === rarity.name);
+        picked = rarityPool.find(r => r.name === rarity.name);
         break;
       }
     }
@@ -914,59 +923,33 @@ app.post('/api/use-potion', requireAuth, async (req, res) => {
 
     const potion = POTIONS[potionKey];
     
-// Check for Finale Elixir (single use)
-if (potionKey === 'finale') {
-    // Finale Elixir is used immediately, not added to active potions
-    if (!user.finaleElixirReady) {
-        user.finaleElixirReady = true;
-    } else {
-        return res.json({ success: false, error: 'Finale Elixir already prepared' });
-    }
-} else {
-    if ((user.activePotions || []).find(p => p.key === potionKey)) {
-        return res.json({ success: false, error: 'Potion already active' });
-    }
-
-  user.inventory.potions[potionKey] -= 1;
-
-if (potionKey === 'finale') {
-    // Finale Elixir doesn't go into active potions
-    user.finaleElixirReady = true;
-    await writeData(data);
-    return res.json({
+    // Check for Finale Elixir (single use)
+    if (potionKey === 'finale') {
+      // Decrement inventory first
+      user.inventory.potions[potionKey] -= 1;
+      if (user.inventory.potions[potionKey] < 0) {
+        user.inventory.potions[potionKey] = 0;
+      }
+      
+      // Set finale elixir ready for next spin
+      user.finaleElixirReady = true;
+      await writeData(data);
+      return res.json({
         success: true,
         message: 'Finale Elixir prepared! Your next spin will have 100x luck!',
-        finaleReady: true
-    });
-}
-
-if (!user.activePotions) user.activePotions = [];
-
-const activePotion = {
-    key: potionKey,
-    name: potion.name,
-    type: potion.type,
-    expires: Date.now() + potion.duration
-};
-
-if (potion.multiplier) activePotion.multiplier = potion.multiplier;
-if (potion.cooldownReduction) activePotion.cooldownReduction = potion.cooldownReduction;
-if (potion.coinMultiplier) activePotion.coinMultiplier = potion.coinMultiplier;
-
-user.activePotions.push(activePotion);
-    
-    // Check for coin potion conflicts
-    if (potion.type === 'coin') {
-        const existingCoinPotion = (user.activePotions || []).find(p => p.type === 'coin');
-        if (existingCoinPotion) {
-            return res.json({ success: false, error: 'Another coin potion is active' });
-        }
+        finaleReady: true,
+        activePotions: user.activePotions || []
+      });
     }
-}
 
+    // For other potions, decrement inventory
     user.inventory.potions[potionKey] -= 1;
+    if (user.inventory.potions[potionKey] < 0) {
+      user.inventory.potions[potionKey] = 0;
+    }
+
     if (!user.activePotions) user.activePotions = [];
-    
+
     const activePotion = {
       key: potionKey,
       name: potion.name,
@@ -1372,16 +1355,6 @@ app.post('/api/admin/meteor/start', requireAdmin, async (req, res) => {
   }
 });
 
-app.post('/api/admin/blackhole/start', requireAdmin, async (req, res) => {
-  try {
-    io.emit('blackhole_start');
-    res.json({ success: true });
-  } catch (error) {
-    console.error('❌ Blackhole error:', error);
-    res.status(500).json({ success: false, error: 'Server error' });
-  }
-});
-
 app.post('/api/admin/banana-rain/start', requireAdmin, async (req, res) => {
   try {
     io.emit('banana_rain_start');
@@ -1410,6 +1383,29 @@ app.post('/api/admin/coin-rush-2/start', requireAdmin, async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('❌ Coin rush 2.0 error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/return-to-zero/start', requireAdmin, async (req, res) => {
+  try {
+    const data = await readData();
+    
+    // Reset all users to zero coins and clear inventories
+    data.users.forEach(user => {
+      user.coins = 0;
+      user.inventory = { rarities: {}, potions: {}, items: {} };
+      user.activePotions = [];
+      user.totalSpins = 0;
+      user.finaleElixirReady = false;
+    });
+    
+    await writeData(data);
+    
+    io.emit('return_to_zero_start');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Return to Zero error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1552,7 +1548,7 @@ app.post('/api/admin/ban-user', requireFullAdmin, async (req, res) => {
 
 app.post('/api/admin/modify-user', requireFullAdmin, async (req, res) => {
   try {
-    const { username, action, value, itemName, potionKey, count } = req.body;
+    const { username, action, value, itemName, potionKey, count, rarityKey, spins, totalSpins } = req.body;
     
     const data = await readData();
     const user = data.users.find(u => u.username === username);
@@ -1562,7 +1558,9 @@ app.post('/api/admin/modify-user', requireFullAdmin, async (req, res) => {
     }
 
     if (action === 'setCoins') {
-      user.coins = parseInt(value) || 0;
+      user.coins = Math.max(0, parseInt(value) || 0);
+    } else if (action === 'addCoins') {
+      user.coins = (user.coins || 0) + (parseInt(value) || 0);
     } else if (action === 'giveItem') {
       if (!user.inventory.items) user.inventory.items = {};
       const itemKey = itemName.toLowerCase().replace(/\s+/g, '-');
@@ -1579,6 +1577,33 @@ app.post('/api/admin/modify-user', requireFullAdmin, async (req, res) => {
         user.inventory.potions[potionKey] = 0;
       }
       user.inventory.potions[potionKey] += parseInt(count) || 1;
+    } else if (action === 'giveRarity') {
+      if (!user.inventory.rarities) user.inventory.rarities = {};
+      const rarity = RARITIES.find(r => r.name.toLowerCase().replace(/\s+/g, '-') === rarityKey);
+      if (rarity) {
+        if (!user.inventory.rarities[rarityKey]) {
+          user.inventory.rarities[rarityKey] = {
+            name: rarity.name,
+            count: 0,
+            color: rarity.color,
+            serialNumbers: []
+          };
+        }
+        user.inventory.rarities[rarityKey].count += parseInt(count) || 1;
+      }
+    } else if (action === 'setSpins') {
+      user.totalSpins = Math.max(0, parseInt(totalSpins) || 0);
+    } else if (action === 'addSpins') {
+      user.totalSpins = (user.totalSpins || 0) + (parseInt(spins) || 0);
+    } else if (action === 'clearInventory') {
+      user.inventory = { rarities: {}, potions: {}, items: {} };
+    } else if (action === 'resetAccount') {
+      user.coins = 1000;
+      user.totalSpins = 0;
+      user.inventory = { rarities: {}, potions: {}, items: {} };
+      user.activePotions = [];
+      user.finaleElixirReady = false;
+      user.equippedTitle = null;
     }
 
     await writeData(data);
