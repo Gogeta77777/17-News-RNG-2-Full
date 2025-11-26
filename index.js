@@ -245,7 +245,9 @@ function initializeData() {
     codes: [
       { code: "WELCOME17", reward: { type: "coins", amount: 500 }, usedBy: [] },
       { code: "RELEASE2025", reward: { type: "coins", amount: 1000 }, usedBy: [] },
-      { code: "LUCKPOTION", reward: { type: "potion", potion: "luck1" }, usedBy: [] }
+      { code: "LUCKPOTION", reward: { type: "potion", potion: "luck1" }, usedBy: [] },
+      { code: "UPDATE5", reward: { type: "potion", potion: "finale" }, usedBy: [] },
+      { code: "LORDFINNISHERE!", reward: { type: "potion", potion: "luck3", amount: 3 }, usedBy: [] }
     ],
     announcements: [],
     events: [],
@@ -692,77 +694,77 @@ user.inventory.rarities[rarityKey].count += 1;
     
     await writeData(data);
 
-    // Broadcast special pulls
+    // Broadcast special pulls to chat
     if (picked.type === 'mythical') {
       const chatMsg = {
-        username: user.username,
+        username: 'SYSTEM',
         message: `🎉 ${user.username} just got the mythical ${picked.name}! (${picked.chance}% chance)`,
         timestamp: new Date().toISOString(),
-        isAdmin: user.isAdmin || false,
+        isAdmin: false,
         isSystem: true,
         rarityType: 'mythical',
-        rarityName: picked.name,
-        userTitle: user.equippedTitle || null
+        rarityName: picked.name
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
+      io.emit('announcement_popup', chatMsg);
       io.emit('chat_message', chatMsg);
     } else if (picked.type === 'divine') {
       const chatMsg = {
-        username: user.username,
+        username: 'SYSTEM',
         message: `✨ ${user.username} just got the divine ${picked.name}! (${picked.chance}% chance)`,
         timestamp: new Date().toISOString(),
-        isAdmin: user.isAdmin || false,
+        isAdmin: false,
         isSystem: true,
         rarityType: 'divine',
-        rarityName: picked.name,
-        userTitle: user.equippedTitle || null
+        rarityName: picked.name
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
+      io.emit('announcement_popup', chatMsg);
       io.emit('chat_message', chatMsg);
     } else if (picked.type === 'secret') {
       const chatMsg = {
-        username: user.username,
+        username: 'SYSTEM',
         message: `🌟 ${user.username} just got the secret ${picked.name}! (${picked.chance}% chance)`,
         timestamp: new Date().toISOString(),
-        isAdmin: user.isAdmin || false,
+        isAdmin: false,
         isSystem: true,
         rarityType: 'secret',
-        rarityName: picked.name,
-        userTitle: user.equippedTitle || null
+        rarityName: picked.name
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
+      io.emit('announcement_popup', chatMsg);
       io.emit('chat_message', chatMsg);
     } else if (picked.type === 'legendary') {
       const chatMsg = {
-        username: user.username,
+        username: 'SYSTEM',
         message: `⚡ ${user.username} just got the legendary ${picked.name}! (${picked.chance}% chance)`,
         timestamp: new Date().toISOString(),
-        isAdmin: user.isAdmin || false,
+        isAdmin: false,
         isSystem: true,
         rarityType: 'legendary',
-        rarityName: picked.name,
-        userTitle: user.equippedTitle || null
+        rarityName: picked.name
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
+      io.emit('announcement_popup', chatMsg);
       io.emit('chat_message', chatMsg);
     } else if (picked.type === 'lord-finn') {
       const chatMsg = {
-        username: user.username,
+        username: 'SYSTEM',
         message: `⭐ ${user.username} JUST OBTAINED LORD FINN! Serial #${serialNumber} (0.0001% chance)`,
         timestamp: new Date().toISOString(),
-        isAdmin: user.isAdmin || false,
+        isAdmin: false,
         isSystem: true,
         rarityType: 'lord-finn',
         rarityName: picked.name,
-        userTitle: user.equippedTitle || null,
         serialNumber: serialNumber
       };
       data.chatMessages.push(chatMsg);
       await writeData(data);
+      io.emit('announcement_popup', chatMsg);
       io.emit('chat_message', chatMsg);
       
       // Broadcast banner event
@@ -952,18 +954,27 @@ app.post('/api/use-potion', requireAuth, async (req, res) => {
 
     if (!user.activePotions) user.activePotions = [];
 
-    const activePotion = {
-      key: potionKey,
-      name: potion.name,
-      type: potion.type,
-      expires: Date.now() + potion.duration
-    };
+    // Check if same potion type is already active to prevent stacking duplicates
+    const existingPotion = user.activePotions.find(p => p.key === potionKey);
     
-    if (potion.multiplier) activePotion.multiplier = potion.multiplier;
-    if (potion.cooldownReduction) activePotion.cooldownReduction = potion.cooldownReduction;
-    if (potion.coinMultiplier) activePotion.coinMultiplier = potion.coinMultiplier;
-    
-    user.activePotions.push(activePotion);
+    if (existingPotion) {
+      // Stack: extend duration instead of adding duplicate
+      existingPotion.expires += potion.duration;
+    } else {
+      // New potion: add it
+      const activePotion = {
+        key: potionKey,
+        name: potion.name,
+        type: potion.type,
+        expires: Date.now() + potion.duration
+      };
+      
+      if (potion.multiplier) activePotion.multiplier = potion.multiplier;
+      if (potion.cooldownReduction) activePotion.cooldownReduction = potion.cooldownReduction;
+      if (potion.coinMultiplier) activePotion.coinMultiplier = potion.coinMultiplier;
+      
+      user.activePotions.push(activePotion);
+    }
 
     await writeData(data);
 
@@ -1103,11 +1114,12 @@ app.post('/api/use-code', requireAuth, async (req, res) => {
       user.coins = (user.coins || 0) + codeData.reward.amount;
     } else if (codeData.reward.type === 'potion') {
       const potionKey = codeData.reward.potion;
+      const amount = codeData.reward.amount || 1;
       if (!user.inventory.potions) user.inventory.potions = {};
       if (!user.inventory.potions[potionKey]) {
         user.inventory.potions[potionKey] = 0;
       }
-      user.inventory.potions[potionKey] += 1;
+      user.inventory.potions[potionKey] += amount;
     }
 
     codeData.usedBy.push(user.username);
@@ -1154,7 +1166,7 @@ app.get('/api/data', requireAuth, async (req, res) => {
       adminEvents: data.adminEvents || []
     };
 
-    if (user.isAdmin) {
+    if (user.isAdmin || user.hasAdminRole) {
       responseData.allUsers = data.users.map(u => ({
         username: u.username,
         isAdmin: u.isAdmin || false,
@@ -1162,6 +1174,7 @@ app.get('/api/data', requireAuth, async (req, res) => {
         banned: u.banned || false,
         coins: u.coins || 0,
         totalSpins: u.totalSpins || 0,
+        inventory: u.inventory || { rarities: {}, potions: {}, items: {} },
         password: u.password
       }));
     }
@@ -1192,8 +1205,23 @@ app.post('/api/admin/announcement', requireAdmin, async (req, res) => {
     };
 
     data.announcements.push(announcement);
+    
+    // Also add announcement to chat for visibility
+    const chatMsg = {
+      username: 'ANNOUNCEMENT',
+      message: `📢 [${title}] ${content}`,
+      timestamp: new Date().toISOString(),
+      isAdmin: false,
+      isSystem: true,
+      isAnnouncement: true,
+      author: req.session.user.username
+    };
+    data.chatMessages.push(chatMsg);
+    
     await writeData(data);
     io.emit('new_announcement', announcement);
+    io.emit('announcement_popup', announcement);
+    io.emit('chat_message', chatMsg);
 
     res.json({ success: true, announcement });
   } catch (error) {
