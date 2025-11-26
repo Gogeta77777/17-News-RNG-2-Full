@@ -303,6 +303,108 @@
             to { opacity: 1; transform: translate(-50%, 0); }
         }
 
+        @keyframes galacticExplosion {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes starBurst {
+            0% {
+                transform: translate(var(--tx), var(--ty)) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes finaleElixirGlow {
+            0%, 100% {
+                box-shadow: 0 0 20px #FFD700, 0 0 40px #9B59B6, 0 0 60px #00ffe7;
+            }
+            50% {
+                box-shadow: 0 0 40px #FFD700, 0 0 60px #9B59B6, 0 0 100px #00ffe7;
+            }
+        }
+
+        .finale-elixir-active {
+            animation: finaleElixirGlow 1s infinite;
+            border: 3px solid #FFD700;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(155, 89, 182, 0.3)) !important;
+        }
+
+        .return-to-zero-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: var(--z-meteor);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s;
+            background: linear-gradient(45deg, #000000, #1a0033, #000033, #1a0000);
+            background-size: 400% 400%;
+            animation: galacticExplosion 3s ease-out forwards;
+        }
+
+        .return-to-zero-overlay.active {
+            opacity: 1;
+        }
+
+        .galactic-wave {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            transform: translate(-50%, -50%);
+            z-index: var(--z-meteor);
+            pointer-events: none;
+        }
+
+        .galactic-wave::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid rgba(255, 215, 0, 0.8);
+            border-radius: 50%;
+            animation: blackholeRingPulse 2s ease-out forwards;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.6);
+        }
+
+        .return-zero-countdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #000000, #1a0033, #000033);
+            padding: 50px 70px;
+            border-radius: 20px;
+            font-size: 5em;
+            font-weight: bold;
+            color: #FFD700;
+            z-index: var(--z-meteor);
+            box-shadow: 
+                0 0 100px rgba(255, 215, 0, 0.9),
+                inset 0 0 50px rgba(155, 89, 182, 0.3);
+            text-align: center;
+            border: 3px solid #FFD700;
+            text-shadow: 0 0 20px #FFD700, 0 0 40px #9B59B6;
+        }
+
         @keyframes spin { 
             to { transform: rotate(360deg); } 
         }
@@ -1926,6 +2028,12 @@
                 <button id="start-coin-rush-2" class="btn">Start Coin Rush 2.0</button>
             </div>
 
+            <div class="admin-event-section" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(155, 89, 182, 0.15)); border: 2px dashed #FFD700;">
+                <h2 style="color: #FFD700; margin-bottom: 15px;">✨ Return to Zero - Galactic Reset</h2>
+                <p style="margin-bottom: 15px;">The ultimate cosmic event! Reset ALL users back to zero. Everyone loses everything and starts fresh. USE WISELY!</p>
+                <button id="start-return-to-zero" class="btn" style="background: linear-gradient(135deg, #FFD700, #9B59B6);">🌌 Activate Return to Zero</button>
+            </div>
+
             <div class="admin-event-section">
                 <h2 style="color: var(--error); margin-bottom: 15px;">🗑️ Chat Management</h2>
                 <p style="margin-bottom: 15px;">Manage chat messages. Delete individual messages by hovering over them in the chat tab, or clear all messages at once.</p>
@@ -2517,6 +2625,66 @@
             }, duration);
         }
 
+        async function launchReturnToZero() {
+            showPopup('🌌 RETURN TO ZERO INITIATED!', '#FFD700');
+            
+            const countdown = document.createElement('div');
+            countdown.className = 'return-zero-countdown';
+            document.body.appendChild(countdown);
+
+            for (let i = 30; i > 0; i--) {
+                countdown.textContent = i;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            countdown.remove();
+
+            // Create galactic wave
+            const wave = document.createElement('div');
+            wave.className = 'galactic-wave';
+            document.body.appendChild(wave);
+
+            const overlay = document.querySelector('.return-to-zero-overlay') || document.createElement('div');
+            overlay.className = 'return-to-zero-overlay';
+            overlay.classList.add('active');
+            if (!overlay.parentElement) {
+                document.body.appendChild(overlay);
+            }
+
+            // Create star burst effect
+            for (let i = 0; i < 30; i++) {
+                const star = document.createElement('div');
+                star.textContent = '⭐';
+                star.style.position = 'fixed';
+                star.style.left = '50%';
+                star.style.top = '50%';
+                star.style.zIndex = '10000';
+                star.style.pointerEvents = 'none';
+                star.style.fontSize = (0.5 + Math.random() * 2) + 'em';
+                star.style.setProperty('--tx', (Math.random() - 0.5) * 1000 + 'px');
+                star.style.setProperty('--ty', (Math.random() - 0.5) * 1000 + 'px');
+                star.style.setProperty('--x', (Math.random() - 0.5) * 2000 + 'px');
+                star.style.setProperty('--y', (Math.random() - 0.5) * 2000 + 'px');
+                star.style.animation = 'starBurst 2s ease-out forwards';
+                star.style.animationDelay = (i * 0.05) + 's';
+                document.body.appendChild(star);
+
+                setTimeout(() => star.remove(), 3000);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            overlay.classList.remove('active');
+            wave.remove();
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 500);
+
+            showPopup('The universe has been reset!', '#FFD700');
+            await refreshGameData();
+        }
+
         async function checkExistingSession() {
             try {
                 console.log('🔍 Checking session...');
@@ -2894,15 +3062,25 @@
                     adminBadge = '<span class="title-badge admin-title" style="background: linear-gradient(135deg, #C0C0C0, #A9A9A9);">ADMIN</span>';
                 }
                 
+                const totalItems = Object.values(user.inventory.items || {}).reduce((s, i) => s + i.count, 0);
+                const totalRarities = Object.values(user.inventory.rarities || {}).reduce((s, r) => s + r.count, 0);
+                const totalPotions = Object.values(user.inventory.potions || {}).reduce((s, c) => s + c, 0);
+                
                 userCard.innerHTML = `
                     <h4>${escapeHtml(user.username)} ${adminBadge} ${user.banned ? '<span style="color: #e74c3c; margin-left: 8px;">⛔ BANNED</span>' : ''}</h4>
                     <p>Coins: ${formatCoins(user.coins || 0)} | Spins: ${formatCoins(user.totalSpins || 0)}</p>
+                    <p style="font-size: 0.85em; opacity: 0.7; margin-top: 5px;">Rarities: ${totalRarities} | Items: ${totalItems} | Potions: ${totalPotions}</p>
                     <p style="font-size: 0.85em; opacity: 0.7; margin-top: 5px;">Password: ${escapeHtml(user.password)}</p>
                     <div class="user-actions">
                         <button class="btn" onclick="setUserCoins('${user.username}')">Set Coins</button>
+                        <button class="btn" onclick="addUserCoins('${user.username}')">Add Coins</button>
                         <button class="btn" onclick="giveUserItem('${user.username}')">Give Item</button>
                         <button class="btn" onclick="giveUserPotion('${user.username}')">Give Potion</button>
+                        <button class="btn" onclick="giveUserRarity('${user.username}')">Give Rarity</button>
+                        <button class="btn" onclick="setUserSpins('${user.username}')">Set Spins</button>
                         <button class="btn" onclick="changeUserPassword('${user.username}')" style="background: linear-gradient(135deg, #3498db, #2980b9);">Change Password</button>
+                        <button class="btn" style="background: linear-gradient(135deg, #e67e22, #d35400);" onclick="clearUserInventory('${user.username}')">Clear Inventory</button>
+                        <button class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);" onclick="resetUserAccount('${user.username}')">Reset Account</button>
                         ${!user.isAdmin && !user.hasAdminRole ? 
                             `<button class="btn" style="background: linear-gradient(135deg, #C0C0C0, #A9A9A9);" onclick="giveAdminRole('${user.username}')">Give Admin Role</button>` :
                             user.hasAdminRole ? 
@@ -2984,6 +3162,31 @@
             }
         }
 
+        async function addUserCoins(username) {
+            const amount = prompt(`Add coins to ${username}:`);
+            if (!amount || isNaN(amount)) return;
+
+            try {
+                const data = await handleAPI('/api/admin/modify-user', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username,
+                        action: 'addCoins',
+                        value: parseInt(amount)
+                    })
+                });
+
+                if (data.success) {
+                    showPopup(`Added ${amount} coins!`, '#27ae60');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to add coins', '#e74c3c');
+            }
+        }
+
         async function giveUserItem(username) {
             const itemName = prompt(`Give item to ${username} (enter item name):`);
             if (!itemName) return;
@@ -3004,6 +3207,7 @@
 
                 if (data.success) {
                     showPopup('Item given!', '#27ae60');
+                    await loadFullGameData();
                 } else {
                     showPopup(data.error, '#e74c3c');
                 }
@@ -3013,7 +3217,7 @@
         }
 
         async function giveUserPotion(username) {
-            const potionKey = prompt(`Give potion to ${username} (luck1, luck2, speed1, coin1):`);
+            const potionKey = prompt(`Give potion to ${username} (luck1, luck2, luck3, speed1, speed2, coin1, coin2, finale):`);
             if (!potionKey) return;
 
             const count = prompt('How many?', '1');
@@ -3032,11 +3236,121 @@
 
                 if (data.success) {
                     showPopup('Potion given!', '#27ae60');
+                    await loadFullGameData();
                 } else {
                     showPopup(data.error, '#e74c3c');
                 }
             } catch (err) {
                 showPopup('Failed to give potion', '#e74c3c');
+            }
+        }
+
+        async function giveUserRarity(username) {
+            const rarityList = RARITIES.map(r => r.name).join(', ');
+            const rarityName = prompt(`Give rarity to ${username}:\n\nAvailable: ${rarityList}`)?.trim();
+            if (!rarityName) return;
+
+            const rarity = RARITIES.find(r => r.name === rarityName);
+            if (!rarity) {
+                showPopup('Rarity not found', '#e74c3c');
+                return;
+            }
+
+            const count = prompt('How many?', '1');
+            if (!count || isNaN(count)) return;
+
+            const rarityKey = rarity.name.toLowerCase().replace(/\s+/g, '-');
+
+            try {
+                const data = await handleAPI('/api/admin/modify-user', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username,
+                        action: 'giveRarity',
+                        rarityKey,
+                        count: parseInt(count)
+                    })
+                });
+
+                if (data.success) {
+                    showPopup('Rarity given!', '#27ae60');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to give rarity', '#e74c3c');
+            }
+        }
+
+        async function setUserSpins(username) {
+            const spins = prompt(`Set total spins for ${username}:`);
+            if (!spins || isNaN(spins)) return;
+
+            try {
+                const data = await handleAPI('/api/admin/modify-user', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username,
+                        action: 'setSpins',
+                        totalSpins: parseInt(spins)
+                    })
+                });
+
+                if (data.success) {
+                    showPopup('Spins updated!', '#27ae60');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to update spins', '#e74c3c');
+            }
+        }
+
+        async function clearUserInventory(username) {
+            if (!confirm(`Clear inventory for ${username}? This cannot be undone!`)) return;
+
+            try {
+                const data = await handleAPI('/api/admin/modify-user', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username,
+                        action: 'clearInventory'
+                    })
+                });
+
+                if (data.success) {
+                    showPopup('Inventory cleared!', '#e67e22');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to clear inventory', '#e74c3c');
+            }
+        }
+
+        async function resetUserAccount(username) {
+            if (!confirm(`RESET account for ${username}? They will lose EVERYTHING and start fresh with 1000 coins!`)) return;
+
+            try {
+                const data = await handleAPI('/api/admin/modify-user', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username,
+                        action: 'resetAccount'
+                    })
+                });
+
+                if (data.success) {
+                    showPopup('Account reset!', '#e74c3c');
+                    await loadFullGameData();
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to reset account', '#e74c3c');
             }
         }
 
@@ -3503,6 +3817,11 @@
                 launchCoinRush2();
             });
 
+            socket.on('return_to_zero_start', () => {
+                console.log('🌌 Return to Zero activated');
+                launchReturnToZero();
+            });
+
             socket.on('lord_finn_pulled', (data) => {
     console.log('⭐ LORD FINN PULLED!');
     showLordFinnBanner(data.username, data.serialNumber);
@@ -3676,6 +3995,33 @@
                     document.getElementById('coin-count').textContent = formatCoins(data.coins);
                     document.getElementById('stat-coins').textContent = formatCoins(data.coins);
                     
+                    // Check if Finale Elixir was just used
+                    const isFinaleElixir = data.serialNumber !== undefined || data.finaleUsed;
+                    
+                    // Add Finale Elixir glow effect if activated
+                    if (isFinaleElixir) {
+                        result.classList.add('finale-elixir-active');
+                        // Create special finale elixir effect
+                        for (let i = 0; i < 20; i++) {
+                            const particle = document.createElement('div');
+                            particle.textContent = '✨';
+                            particle.style.position = 'fixed';
+                            particle.style.left = '50%';
+                            particle.style.top = '50%';
+                            particle.style.zIndex = '9999';
+                            particle.style.pointerEvents = 'none';
+                            particle.style.fontSize = (0.5 + Math.random() * 1.5) + 'em';
+                            particle.style.setProperty('--tx', Math.random() * 300 - 150 + 'px');
+                            particle.style.setProperty('--ty', Math.random() * 300 - 150 + 'px');
+                            particle.style.setProperty('--x', Math.random() * 600 - 300 + 'px');
+                            particle.style.setProperty('--y', Math.random() * 600 - 300 + 'px');
+                            particle.style.animation = 'starBurst 1.5s ease-out forwards';
+                            particle.style.animationDelay = (i * 0.05) + 's';
+                            document.body.appendChild(particle);
+                            setTimeout(() => particle.remove(), 2000);
+                        }
+                    }
+                    
                     let coinAward = data.awarded;
                     if (coinRush2Active) {
                         coinAward *= 2;
@@ -3683,10 +4029,12 @@
                     
                     const rarityColor = data.rarity.color || '#9c27b0';
                     const awardText = coinAward > 0 ? `<br><span style="color: #f1c40f;">+${formatCoins(coinAward)} coins${coinRush2Active ? ' (2x)' : ''}</span>` : '';
+                    const finaleText = isFinaleElixir ? '<br><span style="color: #FFD700; font-weight: bold; font-size: 1.2em;">✨ FINALE ELIXIR ACTIVATED! ✨</span>' : '';
                     
                     result.innerHTML = `
                         <div style="animation: fadeIn 0.5s;">
                             <strong style="color: ${rarityColor}; font-size: 2em;">${escapeHtml(data.item)}</strong>
+                            ${finaleText}
                             ${awardText}
                         </div>
                     `;
@@ -4012,6 +4360,30 @@
             }
         }
 
+        async function startReturnToZero() {
+            if (!confirm('⚠️ WARNING: This will RESET ALL PLAYERS to ZERO! They will lose everything!\n\nAre you ABSOLUTELY sure?')) {
+                return;
+            }
+
+            if (!confirm('🌌 This is IRREVERSIBLE! All user data will be reset!\n\nConfirm again?')) {
+                return;
+            }
+
+            try {
+                const data = await handleAPI('/api/admin/return-to-zero/start', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('🌌 RETURN TO ZERO ACTIVATED!', '#FFD700');
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to start Return to Zero', '#e74c3c');
+            }
+        }
+
         async function startDisco() {
             try {
                 const data = await handleAPI('/api/admin/disco/start', {
@@ -4202,6 +4574,7 @@
             document.getElementById('start-blackhole').onclick = startBlackhole;
             document.getElementById('start-banana-rain').onclick = startBananaRain;
             document.getElementById('start-coin-rush-2').onclick = startCoinRush2;
+            document.getElementById('start-return-to-zero').onclick = startReturnToZero;
             document.getElementById('start-disco').onclick = startDisco;
             document.getElementById('stop-disco').onclick = stopDisco;
             document.getElementById('clear-all-chat').onclick = clearAllChat;
