@@ -1762,9 +1762,9 @@
                     <p>⭐ NEW RARITY: Lord Finn (0.0001% chance - 1,000,000 coins!) with Serial Numbers</p>
                     <p>🎨 Chroma Text Effects for Lord Finn & Chosen One Title</p>
                     <p>🏆 2 New Titles: "The Darkest Knight" (15x Dark Knight) & "Chosen One" (1x Lord Finn)</p>
-                    <p>🧪 2 New Potions: Coin Potion II (4x multiplier) & Finale Elixir (100x luck ONE spin)</p>
-                    <p>🎁 2 New Crafting Recipes: Coin Potion II & Finale Elixir</p>
-                    <p>💫 Finale Elixir: Ultimate power - 100x luck boost for your next spin only!</p>
+                    <p>🧪 2 New Potions: Coin Potion II (4x multiplier) & Final Elixir (100x luck ONE spin)</p>
+                    <p>🎁 2 New Crafting Recipes: Coin Potion II & Final Elixir</p>
+                    <p>💫 Final Elixir: Ultimate power - 100x luck boost for your next spin only!</p>
                     <p>🌟 Serial number tracking for Lord Finn pulls across all players</p>
                     <p>🐛 Bug Fixes: Fixed crafting system, syntax errors, and UI updates</p>
                 </div>
@@ -2028,9 +2028,9 @@
                 <button id="start-coin-rush-2" class="btn">Start Coin Rush 2.0</button>
             </div>
 
-            <div class="admin-event-section" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(155, 89, 182, 0.15)); border: 2px dashed #FFD700;">
+            <div id="return-to-zero-section" class="admin-event-section" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(155, 89, 182, 0.15)); border: 2px dashed #FFD700;">
                 <h2 style="color: #FFD700; margin-bottom: 15px;">✨ Return to Zero - Galactic Reset</h2>
-                <p style="margin-bottom: 15px;">The ultimate cosmic event! Reset ALL users back to zero. Everyone loses everything and starts fresh. USE WISELY!</p>
+                <p style="margin-bottom: 15px;">The ultimate cosmic visual — a galactic celebration across the server. <strong>This event is NON-DESTRUCTIVE</strong> (does not reset or delete user data) — it only plays dramatic visual effects for all players.</p>
                 <button id="start-return-to-zero" class="btn" style="background: linear-gradient(135deg, #FFD700, #9B59B6);">🌌 Activate Return to Zero</button>
             </div>
 
@@ -2126,7 +2126,7 @@
             },
             {
                 id: 'finale',
-                name: 'Finale Elixir',
+                name: 'Final Elixir',
                 description: '100x luck for ONE spin! ULTIMATE RARITY! (NEW)',
                 requires: { items: { 'house-leader-badge': 10, 'school-leader-badge': 5, 'media-team-badge': 5, 'meteor-piece': 5 }, coins: 500000 },
                 result: { type: 'potion', key: 'finale' }
@@ -2681,7 +2681,7 @@
                 overlay.style.display = 'none';
             }, 500);
 
-            showPopup('The universe has been reset!', '#FFD700');
+            showPopup('Return to Zero visual complete! (no data was modified)', '#FFD700');
             await refreshGameData();
         }
 
@@ -2843,7 +2843,7 @@
                 }
             }
 
-            if (data.allUsers && currentUser.isAdmin) {
+            if (data.allUsers && (currentUser.isAdmin || currentUser.username === 'Mr_Fernanski')) {
                 loadAdminUsers(data.allUsers);
             }
 
@@ -2851,12 +2851,23 @@
             const fullAdminSection = document.getElementById('full-admin-section');
             const fullAdminForms = document.getElementById('full-admin-forms');
             
-            if (currentUser.isAdmin) {
+            // owner or full admin gets access to full admin panel and user management
+            if (currentUser.isAdmin || currentUser.username === 'Mr_Fernanski') {
                 if (fullAdminSection) fullAdminSection.style.display = 'block';
                 if (fullAdminForms) fullAdminForms.style.display = 'block';
             } else {
                 if (fullAdminSection) fullAdminSection.style.display = 'none';
                 if (fullAdminForms) fullAdminForms.style.display = 'none';
+            }
+
+            // Hide return-to-zero section for non-full admins. Only owner/full admin can activate it.
+            const returnSection = document.getElementById('return-to-zero-section');
+            if (returnSection) {
+                if (currentUser.isAdmin || currentUser.username === 'Mr_Fernanski') {
+                    returnSection.style.display = 'block';
+                } else {
+                    returnSection.style.display = 'none';
+                }
             }
 
             updateActivePotions();
@@ -3620,6 +3631,9 @@
                     speed1: 'Speed Potion I',
                     speed2: 'Speed Potion II',
                     coin1: 'Coin Potion I'
+                    ,
+                    finale: 'Final Elixir',
+                    coin2: 'Coin Potion II'
                 };
 
                 Object.entries(category).forEach(([key, count]) => {
@@ -3995,31 +4009,31 @@
                     document.getElementById('coin-count').textContent = formatCoins(data.coins);
                     document.getElementById('stat-coins').textContent = formatCoins(data.coins);
                     
-                    // Check if Finale Elixir was just used
-                    const isFinaleElixir = data.serialNumber !== undefined || data.finaleUsed;
+                    // Check if Finale Elixir was just used (backend provided flag)
+                    const isFinaleElixir = !!data.finaleUsed;
                     
                     // Add Finale Elixir glow effect if activated
                     if (isFinaleElixir) {
+                        // Subtle Finale glow and a compact burst of particles
                         result.classList.add('finale-elixir-active');
-                        // Create special finale elixir effect
-                        for (let i = 0; i < 20; i++) {
+                        for (let i = 0; i < 8; i++) {
                             const particle = document.createElement('div');
-                            particle.textContent = '✨';
+                            particle.textContent = '🌟';
                             particle.style.position = 'fixed';
                             particle.style.left = '50%';
-                            particle.style.top = '50%';
+                            particle.style.top = '48%';
                             particle.style.zIndex = '9999';
                             particle.style.pointerEvents = 'none';
-                            particle.style.fontSize = (0.5 + Math.random() * 1.5) + 'em';
-                            particle.style.setProperty('--tx', Math.random() * 300 - 150 + 'px');
-                            particle.style.setProperty('--ty', Math.random() * 300 - 150 + 'px');
-                            particle.style.setProperty('--x', Math.random() * 600 - 300 + 'px');
-                            particle.style.setProperty('--y', Math.random() * 600 - 300 + 'px');
-                            particle.style.animation = 'starBurst 1.5s ease-out forwards';
-                            particle.style.animationDelay = (i * 0.05) + 's';
+                            particle.style.fontSize = (0.9 + Math.random() * 0.8) + 'em';
+                            particle.style.setProperty('--tx', (Math.random() - 0.5) * 200 + 'px');
+                            particle.style.setProperty('--ty', (Math.random() - 0.5) * 200 + 'px');
+                            particle.style.animation = 'starBurst 1s ease-out forwards';
+                            particle.style.animationDelay = (i * 0.03) + 's';
                             document.body.appendChild(particle);
-                            setTimeout(() => particle.remove(), 2000);
+                            setTimeout(() => particle.remove(), 1200);
                         }
+                        // Remove temporary glow class after short time
+                        setTimeout(() => result.classList.remove('finale-elixir-active'), 2000);
                     }
                     
                     let coinAward = data.awarded;
@@ -4029,7 +4043,7 @@
                     
                     const rarityColor = data.rarity.color || '#9c27b0';
                     const awardText = coinAward > 0 ? `<br><span style="color: #f1c40f;">+${formatCoins(coinAward)} coins${coinRush2Active ? ' (2x)' : ''}</span>` : '';
-                    const finaleText = isFinaleElixir ? '<br><span style="color: #FFD700; font-weight: bold; font-size: 1.2em;">✨ FINALE ELIXIR ACTIVATED! ✨</span>' : '';
+                    const finaleText = isFinaleElixir ? '<br><span style="color: #FFD700; font-weight: bold; font-size: 1.2em;">✨ FINAL ELIXIR USED ✨</span>' : '';
                     
                     result.innerHTML = `
                         <div style="animation: fadeIn 0.5s;">
@@ -4361,11 +4375,7 @@
         }
 
         async function startReturnToZero() {
-            if (!confirm('⚠️ WARNING: This will RESET ALL PLAYERS to ZERO! They will lose everything!\n\nAre you ABSOLUTELY sure?')) {
-                return;
-            }
-
-            if (!confirm('🌌 This is IRREVERSIBLE! All user data will be reset!\n\nConfirm again?')) {
+            if (!confirm('🌌 Activate Return to Zero (visual event only) for all players?\n\nThis will NOT delete or reset accounts — just a dramatic visual.') ) {
                 return;
             }
 
