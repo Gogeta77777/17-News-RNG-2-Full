@@ -2628,60 +2628,134 @@
         async function launchReturnToZero() {
             showPopup('🌌 RETURN TO ZERO INITIATED!', '#FFD700');
             
+            // Create elaborate countdown with cosmic effects
             const countdown = document.createElement('div');
             countdown.className = 'return-zero-countdown';
+            countdown.style.background = 'linear-gradient(135deg, #000000, #1a0033, #330033, #1a0000)';
+            countdown.style.boxShadow = '0 0 100px rgba(255, 215, 0, 0.8), inset 0 0 100px rgba(155, 89, 182, 0.5)';
+            countdown.style.textShadow = '0 0 30px #FFD700, 0 0 60px #9B59B6, 0 0 90px #FF00FF';
             document.body.appendChild(countdown);
 
-            for (let i = 30; i > 0; i--) {
+            // Enhanced 60-second countdown with cosmic effects
+            for (let i = 60; i > 0; i--) {
                 countdown.textContent = i;
+                countdown.style.transform = `scale(${1 + (60 - i) * 0.005})`;
+                countdown.style.opacity = Math.max(0.5, 1 - ((60 - i) / 120));
+                
+                // Create cosmic particles around countdown
+                if (i % 5 === 0) {
+                    for (let p = 0; p < 8; p++) {
+                        const particle = document.createElement('div');
+                        particle.style.position = 'fixed';
+                        particle.style.width = '4px';
+                        particle.style.height = '4px';
+                        particle.style.background = '#FFD700';
+                        particle.style.borderRadius = '50%';
+                        particle.style.left = (50 + Math.cos(p * Math.PI / 4) * 150) + '%';
+                        particle.style.top = (50 + Math.sin(p * Math.PI / 4) * 150) + '%';
+                        particle.style.zIndex = '9999';
+                        particle.style.pointerEvents = 'none';
+                        particle.style.boxShadow = '0 0 10px #FFD700';
+                        particle.style.animation = 'suckIn 1s ease-in forwards';
+                        document.body.appendChild(particle);
+                        setTimeout(() => particle.remove(), 1000);
+                    }
+                }
+                
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
             countdown.remove();
 
-            // Create galactic wave
-            const wave = document.createElement('div');
-            wave.className = 'galactic-wave';
-            document.body.appendChild(wave);
-
+            // Intense final phase with multiple effects
             const overlay = document.querySelector('.return-to-zero-overlay') || document.createElement('div');
             overlay.className = 'return-to-zero-overlay';
+            overlay.style.animation = 'galacticExplosion 5s ease-out forwards';
             overlay.classList.add('active');
             if (!overlay.parentElement) {
                 document.body.appendChild(overlay);
             }
 
-            // Create star burst effect
-            for (let i = 0; i < 30; i++) {
+            // Multiple galactic waves expanding outward
+            for (let w = 0; w < 3; w++) {
+                const wave = document.createElement('div');
+                wave.className = 'galactic-wave';
+                wave.style.animationDelay = (w * 0.5) + 's';
+                wave.style.width = (150 + w * 50) + 'px';
+                wave.style.height = (150 + w * 50) + 'px';
+                document.body.appendChild(wave);
+                setTimeout(() => wave.remove(), 3500);
+            }
+
+            // Massive star burst with more particles
+            for (let i = 0; i < 80; i++) {
                 const star = document.createElement('div');
-                star.textContent = '⭐';
+                star.textContent = i % 3 === 0 ? '✨' : (i % 3 === 1 ? '⭐' : '💫');
                 star.style.position = 'fixed';
                 star.style.left = '50%';
                 star.style.top = '50%';
                 star.style.zIndex = '10000';
                 star.style.pointerEvents = 'none';
-                star.style.fontSize = (0.5 + Math.random() * 2) + 'em';
-                star.style.setProperty('--tx', (Math.random() - 0.5) * 1000 + 'px');
-                star.style.setProperty('--ty', (Math.random() - 0.5) * 1000 + 'px');
-                star.style.setProperty('--x', (Math.random() - 0.5) * 2000 + 'px');
-                star.style.setProperty('--y', (Math.random() - 0.5) * 2000 + 'px');
-                star.style.animation = 'starBurst 2s ease-out forwards';
-                star.style.animationDelay = (i * 0.05) + 's';
+                star.style.fontSize = (0.8 + Math.random() * 3) + 'em';
+                star.style.textShadow = '0 0 20px ' + (i % 2 === 0 ? '#FFD700' : '#FF00FF');
+                
+                const angle = (i / 80) * Math.PI * 2;
+                const distance = 300 + Math.random() * 500;
+                star.style.setProperty('--x', Math.cos(angle) * distance + 'px');
+                star.style.setProperty('--y', Math.sin(angle) * distance + 'px');
+                star.style.animation = 'starBurst 3s ease-out forwards';
+                star.style.animationDelay = (i * 0.02) + 's';
                 document.body.appendChild(star);
 
-                setTimeout(() => star.remove(), 3000);
+                setTimeout(() => star.remove(), 4000);
             }
 
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            // Lightning effects
+            for (let l = 0; l < 15; l++) {
+                const lightning = document.createElement('div');
+                lightning.style.position = 'fixed';
+                lightning.style.width = '2px';
+                lightning.style.height = Math.random() * 400 + 100 + 'px';
+                lightning.style.background = 'linear-gradient(to bottom, #FFFFFF, #FFD700, transparent)';
+                lightning.style.left = Math.random() * 100 + '%';
+                lightning.style.top = Math.random() * 100 + '%';
+                lightning.style.zIndex = '9999';
+                lightning.style.pointerEvents = 'none';
+                lightning.style.boxShadow = '0 0 20px #FFD700';
+                lightning.style.animation = 'fadeIn 0.5s ease-out forwards';
+                lightning.style.animationDelay = (l * 0.1) + 's';
+                lightning.style.opacity = '0';
+                document.body.appendChild(lightning);
+                setTimeout(() => lightning.remove(), 2500);
+            }
+
+            // Black hole pull effect in center
+            const blackhole = document.createElement('div');
+            blackhole.style.position = 'fixed';
+            blackhole.style.width = '300px';
+            blackhole.style.height = '300px';
+            blackhole.style.background = 'radial-gradient(circle, rgba(0,0,0,0.9), transparent)';
+            blackhole.style.borderRadius = '50%';
+            blackhole.style.left = '50%';
+            blackhole.style.top = '50%';
+            blackhole.style.transform = 'translate(-50%, -50%)';
+            blackhole.style.zIndex = '9998';
+            blackhole.style.pointerEvents = 'none';
+            blackhole.style.boxShadow = '0 0 150px rgba(255, 215, 0, 0.6), inset 0 0 150px rgba(155, 89, 182, 0.8)';
+            blackhole.style.animation = 'blackholeRotate 2s linear infinite, pulse 1s ease-in-out infinite';
+            document.body.appendChild(blackhole);
+
+            await new Promise(resolve => setTimeout(resolve, 5000));
 
             overlay.classList.remove('active');
-            wave.remove();
+            overlay.style.opacity = '0';
+            blackhole.remove();
 
             setTimeout(() => {
                 overlay.style.display = 'none';
-            }, 500);
+            }, 1000);
 
-            showPopup('Return to Zero visual complete! (no data was modified)', '#FFD700');
+            showPopup('✨ GALACTIC RETURN TO ZERO COMPLETE! ✨\nNo data was modified, just pure cosmic energy!', '#FFD700');
             await refreshGameData();
         }
 
@@ -3845,6 +3919,17 @@
                 console.log('📢 New announcement');
                 showPopup('New announcement: ' + data.title, '#f39c12');
                 loadFullGameData();
+            });
+
+            socket.on('announcement_popup', (data) => {
+                console.log('📢 Announcement popup received');
+                if (data.title) {
+                    // System announcement
+                    showPopup(`📢 ${data.title}\n${data.content}`, '#f39c12');
+                } else if (data.message) {
+                    // Rarity announcement
+                    showPopup(data.message, '#FFD700');
+                }
             });
 
             socket.on('new_event', (data) => {
