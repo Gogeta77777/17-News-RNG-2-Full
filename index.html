@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
-    <title>17 News RNG 2 - Update 5.0</title>
+    <title>17 News RNG 2 - Update 5.5</title>
     
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -1734,7 +1734,7 @@
 </head>
 <body>
     <div class="announcement-bar" id="announcement-bar">
-        <span>🎮 Welcome to 17 News RNG 2 - Update 5.0 v2.4.0 - FINAL NOVEMBER UPDATE! 🌟 New: Lord Finn! 🧪 New Potions! 🏆 New Titles!</span>
+        <span>⚠️ DATA RESET NOTICE: Our database expired. Use your EXACT original username to recover your data! Contact Mr_Fernanski, Delan Fernando, or IRL staff if needed. 🔄</span>
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
@@ -1758,15 +1758,18 @@
             <div class="update-log">
                 <h3>Latest Updates</h3>
                 <div class="log-entry">
+                    <span class="date">30/11/25 - Update 5.5 v2.5.0</span>
+                    <p>🔄 CRITICAL: Database Reset - Our database expired and was reset</p>
+                    <p>📝 To recover your data: Use your EXACT original username when logging in</p>
+                    <p>👥 Contact Mr_Fernanski, Delan Fernando, or any 17 News IRL staff for manual recovery</p>
+                    <p>🎨 UI Improvements: Cleaner design and better visual hierarchy</p>
+                    <p>⚠️ New warning labels on register page with data recovery instructions</p>
+                </div>
+                <div class="log-entry">
                     <span class="date">25/11/25 - Update 5.0 (FINAL NOVEMBER UPDATE) v2.4.0</span>
                     <p>⭐ NEW RARITY: Lord Finn (0.0001% chance - 1,000,000 coins!) with Serial Numbers</p>
                     <p>🎨 Chroma Text Effects for Lord Finn & Chosen One Title</p>
-                    <p>🏆 2 New Titles: "The Darkest Knight" (15x Dark Knight) & "Chosen One" (1x Lord Finn)</p>
-                    <p>🧪 2 New Potions: Coin Potion II (4x multiplier) & Final Elixir (100x luck ONE spin)</p>
-                    <p>🎁 2 New Crafting Recipes: Coin Potion II & Final Elixir</p>
-                    <p>💫 Final Elixir: Ultimate power - 100x luck boost for your next spin only!</p>
-                    <p>🌟 Serial number tracking for Lord Finn pulls across all players</p>
-                    <p>🐛 Bug Fixes: Fixed crafting system, syntax errors, and UI updates</p>
+                    <p>🏆 2 New Titles: "The Darkest Knight" & "Chosen One"</p>
                 </div>
             </div>
         </main>
@@ -1797,12 +1800,17 @@
     <!-- REGISTER PAGE -->
     <div id="register-page" class="auth-container hidden">
         <div class="auth-card">
+            <div style="background: linear-gradient(135deg, rgba(255, 152, 0, 0.25), rgba(255, 105, 0, 0.15)); border: 2px solid #FF9800; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <p style="color: #FF9800; font-weight: bold; font-size: 1em; margin: 0 0 8px 0;">⚠️ DATA RESET NOTICE</p>
+                <p style="color: #FFB74D; margin: 8px 0; font-size: 0.95em;"><strong>If you have an account that was lost in the data reset, please put the EXACT same username so we know who to give the data back to!</strong></p>
+                <p style="color: #FFB74D; margin: 8px 0; font-size: 0.85em;">You can also contact 17 News HR or Mr Fernanski himself to learn more about this</p>
+            </div>
             <h1>Register</h1>
             <div id="register-error" class="error-message hidden"></div>
             <form id="register-form">
                 <div class="form-group">
                     <label for="register-username">Username</label>
-                    <input type="text" id="register-username" required autocomplete="username">
+                    <input type="text" id="register-username" required autocomplete="username" placeholder="Use your original username if recovering account">
                 </div>
                 <div class="form-group">
                     <label for="register-password">Password</label>
