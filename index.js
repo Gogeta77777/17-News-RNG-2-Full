@@ -1,5 +1,5 @@
 /*
-  17-News-RNG Server - Update 5.0 v2.4.0 - FINAL NOVEMBER UPDATE
+  17-News-RNG Server - Update 6.0 v3.0.0 - PERFORMANCE & NEW EVENTS
 */
 
 const express = require('express');
@@ -407,6 +407,8 @@ function requireFullAdmin(req, res, next) {
 
 let coinRushInterval = null;
 let discoModeActive = false;
+let alienModeActive = false;
+let coinRush2Active = false;
 
 async function startCoinRush(coinsPerSecond) {
   if (coinRushInterval) {
@@ -620,6 +622,10 @@ app.post('/api/spin', requireAuth, async (req, res) => {
 
     if (discoModeActive) {
       luckMultiplier *= 5;
+    }
+
+    if (alienModeActive) {
+      luckMultiplier *= 10;
     }
 
     // Check for Finale Elixir - guarantees rare pulls
@@ -1546,6 +1552,116 @@ app.post('/api/admin/disco/stop', requireAdmin, async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('❌ Disco stop error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/alien-mode/start', requireAdmin, async (req, res) => {
+  try {
+    alienModeActive = true;
+    
+    const data = await readData();
+    
+    const adminEvent = {
+      id: Date.now(),
+      type: 'alien_mode',
+      name: 'Alien Mode',
+      active: true,
+      startedAt: new Date().toISOString(),
+      startedBy: req.session.user.username
+    };
+
+    if (!data.adminEvents) data.adminEvents = [];
+    data.adminEvents = data.adminEvents.filter(e => e.type !== 'alien_mode');
+    data.adminEvents.push(adminEvent);
+    
+    await writeData(data);
+    
+    io.emit('alien_mode_start');
+
+    res.json({ success: true, message: 'Alien Mode activated! 10x Luck for all!' });
+  } catch (error) {
+    console.error('❌ Alien mode start error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/alien-mode/stop', requireAdmin, async (req, res) => {
+  try {
+    alienModeActive = false;
+    
+    const data = await readData();
+    
+    if (!data.adminEvents) data.adminEvents = [];
+    data.adminEvents = data.adminEvents.filter(e => e.type !== 'alien_mode');
+    
+    await writeData(data);
+    
+    io.emit('alien_mode_stop');
+
+    res.json({ success: true, message: 'Alien Mode deactivated!' });
+  } catch (error) {
+    console.error('❌ Alien mode stop error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/coin-rush-2/start', requireAdmin, async (req, res) => {
+  try {
+    coinRush2Active = true;
+    
+    const data = await readData();
+    
+    const adminEvent = {
+      id: Date.now(),
+      type: 'coin_rush_2',
+      name: 'Coin Rush 2.0',
+      active: true,
+      startedAt: new Date().toISOString(),
+      startedBy: req.session.user.username
+    };
+
+    if (!data.adminEvents) data.adminEvents = [];
+    data.adminEvents = data.adminEvents.filter(e => e.type !== 'coin_rush_2');
+    data.adminEvents.push(adminEvent);
+    
+    await writeData(data);
+    
+    io.emit('coin_rush_2_start');
+
+    res.json({ success: true, message: 'Coin Rush 2.0 activated!' });
+  } catch (error) {
+    console.error('❌ Coin Rush 2.0 start error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/coin-rush-2/stop', requireAdmin, async (req, res) => {
+  try {
+    coinRush2Active = false;
+    
+    const data = await readData();
+    
+    if (!data.adminEvents) data.adminEvents = [];
+    data.adminEvents = data.adminEvents.filter(e => e.type !== 'coin_rush_2');
+    
+    await writeData(data);
+    
+    io.emit('coin_rush_2_stop');
+
+    res.json({ success: true, message: 'Coin Rush 2.0 deactivated!' });
+  } catch (error) {
+    console.error('❌ Coin Rush 2.0 stop error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/admin/blackhole/start', requireAdmin, async (req, res) => {
+  try {
+    io.emit('blackhole_start');
+    res.json({ success: true, message: 'Blackhole event started!' });
+  } catch (error) {
+    console.error('❌ Blackhole error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
