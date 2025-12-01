@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
-    <title>17 News RNG 2 - Update 5.5</title>
+    <title>17 News RNG 2 - Update 6.0</title>
     
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -1758,18 +1758,13 @@
             <div class="update-log">
                 <h3>Latest Updates</h3>
                 <div class="log-entry">
-                    <span class="date">30/11/25 - Update 5.5 v2.5.0</span>
-                    <p>🔄 CRITICAL: Database Reset - Our database expired and was reset</p>
-                    <p>📝 To recover your data: Use your EXACT original username when logging in</p>
-                    <p>👥 Contact Mr_Fernanski, Delan Fernando, or any 17 News IRL staff for manual recovery</p>
-                    <p>🎨 UI Improvements: Cleaner design and better visual hierarchy</p>
-                    <p>⚠️ New warning labels on register page with data recovery instructions</p>
-                </div>
-                <div class="log-entry">
-                    <span class="date">25/11/25 - Update 5.0 (FINAL NOVEMBER UPDATE) v2.4.0</span>
-                    <p>⭐ NEW RARITY: Lord Finn (0.0001% chance - 1,000,000 coins!) with Serial Numbers</p>
-                    <p>🎨 Chroma Text Effects for Lord Finn & Chosen One Title</p>
-                    <p>🏆 2 New Titles: "The Darkest Knight" & "Chosen One"</p>
+                    <span class="date">2/12/25 - Update 6.0 v3.0.0</span>
+                    <p>⚡ MAJOR PERFORMANCE UPDATE: Optimized spin cooldown, chat messaging, and socket events</p>
+                    <p>🐛 Fixed Blackhole event network errors</p>
+                    <p>👽 NEW ADMIN EVENT: Alien Mode - 10x luck boost with on/off toggle</p>
+                    <p>🎛️ Coin Rush 2.0 now has on/off toggle like other admin events</p>
+                    <p>🚀 Reduced lag and delays across all game features</p>
+                    <p>✨ Smoother gameplay experience with optimized event handling</p>
                 </div>
             </div>
         </main>
@@ -1800,10 +1795,10 @@
     <!-- REGISTER PAGE -->
     <div id="register-page" class="auth-container hidden">
         <div class="auth-card">
-            <div style="background: linear-gradient(135deg, rgba(255, 152, 0, 0.25), rgba(255, 105, 0, 0.15)); border: 2px solid #FF9800; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                <p style="color: #FF9800; font-weight: bold; font-size: 1em; margin: 0 0 8px 0;">⚠️ DATA RESET NOTICE</p>
-                <p style="color: #FFB74D; margin: 8px 0; font-size: 0.95em;"><strong>If you have an account that was lost in the data reset, please put the EXACT same username so we know who to give the data back to!</strong></p>
-                <p style="color: #FFB74D; margin: 8px 0; font-size: 0.85em;">You can also contact 17 News HR or Mr Fernanski himself to learn more about this</p>
+            <div style="background: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 105, 0, 0.08)); border: 1px solid #FF9800; padding: 10px 12px; border-radius: 6px; margin-bottom: 16px;">
+                <p style="color: #FFB74D; font-weight: bold; font-size: 0.9em; margin: 0 0 4px 0;">⚠️ Data Reset</p>
+                <p style="color: #FFB74D; margin: 3px 0; font-size: 0.8em;"><strong>Use your original username to recover your account</strong></p>
+                <p style="color: #FFB74D; margin: 3px 0; font-size: 0.75em;">Contact Mr_Fernanski or IRL staff for help</p>
             </div>
             <h1>Register</h1>
             <div id="register-error" class="error-message hidden"></div>
@@ -2031,9 +2026,23 @@
             </div>
 
             <div class="admin-event-section">
-                <h2 style="color: #f39c12; margin-bottom: 15px;">💰 Coin Rush 2.0</h2>
-                <p style="margin-bottom: 15px;">Ultimate coin rush! Coins rain down and players get 2x coins for 30 seconds!</p>
-                <button id="start-coin-rush-2" class="btn">Start Coin Rush 2.0</button>
+                <h2 style="color: #💜; margin-bottom: 15px;">💜 Coin Rush 2.0</h2>
+                <p style="margin-bottom: 15px;">Ultimate coin rush! Coins rain down and players get 2x coins while active!</p>
+                <div class="coin-rush-controls">
+                    <button id="start-coin-rush-2" class="btn">Start Coin Rush 2.0</button>
+                    <button id="stop-coin-rush-2" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Stop Coin Rush 2.0</button>
+                </div>
+                <div id="coin-rush-2-status" style="margin-top: 10px; font-weight: bold;"></div>
+            </div>
+
+            <div class="admin-event-section" style="background: linear-gradient(135deg, rgba(102, 51, 153, 0.2), rgba(75, 0, 130, 0.15)); border: 2px solid #7B2CBF;">
+                <h2 style="color: #9D4EDD; margin-bottom: 15px;">👽 Alien Mode</h2>
+                <p style="margin-bottom: 15px;">Activate alien technology! All online players receive 10x luck multiplier for all spins!</p>
+                <div class="coin-rush-controls">
+                    <button id="start-alien-mode" class="btn" style="background: linear-gradient(135deg, #7B2CBF, #9D4EDD);">👽 Activate Alien Mode</button>
+                    <button id="stop-alien-mode" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Deactivate Alien Mode</button>
+                </div>
+                <div id="alien-mode-status" style="margin-top: 10px; font-weight: bold; color: #9D4EDD;"></div>
             </div>
 
             <div id="return-to-zero-section" class="admin-event-section" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(155, 89, 182, 0.15)); border: 2px dashed #FFD700;">
@@ -3913,9 +3922,29 @@
                 launchCoinRush2();
             });
 
+            socket.on('coin_rush_2_stop', () => {
+                console.log('💰 Coin Rush 2.0 stopped');
+                hideCoinRush2Notification();
+            });
+
+            socket.on('alien_mode_start', () => {
+                console.log('👽 Alien Mode activated - 10x Luck!');
+                showPopup('👽 ALIEN MODE ACTIVATED! 10x Luck Multiplier!', '#9D4EDD');
+            });
+
+            socket.on('alien_mode_stop', () => {
+                console.log('👽 Alien Mode deactivated');
+                showPopup('Alien Mode deactivated', '#95a5a6');
+            });
+
             socket.on('return_to_zero_start', () => {
                 console.log('🌌 Return to Zero activated');
                 launchReturnToZero();
+            });
+
+            socket.on('blackhole_start', () => {
+                console.log('🕳️ Blackhole event started');
+                launchBlackhole();
             });
 
             socket.on('lord_finn_pulled', (data) => {
@@ -4459,11 +4488,63 @@
 
                 if (data.success) {
                     showPopup('Coin Rush 2.0 started!', '#f39c12');
+                    document.getElementById('coin-rush-2-status').innerHTML = '<span style="color: #f39c12;">▶️ Active</span>';
                 } else {
                     showPopup(data.error, '#e74c3c');
                 }
             } catch (err) {
                 showPopup('Failed to start coin rush 2.0', '#e74c3c');
+            }
+        }
+
+        async function stopCoinRush2() {
+            try {
+                const data = await handleAPI('/api/admin/coin-rush-2/stop', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('Coin Rush 2.0 stopped!', '#f39c12');
+                    document.getElementById('coin-rush-2-status').innerHTML = '<span style="color: #95a5a6;">⏸️ Inactive</span>';
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to stop coin rush 2.0', '#e74c3c');
+            }
+        }
+
+        async function startAlienMode() {
+            try {
+                const data = await handleAPI('/api/admin/alien-mode/start', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('👽 ALIEN MODE ACTIVATED! 10x Luck!', '#9D4EDD');
+                    document.getElementById('alien-mode-status').innerHTML = '<span style="color: #9D4EDD;">👽 ▶️ ACTIVE - 10x Luck Multiplier</span>';
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to start alien mode', '#e74c3c');
+            }
+        }
+
+        async function stopAlienMode() {
+            try {
+                const data = await handleAPI('/api/admin/alien-mode/stop', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('Alien Mode deactivated!', '#9D4EDD');
+                    document.getElementById('alien-mode-status').innerHTML = '<span style="color: #95a5a6;">⏸️ Inactive</span>';
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to stop alien mode', '#e74c3c');
             }
         }
 
@@ -4677,6 +4758,9 @@
             document.getElementById('start-blackhole').onclick = startBlackhole;
             document.getElementById('start-banana-rain').onclick = startBananaRain;
             document.getElementById('start-coin-rush-2').onclick = startCoinRush2;
+            document.getElementById('stop-coin-rush-2').onclick = stopCoinRush2;
+            document.getElementById('start-alien-mode').onclick = startAlienMode;
+            document.getElementById('stop-alien-mode').onclick = stopAlienMode;
             document.getElementById('start-return-to-zero').onclick = startReturnToZero;
             document.getElementById('start-disco').onclick = startDisco;
             document.getElementById('stop-disco').onclick = stopDisco;
