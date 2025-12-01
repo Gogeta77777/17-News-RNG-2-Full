@@ -657,6 +657,56 @@
             animation: fadeIn 0.5s ease, discoGlow 1s infinite;
         }
 
+        .alien-notification {
+            position: fixed;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #00DD00, #00FF00, #00DD00);
+            color: #000;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.2em;
+            z-index: var(--z-banner);
+            box-shadow: 0 8px 24px rgba(0, 255, 0, 0.6);
+            animation: fadeIn 0.5s ease, alienGlow 1s infinite;
+            border: 2px solid #00FF00;
+        }
+
+        @keyframes alienGlow {
+            0%, 100% { box-shadow: 0 8px 24px rgba(0, 255, 0, 0.6), 0 0 20px rgba(0, 255, 0, 0.4); }
+            50% { box-shadow: 0 8px 24px rgba(0, 255, 0, 0.8), 0 0 30px rgba(0, 255, 0, 0.6); }
+        }
+
+        .alien-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: var(--z-rainbow);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+            background: linear-gradient(45deg, 
+                rgba(0, 255, 0, 0.1), rgba(0, 200, 0, 0.1), rgba(0, 255, 100, 0.1), rgba(0, 200, 0, 0.1),
+                rgba(0, 255, 0, 0.1), rgba(0, 200, 0, 0.1), rgba(0, 255, 100, 0.1), rgba(0, 200, 0, 0.1)
+            );
+            background-size: 400% 400%;
+            animation: alienShift 4s linear infinite;
+            mix-blend-mode: screen;
+        }
+
+        .alien-overlay.active {
+            opacity: 0.2;
+        }
+
+        @keyframes alienShift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
         .container {
             width: 100%;
             max-width: 1200px;
@@ -1741,9 +1791,11 @@
     <div id="rainbow-overlay" class="rainbow-overlay"></div>
     <div id="meteor-overlay" class="meteor-overlay"></div>
     <div id="blackhole-overlay" class="blackhole-overlay"></div>
+    <div id="alien-overlay" class="alien-overlay"></div>
     <div id="coin-rush-notification" class="coin-rush-notification hidden"></div>
     <div id="coin-rush-2-notification" class="coin-rush-2-notification hidden"></div>
     <div id="disco-notification" class="disco-notification hidden"></div>
+    <div id="alien-notification" class="alien-notification hidden"></div>
 
     <div id="home-page" class="container">
         <main class="home-main">
@@ -1759,12 +1811,9 @@
                 <h3>Latest Updates</h3>
                 <div class="log-entry">
                     <span class="date">2/12/25 - Update 6.0 v3.0.0</span>
-                    <p>⚡ MAJOR PERFORMANCE UPDATE: Optimized spin cooldown, chat messaging, and socket events</p>
-                    <p>🐛 Fixed Blackhole event network errors</p>
-                    <p>👽 NEW ADMIN EVENT: Alien Mode - 10x luck boost with on/off toggle</p>
-                    <p>🎛️ Coin Rush 2.0 now has on/off toggle like other admin events</p>
-                    <p>🚀 Reduced lag and delays across all game features</p>
-                    <p>✨ Smoother gameplay experience with optimized event handling</p>
+                    <p>⚡ MAJOR PERFORMANCE UPDATE: Optimized spin cooldown, chat, & events</p>
+                    <p>🐛 Fixed Blackhole event | 👽 NEW: Alien Mode (10x luck) | 🎛️ Coin Rush 2.0 toggle</p>
+                    <p>🚀 Reduced lag & smoother gameplay experience across all features</p>
                 </div>
             </div>
         </main>
@@ -2382,6 +2431,19 @@
             notification.classList.add('hidden');
             document.body.classList.remove('disco-mode');
             document.getElementById('rainbow-overlay').classList.remove('active');
+        }
+
+        function showAlienNotification() {
+            const notification = document.getElementById('alien-notification');
+            notification.innerHTML = '👽 ALIEN MODE ACTIVE! 10x Luck! 👾';
+            notification.classList.remove('hidden');
+            document.getElementById('alien-overlay').classList.add('active');
+        }
+
+        function hideAlienNotification() {
+            const notification = document.getElementById('alien-notification');
+            notification.classList.add('hidden');
+            document.getElementById('alien-overlay').classList.remove('active');
         }
 
         async function launchMeteor() {
@@ -3929,11 +3991,13 @@
 
             socket.on('alien_mode_start', () => {
                 console.log('👽 Alien Mode activated - 10x Luck!');
-                showPopup('👽 ALIEN MODE ACTIVATED! 10x Luck Multiplier!', '#9D4EDD');
+                showAlienNotification();
+                showPopup('👽 ALIEN MODE ACTIVATED! 10x Luck Multiplier!', '#00FF00');
             });
 
             socket.on('alien_mode_stop', () => {
                 console.log('👽 Alien Mode deactivated');
+                hideAlienNotification();
                 showPopup('Alien Mode deactivated', '#95a5a6');
             });
 
@@ -4521,8 +4585,9 @@
                 });
 
                 if (data.success) {
-                    showPopup('👽 ALIEN MODE ACTIVATED! 10x Luck!', '#9D4EDD');
-                    document.getElementById('alien-mode-status').innerHTML = '<span style="color: #9D4EDD;">👽 ▶️ ACTIVE - 10x Luck Multiplier</span>';
+                    showAlienNotification();
+                    showPopup('👽 ALIEN MODE ACTIVATED! 10x Luck!', '#00FF00');
+                    document.getElementById('alien-mode-status').innerHTML = '<span style="color: #00FF00;">👽 ▶️ ACTIVE - 10x Luck Multiplier</span>';
                 } else {
                     showPopup(data.error, '#e74c3c');
                 }
@@ -4538,7 +4603,8 @@
                 });
 
                 if (data.success) {
-                    showPopup('Alien Mode deactivated!', '#9D4EDD');
+                    hideAlienNotification();
+                    showPopup('Alien Mode deactivated!', '#95a5a6');
                     document.getElementById('alien-mode-status').innerHTML = '<span style="color: #95a5a6;">⏸️ Inactive</span>';
                 } else {
                     showPopup(data.error, '#e74c3c');
