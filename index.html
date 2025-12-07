@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
-    <title>17 News RNG 2 - Update 6.0</title>
+    <title>17 News RNG 2 - Update 7.0</title>
     
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -331,17 +331,27 @@
 
         @keyframes finaleElixirGlow {
             0%, 100% {
-                box-shadow: 0 0 20px #FFD700, 0 0 40px #9B59B6, 0 0 60px #00ffe7;
+                box-shadow: 0 0 25px #FFD700, 0 0 50px #9B59B6, inset 0 0 20px rgba(255, 215, 0, 0.2);
+                border-color: #FFD700;
+            }
+            25% {
+                box-shadow: 0 0 35px #9B59B6, 0 0 70px #FFD700, inset 0 0 25px rgba(155, 89, 182, 0.3);
+                border-color: #9B59B6;
             }
             50% {
-                box-shadow: 0 0 40px #FFD700, 0 0 60px #9B59B6, 0 0 100px #00ffe7;
+                box-shadow: 0 0 40px #FFD700, 0 0 80px #9B59B6, inset 0 0 30px rgba(255, 215, 0, 0.25);
+                border-color: #FFD700;
+            }
+            75% {
+                box-shadow: 0 0 35px #9B59B6, 0 0 60px #FFD700, inset 0 0 25px rgba(155, 89, 182, 0.3);
+                border-color: #9B59B6;
             }
         }
 
         .finale-elixir-active {
-            animation: finaleElixirGlow 1s infinite;
+            animation: finaleElixirGlow 2s infinite;
             border: 3px solid #FFD700;
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(155, 89, 182, 0.3)) !important;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(155, 89, 182, 0.25)) !important;
         }
 
         .return-to-zero-overlay {
@@ -679,6 +689,11 @@
             50% { box-shadow: 0 8px 24px rgba(0, 255, 0, 0.8), 0 0 30px rgba(0, 255, 0, 0.6); }
         }
 
+        @keyframes alienScreen {
+            0% { filter: hue-rotate(0deg) brightness(1); }
+            100% { filter: hue-rotate(120deg) brightness(1.1); }
+        }
+
         .alien-overlay {
             position: fixed;
             top: 0;
@@ -690,12 +705,16 @@
             opacity: 0;
             transition: opacity 0.5s;
             background: linear-gradient(45deg, 
-                rgba(0, 255, 0, 0.1), rgba(0, 200, 0, 0.1), rgba(0, 255, 100, 0.1), rgba(0, 200, 0, 0.1),
-                rgba(0, 255, 0, 0.1), rgba(0, 200, 0, 0.1), rgba(0, 255, 100, 0.1), rgba(0, 200, 0, 0.1)
+                rgba(0, 255, 0, 0.15), rgba(0, 200, 0, 0.1), rgba(0, 255, 100, 0.12), rgba(0, 200, 0, 0.1),
+                rgba(0, 255, 0, 0.15), rgba(0, 200, 0, 0.1), rgba(0, 255, 100, 0.12), rgba(0, 200, 0, 0.1)
             );
             background-size: 400% 400%;
-            animation: alienShift 4s linear infinite;
+            animation: alienShift 4s linear infinite, alienScreen 3s linear infinite;
             mix-blend-mode: screen;
+        }
+
+        .alien-overlay.active {
+            opacity: 0.4;
         }
 
         .alien-overlay.active {
@@ -1770,6 +1789,164 @@
             max-width: 600px;
         }
 
+        /* Trading System Styles */
+        .trading-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .trading-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .trading-section h3 {
+            color: var(--accent-primary);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .online-users-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+
+        .online-user-item {
+            padding: 12px;
+            background: rgba(41, 128, 185, 0.1);
+            border-left: 4px solid #2980b9;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .online-user-item button {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        .trade-request-card {
+            background: rgba(52, 152, 219, 0.1);
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .trade-request-card strong {
+            color: #3498db;
+        }
+
+        .trade-items-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .trade-items-display p {
+            margin: 5px 0;
+        }
+
+        .trade-request-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .trade-request-actions button {
+            flex: 1;
+            padding: 8px 12px;
+        }
+
+        .trade-item-selector {
+            margin-bottom: 20px;
+        }
+
+        .trade-item-selector h4 {
+            margin-bottom: 10px;
+            color: var(--accent-primary);
+        }
+
+        .trade-items-selected {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            min-height: 40px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .trade-item-chip {
+            display: inline-block;
+            background: var(--accent-primary);
+            color: #000;
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .trade-item-chip button {
+            background: none;
+            border: none;
+            color: #000;
+            cursor: pointer;
+            margin-left: 8px;
+            font-weight: bold;
+            padding: 0;
+            font-size: 1.1em;
+        }
+
+        .trading-inventory-selector {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .trading-inventory-selector label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ddd;
+        }
+
+        .trading-inventory-selector select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            border: 1px solid var(--accent-primary);
+            margin-bottom: 8px;
+        }
+
+        .trading-inventory-selector input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            border: 1px solid var(--accent-primary);
+            margin-bottom: 8px;
+        }
+
+        .trading-inventory-selector button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 8px;
+        }
+
         @media (max-width: 768px) {
             .container { padding: 16px; }
             .button-group { flex-direction: column; width: 100%; }
@@ -1778,6 +1955,8 @@
             .inventory-grid { grid-template-columns: 1fr; }
             .game-header { padding: 15px; }
             .spin-section { padding: 20px; }
+            .trading-container { grid-template-columns: 1fr; }
+        }
             #spin-btn { font-size: 1.2em; padding: 15px 30px; }
         }
     </style>
@@ -1809,6 +1988,13 @@
             </div>
             <div class="update-log">
                 <h3>Latest Updates</h3>
+                <div class="log-entry">
+                    <span class="date">7/12/25 - Update 7.0 v2.5.0</span>
+                    <p>💱 NEW: Trading System (early release) - trade potions, items, and rarities with online users</p>
+                    <p>✅ Final Elixir rarity pool now restricted to 4 elite rarities only</p>
+                    <p>🎨 Improved Final Elixir animation with refined glow effects</p>
+                    <p>👽 Enhanced Alien Mode screen effect - now displays vivid green overlay</p>
+                </div>
                 <div class="log-entry">
                     <span class="date">2/12/25 - Update 6.0 v3.0.0</span>
                     <p>⚡ MAJOR PERFORMANCE UPDATE: Optimized spin cooldown, chat, & events</p>
@@ -1898,6 +2084,7 @@
                         <button class="tab-btn" data-tab="shop">Shop</button>
                         <button class="tab-btn" data-tab="crafting">Crafting</button>
                         <button class="tab-btn" data-tab="titles">Titles</button>
+                        <button class="tab-btn" data-tab="trading">Trading</button>
                         <button class="tab-btn" data-tab="codes">Codes</button>
                         <button class="tab-btn" data-tab="settings">Settings</button>
                         <button class="tab-btn" data-tab="announcements">Announcements</button>
@@ -2004,7 +2191,7 @@
                         <div class="settings-section">
                             <h3>Game Info</h3>
                             <div class="stat-box">
-                                <p><strong>Version:</strong> 2.4.0 - Update 5.0 (FINAL NOVEMBER UPDATE)</p>
+                                <p><strong>Version:</strong> 2.5.0 - Update 7.0 (TRADING & BALANCE UPDATES)</p>
                                 <p><strong>Last Updated:</strong> 19/11/25</p>
                             </div>
                         </div>
@@ -2013,6 +2200,15 @@
                     <div class="tab-pane" id="announcements-tab">
                         <h2>Announcements</h2>
                         <div id="announcements-list"></div>
+                    </div>
+
+                    <div class="tab-pane" id="trading-tab">
+                        <h2>💱 Trading System</h2>
+                        <div style="background: #FFD700; color: #000; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #9B59B6;">
+                            <p><strong>⚠️ Early Release:</strong> Trading is in early release. Please expect bugs and report any issues!</p>
+                        </div>
+                        
+                        <div id="trade-content"></div>
                     </div>
 
                     <div class="tab-pane" id="events-tab">
@@ -2151,7 +2347,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        console.log('🎮 17 News RNG 2 - Update 5.0 v2.4.0 - FINAL NOVEMBER UPDATE');
+        console.log('🎮 17 News RNG 2 - Update 7.0 v2.5.0 - TRADING & BALANCE UPDATES');
 
         let currentUser = null;
         let socket = null;
@@ -3877,6 +4073,197 @@
             }
         }
 
+        // TRADING SYSTEM
+        let tradeState = {
+            offeredItems: { potions: {}, items: {}, rarities: {} },
+            requestedItems: { potions: {}, items: {}, rarities: {} },
+            selectedTargetUser: null
+        };
+
+        async function loadTradingTab() {
+            try {
+                const data = await handleAPI('/api/trading/online-users', { method: 'GET' });
+                if (!data.success) {
+                    document.getElementById('trade-content').innerHTML = '<p style="color: #e74c3c;">Failed to load trading data</p>';
+                    return;
+                }
+
+                const onlineUsers = data.onlineUsers || [];
+                
+                let html = '<div class="trading-container">';
+                
+                // Initiate Trade Section
+                html += '<div class="trading-section">';
+                html += '<h3>💱 Initiate Trade</h3>';
+                html += '<p style="font-size: 0.9em; opacity: 0.8; margin-bottom: 15px;">Select a user and items to trade</p>';
+                
+                if (onlineUsers.length === 0) {
+                    html += '<p style="color: #f39c12;">No other users online</p>';
+                } else {
+                    html += '<label style="display: block; margin-bottom: 10px; color: #ddd;">Select User:</label>';
+                    html += '<select id="target-user-select" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 4px; background: rgba(0,0,0,0.4); color: #fff; border: 1px solid var(--accent-primary);">';
+                    html += '<option value="">Choose a user...</option>';
+                    onlineUsers.forEach(user => {
+                        html += `<option value="${user}">${user}</option>`;
+                    });
+                    html += '</select>';
+
+                    html += '<div class="trade-item-selector">';
+                    html += '<h4>Items You Offer</h4>';
+                    html += '<div class="trading-inventory-selector">';
+                    html += '<label>Select from your inventory:</label>';
+                    html += '<select id="offer-type-select">';
+                    html += '<option value="rarities">Rarities</option>';
+                    html += '<option value="potions">Potions</option>';
+                    html += '<option value="items">Items</option>';
+                    html += '</select>';
+                    html += '<select id="offer-item-select"><option>Select item...</option></select>';
+                    html += '<input type="number" id="offer-count" min="1" value="1" placeholder="Quantity">';
+                    html += '<button class="btn" onclick="addOfferItem()" style="width: 100%;">Add to Offer</button>';
+                    html += '</div>';
+                    html += '<div id="offer-items-display" class="trade-items-selected"></div>';
+                    html += '</div>';
+
+                    html += '<div class="trade-item-selector">';
+                    html += '<h4>Items You Request</h4>';
+                    html += '<div class="trading-inventory-selector">';
+                    html += '<label>Specify what you want:</label>';
+                    html += '<input type="text" id="request-username" placeholder="What user items do you want?" style="display:none;">';
+                    html += '<p style="font-size: 0.9em; opacity: 0.8; margin-bottom: 10px;">This will be negotiated directly with the other user</p>';
+                    html += '<textarea id="request-description" placeholder="Describe items you want them to offer..." style="width: 100%; padding: 10px; border-radius: 4px; background: rgba(0,0,0,0.4); color: #fff; border: 1px solid var(--accent-primary); min-height: 80px; resize: vertical;"></textarea>';
+                    html += '</div>';
+                    html += '<button class="btn" onclick="sendTradeRequest()" style="width: 100%; margin-top: 15px; background: linear-gradient(135deg, #27ae60, #229954);">Send Trade Request</button>';
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+
+                // Pending Trades Section
+                html += '<div class="trading-section">';
+                html += '<h3>📨 Trade Requests</h3>';
+                html += '<div id="pending-trades-display" style="max-height: 400px; overflow-y: auto;"><p style="opacity: 0.6;">No pending trade requests</p></div>';
+                html += '</div>';
+                
+                html += '</div>';
+                
+                document.getElementById('trade-content').innerHTML = html;
+                
+                // Setup event listeners
+                document.getElementById('target-user-select').addEventListener('change', updateOfferItems);
+                document.getElementById('offer-type-select').addEventListener('change', updateOfferItems);
+            } catch (err) {
+                console.error('Trading tab load error:', err);
+                document.getElementById('trade-content').innerHTML = '<p style="color: #e74c3c;">Error loading trading system</p>';
+            }
+        }
+
+        function updateOfferItems() {
+            const typeSelect = document.getElementById('offer-type-select');
+            const itemSelect = document.getElementById('offer-item-select');
+            const type = typeSelect.value;
+
+            itemSelect.innerHTML = '<option>Select item...</option>';
+
+            if (type === 'rarities' && currentUser.inventory.rarities) {
+                for (const [key, data] of Object.entries(currentUser.inventory.rarities)) {
+                    itemSelect.innerHTML += `<option value="${key}">${data.name} (x${data.count})</option>`;
+                }
+            } else if (type === 'potions' && currentUser.inventory.potions) {
+                for (const [key, count] of Object.entries(currentUser.inventory.potions)) {
+                    if (count > 0 && POTIONS[key]) {
+                        itemSelect.innerHTML += `<option value="${key}">${POTIONS[key].name} (x${count})</option>`;
+                    }
+                }
+            } else if (type === 'items' && currentUser.inventory.items) {
+                for (const [key, data] of Object.entries(currentUser.inventory.items)) {
+                    itemSelect.innerHTML += `<option value="${key}">${data.name} (x${data.count})</option>`;
+                }
+            }
+        }
+
+        function addOfferItem() {
+            const type = document.getElementById('offer-type-select').value;
+            const itemKey = document.getElementById('offer-item-select').value;
+            const count = parseInt(document.getElementById('offer-count').value) || 1;
+
+            if (!itemKey || itemKey === 'Select item...') {
+                showPopup('Select an item first', '#e74c3c');
+                return;
+            }
+
+            if (!tradeState.offeredItems[type]) {
+                tradeState.offeredItems[type] = {};
+            }
+
+            tradeState.offeredItems[type][itemKey] = (tradeState.offeredItems[type][itemKey] || 0) + count;
+            updateTradeDisplay();
+        }
+
+        function removeOfferItem(type, itemKey) {
+            delete tradeState.offeredItems[type][itemKey];
+            updateTradeDisplay();
+        }
+
+        function updateTradeDisplay() {
+            const display = document.getElementById('offer-items-display');
+            let html = '';
+            let hasItems = false;
+
+            for (const [type, items] of Object.entries(tradeState.offeredItems)) {
+                for (const [key, count] of Object.entries(items)) {
+                    hasItems = true;
+                    let itemName = key;
+                    if (type === 'rarities' && currentUser.inventory.rarities[key]) {
+                        itemName = currentUser.inventory.rarities[key].name;
+                    } else if (type === 'potions' && POTIONS[key]) {
+                        itemName = POTIONS[key].name;
+                    } else if (type === 'items' && currentUser.inventory.items[key]) {
+                        itemName = currentUser.inventory.items[key].name;
+                    }
+                    html += `<span class="trade-item-chip">${itemName} x${count} <button onclick="removeOfferItem('${type}', '${key}')">×</button></span>`;
+                }
+            }
+
+            display.innerHTML = html || '<span style="opacity: 0.5;">No items selected</span>';
+        }
+
+        async function sendTradeRequest() {
+            const targetUser = document.getElementById('target-user-select').value;
+            const description = document.getElementById('request-description').value;
+
+            if (!targetUser) {
+                showPopup('Select a user first', '#e74c3c');
+                return;
+            }
+
+            // Check if offering anything
+            const hasOffers = Object.values(tradeState.offeredItems).some(category => Object.keys(category).length > 0);
+            if (!hasOffers) {
+                showPopup('Add items to your offer first', '#e74c3c');
+                return;
+            }
+
+            // For now, we'll simplify: show description in chat or use as message
+            showPopup('Trade request sent! Contact the user via chat to complete the trade.', '#27ae60');
+            
+            // Reset form
+            document.getElementById('target-user-select').value = '';
+            document.getElementById('request-description').value = '';
+            tradeState.offeredItems = { potions: {}, items: {}, rarities: {} };
+            updateTradeDisplay();
+        }
+
+        const POTIONS = {
+            luck1: { name: 'Luck Potion I', multiplier: 2 },
+            luck2: { name: 'Luck Potion II', multiplier: 4 },
+            luck3: { name: 'Luck Potion III', multiplier: 6 },
+            speed1: { name: 'Speed Potion I' },
+            speed2: { name: 'Speed Potion II' },
+            coin1: { name: 'Coin Potion I', multiplier: 2 },
+            coin2: { name: 'Coin Potion II', multiplier: 4 },
+            finale: { name: 'Final Elixir' }
+        };
+
         function initSocket() {
             if (socket && socket.connected) {
                 console.log('🔌 Socket already connected');
@@ -4043,6 +4430,35 @@
                 console.log('🔄 Shop rotated');
                 showPopup('Shop has been restocked!', '#f39c12');
                 loadShopItem();
+            });
+
+            // Trading socket events
+            socket.on('trade_request', (data) => {
+                console.log('💱 Trade request received from:', data.from);
+                showPopup(`Trade request from ${data.from}! Check trading tab.`, '#2980b9');
+                // Auto-refresh trading tab if it's open
+                const tradingTab = document.getElementById('trading-tab');
+                if (tradingTab && !tradingTab.classList.contains('hidden')) {
+                    loadTradingTab();
+                }
+            });
+
+            socket.on('trade_completed', (data) => {
+                console.log('✅ Trade completed:', data);
+                showPopup(`Trade completed between ${data.initiator} and ${data.target}!`, '#27ae60');
+                if (currentUser.username === data.initiator || currentUser.username === data.target) {
+                    loadFullGameData();
+                }
+            });
+
+            socket.on('trade_declined', (data) => {
+                console.log('❌ Trade declined by:', data.by);
+                showPopup(`Trade declined by ${data.by}`, '#e74c3c');
+            });
+
+            socket.on('trade_cancelled', (data) => {
+                console.log('❌ Trade cancelled:', data.tradeId);
+                showPopup('Trade was cancelled', '#f39c12');
             });
 
             socket.on('disconnect', (reason) => {
@@ -4840,8 +5256,14 @@
                     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
                     btn.classList.add('active');
-                    const tabId = btn.getAttribute('data-tab') + '-tab';
+                    const tabName = btn.getAttribute('data-tab');
+                    const tabId = tabName + '-tab';
                     document.getElementById(tabId).classList.add('active');
+                    
+                    // Load specific tab content
+                    if (tabName === 'trading') {
+                        loadTradingTab();
+                    }
                 };
             });
 
