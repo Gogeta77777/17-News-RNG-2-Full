@@ -18,8 +18,9 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
   transports: ['websocket', 'polling'],
-  pingTimeout: 60000,
-  pingInterval: 25000
+  pingTimeout: 25000,
+  pingInterval: 10000,
+  serveClient: false
 });
 
 app.set('trust proxy', 1);
@@ -252,7 +253,8 @@ function initializeData() {
     announcements: [],
     events: [],
     chatMessages: [],
-    adminEvents: []
+    adminEvents: [],
+    trades: []
   };
 }
 
@@ -2142,12 +2144,9 @@ app.post('/api/logout', (req, res) => {
 
 // Socket.IO
 io.on('connection', (socket) => {
-  console.log('🔌 Socket connected:', socket.id);
-  
   const username = socket.request.session?.user?.username;
   if (username) {
     connectedSockets.add(username);
-    console.log('✅ User connected:', username);
   }
 
   socket.on('chat_message', async (msg) => {
@@ -2187,10 +2186,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('🔌 Disconnected:', socket.id);
     if (username) {
       connectedSockets.delete(username);
-      console.log('❌ User disconnected:', username);
     }
   });
 });
