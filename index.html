@@ -1963,7 +1963,7 @@
 </head>
 <body>
     <div class="announcement-bar" id="announcement-bar">
-        <span>⚠️ DATA RESET NOTICE: Our database expired. Use your EXACT original username to recover your data! Contact Mr_Fernanski, Delan Fernando, or IRL staff if needed. 🔄</span>
+        <span>🎉 UPDATE 7.0 LIVE: NEW Trading System now available! Trade potions, items, and rarities with other players. Click the Trading tab to get started! 💱</span>
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
@@ -1987,19 +1987,13 @@
                 </div>
             </div>
             <div class="update-log">
-                <h3>Latest Updates</h3>
+                <h3>Latest Update</h3>
                 <div class="log-entry">
                     <span class="date">7/12/25 - Update 7.0 v2.5.0</span>
-                    <p>💱 NEW: Trading System (early release) - trade potions, items, and rarities with online users</p>
+                    <p>💱 NEW: Trading System - trade potions, items, and rarities with online players</p>
                     <p>✅ Final Elixir rarity pool now restricted to 4 elite rarities only</p>
-                    <p>🎨 Improved Final Elixir animation with refined glow effects</p>
-                    <p>👽 Enhanced Alien Mode screen effect - now displays vivid green overlay</p>
-                </div>
-                <div class="log-entry">
-                    <span class="date">2/12/25 - Update 6.0 v3.0.0</span>
-                    <p>⚡ MAJOR PERFORMANCE UPDATE: Optimized spin cooldown, chat, & events</p>
-                    <p>🐛 Fixed Blackhole event | 👽 NEW: Alien Mode (10x luck) | 🎛️ Coin Rush 2.0 toggle</p>
-                    <p>🚀 Reduced lag & smoother gameplay experience across all features</p>
+                    <p>⚡ Performance optimizations across all systems</p>
+                    <p>🎨 Improved visual effects and animations</p>
                 </div>
             </div>
         </main>
@@ -4288,7 +4282,6 @@
             });
             
             socket.on('chat_message', (data) => {
-                console.log('💬 Chat received:', data.username);
                 addChatMessage(data);
                 const chatMessages = document.getElementById('chat-messages');
                 if (chatMessages) {
