@@ -1,5 +1,5 @@
 /*
-  17-News-RNG Server - Update 6.0 v3.0.0 - PERFORMANCE & NEW EVENTS
+  17-News-RNG Server - Update 7.0 v2.5.0 - TRADING & BALANCE UPDATES
 */
 
 const express = require('express');
@@ -636,11 +636,15 @@ app.post('/api/spin', requireAuth, async (req, res) => {
       user.finaleElixirReady = false; // Consume it
     }
 
-    // If Finale Elixir is active, filter to only rare/epic rarities (exclude common ones)
+    // If Finale Elixir is active, only allow these 4 rarities: The Dark Knight, Mrs Joseph Mcglashan, Lord Crinkle, Lord Finn
     let rarityPool = RARITIES;
     if (isFinaleElixir) {
-      // Only include rarities with 5% chance or less (rare+)
-      rarityPool = RARITIES.filter(r => r.chance <= 5 || r.type === 'mythical' || r.type === 'divine' || r.type === 'secret' || r.type === 'legendary' || r.type === 'lord-finn');
+      rarityPool = RARITIES.filter(r => 
+        r.name === 'The Dark Knight' || 
+        r.name === 'Mrs Joseph Mcglashan' || 
+        r.name === 'Lord Crinkle' || 
+        r.name === 'Lord Finn'
+      );
     }
 
     const adjustedRarities = rarityPool.map((r) => 
@@ -994,6 +998,287 @@ app.post('/api/use-potion', requireAuth, async (req, res) => {
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
+
+// TRADING SYSTEM - Update 7
+app.get('/api/trading/online-users', requireAuth, (req, res) => {
+  try {
+    const currentUser = req.session.user.username;
+    const onlineUsers = Array.from(connectedSockets).filter(u => u !== currentUser);
+    res.json({ success: true, onlineUsers });
+  } catch (error) {
+    console.error('❌ Get online users error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/trading/initiate', requireAuth, async (req, res) => {
+  try {
+    const { targetUser, offeredItems, requestedItems } = req.body;
+    const initiatorUser = req.session.user.username;
+
+    // Validate target user is online
+    if (!connectedSockets.has(targetUser) || targetUser === initiatorUser) {
+      return res.json({ success: false, error: 'Target user not online or invalid' });
+    }
+
+    const data = await readData();
+    const initiator = data.users.find(u => u.username === initiatorUser);
+    const target = data.users.find(u => u.username === targetUser);
+
+    if (!initiator || !target) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    // Validate offered items exist in initiator's inventory
+    if (!validateTradeItems(initiator, offeredItems)) {
+      return res.json({ success: false, error: 'Invalid items offered' });
+    }
+
+    // Create trade request ID
+    const tradeId = Date.now().toString();
+    if (!data.trades) data.trades = [];
+
+    const tradeRequest = {
+      id: tradeId,
+      initiator: initiatorUser,
+      target: targetUser,
+      offeredItems,
+      requestedItems,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 300000).toISOString() // 5 min expiry
+    };
+
+    data.trades.push(tradeRequest);
+    await writeData(data);
+
+    // Emit socket event to target user
+    io.emit('trade_request', {
+      tradeId,
+      from: initiatorUser,
+      offeredItems,
+      requestedItems,
+      expiresAt: tradeRequest.expiresAt
+    });
+
+    res.json({ success: true, tradeId });
+  } catch (error) {
+    console.error('❌ Initiate trade error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/trading/accept', requireAuth, async (req, res) => {
+  try {
+    const { tradeId } = req.body;
+    const targetUser = req.session.user.username;
+
+    const data = await readData();
+    const trade = data.trades.find(t => t.id === tradeId);
+
+    if (!trade) {
+      return res.json({ success: false, error: 'Trade not found' });
+    }
+
+    if (trade.target !== targetUser) {
+      return res.json({ success: false, error: 'Not authorized' });
+    }
+
+    if (trade.status !== 'pending') {
+      return res.json({ success: false, error: 'Trade no longer available' });
+    }
+
+    // Check if trade expired
+    if (new Date(trade.expiresAt) < new Date()) {
+      trade.status = 'expired';
+      await writeData(data);
+      return res.json({ success: false, error: 'Trade expired' });
+    }
+
+    const initiator = data.users.find(u => u.username === trade.initiator);
+    const target = data.users.find(u => u.username === targetUser);
+
+    if (!initiator || !target) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    // Final validation - items still exist
+    if (!validateTradeItems(initiator, trade.offeredItems) || !validateTradeItems(target, trade.requestedItems)) {
+      return res.json({ success: false, error: 'Items no longer available' });
+    }
+
+    // Execute trade
+    removeTradeItems(initiator, trade.offeredItems);
+    addTradeItems(initiator, trade.requestedItems);
+
+    removeTradeItems(target, trade.requestedItems);
+    addTradeItems(target, trade.offeredItems);
+
+    trade.status = 'completed';
+    await writeData(data);
+
+    // Emit trade completion
+    io.emit('trade_completed', {
+      tradeId,
+      initiator: trade.initiator,
+      target: targetUser
+    });
+
+    res.json({ success: true, message: 'Trade completed!' });
+  } catch (error) {
+    console.error('❌ Accept trade error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/trading/decline', requireAuth, async (req, res) => {
+  try {
+    const { tradeId } = req.body;
+    const targetUser = req.session.user.username;
+
+    const data = await readData();
+    const trade = data.trades.find(t => t.id === tradeId);
+
+    if (!trade || trade.target !== targetUser) {
+      return res.json({ success: false, error: 'Trade not found or unauthorized' });
+    }
+
+    trade.status = 'declined';
+    await writeData(data);
+
+    io.emit('trade_declined', { tradeId, by: targetUser });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Decline trade error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+app.post('/api/trading/cancel', requireAuth, async (req, res) => {
+  try {
+    const { tradeId } = req.body;
+    const initiatorUser = req.session.user.username;
+
+    const data = await readData();
+    const trade = data.trades.find(t => t.id === tradeId);
+
+    if (!trade || trade.initiator !== initiatorUser) {
+      return res.json({ success: false, error: 'Trade not found or unauthorized' });
+    }
+
+    if (trade.status !== 'pending') {
+      return res.json({ success: false, error: 'Cannot cancel completed trade' });
+    }
+
+    trade.status = 'cancelled';
+    await writeData(data);
+
+    io.emit('trade_cancelled', { tradeId });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Cancel trade error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// Helper functions for trading
+function validateTradeItems(user, items) {
+  if (!items || (items.potions && Object.keys(items.potions).length === 0) && 
+      (items.items && Object.keys(items.items).length === 0) && 
+      (items.rarities && Object.keys(items.rarities).length === 0)) {
+    return false;
+  }
+
+  if (items.potions) {
+    for (const [key, count] of Object.entries(items.potions)) {
+      const has = (user.inventory.potions && user.inventory.potions[key]) || 0;
+      if (has < count) return false;
+    }
+  }
+
+  if (items.items) {
+    for (const [key, count] of Object.entries(items.items)) {
+      const itemData = user.inventory.items && user.inventory.items[key];
+      const has = itemData ? itemData.count : 0;
+      if (has < count) return false;
+    }
+  }
+
+  if (items.rarities) {
+    for (const [key, count] of Object.entries(items.rarities)) {
+      const rarityData = user.inventory.rarities && user.inventory.rarities[key];
+      const has = rarityData ? rarityData.count : 0;
+      if (has < count) return false;
+    }
+  }
+
+  return true;
+}
+
+function removeTradeItems(user, items) {
+  if (items.potions) {
+    for (const [key, count] of Object.entries(items.potions)) {
+      user.inventory.potions[key] -= count;
+      if (user.inventory.potions[key] <= 0) delete user.inventory.potions[key];
+    }
+  }
+
+  if (items.items) {
+    for (const [key, count] of Object.entries(items.items)) {
+      user.inventory.items[key].count -= count;
+      if (user.inventory.items[key].count <= 0) delete user.inventory.items[key];
+    }
+  }
+
+  if (items.rarities) {
+    for (const [key, count] of Object.entries(items.rarities)) {
+      user.inventory.rarities[key].count -= count;
+      if (user.inventory.rarities[key].count <= 0) delete user.inventory.rarities[key];
+    }
+  }
+}
+
+function addTradeItems(user, items) {
+  if (!user.inventory.potions) user.inventory.potions = {};
+  if (!user.inventory.items) user.inventory.items = {};
+  if (!user.inventory.rarities) user.inventory.rarities = {};
+
+  if (items.potions) {
+    for (const [key, count] of Object.entries(items.potions)) {
+      if (!user.inventory.potions[key]) user.inventory.potions[key] = 0;
+      user.inventory.potions[key] += count;
+    }
+  }
+
+  if (items.items) {
+    for (const [key, count] of Object.entries(items.items)) {
+      if (!user.inventory.items[key]) {
+        const itemName = key.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        user.inventory.items[key] = { name: itemName, count: 0 };
+      }
+      user.inventory.items[key].count += count;
+    }
+  }
+
+  if (items.rarities) {
+    for (const [key, count] of Object.entries(items.rarities)) {
+      if (!user.inventory.rarities[key]) {
+        const rarity = RARITIES.find(r => r.name.toLowerCase().replace(/\s+/g, '-') === key);
+        if (rarity) {
+          user.inventory.rarities[key] = {
+            name: rarity.name,
+            count: 0,
+            color: rarity.color,
+            serialNumbers: []
+          };
+        }
+      }
+      user.inventory.rarities[key].count += count;
+    }
+  }
+}
 
 app.get('/api/shop/current', requireAuth, (req, res) => {
   const shopData = getCurrentShopItem();
@@ -1925,7 +2210,7 @@ if (!IS_VERCEL) {
       const shopData = getCurrentShopItem();
       console.log('');
       console.log('🎮 ════════════════════════════════════════════════');
-      console.log('🎮  17-News-RNG Server - Update 5.0 v2.4.0 - FINAL NOVEMBER UPDATE');
+      console.log('🎮  17-News-RNG Server - Update 7.0 v2.5.0 - TRADING & BALANCE');
       console.log('🎮 ════════════════════════════════════════════════');
       console.log('');
       console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
@@ -1934,13 +2219,11 @@ if (!IS_VERCEL) {
       console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
       console.log('👑 Admin: Mr_Fernanski ready');
       console.log('');
-      console.log('✨ Update 5.0 Features:');
-      console.log('   ⭐ NEW RARITY: Lord Finn (0.0001% - 1M coins!)');
-      console.log('   🎨 Chroma Effects & Serial Numbers');
-      console.log('   🏆 2 New Titles (The Darkest Knight & Chosen One)');
-      console.log('   🧪 2 New Potions (Coin Potion II & Final Elixir)');
-      console.log('   💫 Final Elixir: 100x Luck for ONE spin!');
-      console.log('   🎯 New Crafting Recipes');
+      console.log('✨ Update 7.0 Features:');
+      console.log('   💱 NEW: Trading System (early release) - trade with online users');
+      console.log('   ✅ Final Elixir restricted to 4 elite rarities');
+      console.log('   🎨 Improved Final Elixir animation');
+      console.log('   👽 Enhanced Alien Mode green screen effect');
       console.log('');
       console.log('✅ Ready!');
       console.log('🎮 ════════════════════════════════════════════════');
