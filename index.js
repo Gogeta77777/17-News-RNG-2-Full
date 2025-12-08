@@ -2150,49 +2150,65 @@ io.on('connection', (socket) => {
     connectedSockets.add(username);
   }
 
-  socket.on('chat_message', async (msg) => {
+  socket.on('chat_message', async (msg, callback) => {
     try {
-      if (!msg || !msg.username || !msg.message) return;
+      if (!msg || !msg.username || !msg.message) {
+        if (callback) callback({ success: false, error: 'Invalid message' });
+        return;
+      }
       
       const sanitizedMessage = String(msg.message).trim().slice(0, 500);
-      if (!sanitizedMessage || sanitizedMessage.length === 0) return;
-      
-      // Immediate broadcast for instant feedback
-      io.emit('chat_message', {
+      if (!sanitizedMessage || sanitizedMessage.length === 0) {
+        if (callback) callback({ success: false, error: 'Empty message' });
+        return;
+      }
+
+      // Immediate broadcast for instant feedback (no wait)
+      const timestamp = new Date().toISOString();
+      const chatMsg = {
         username: msg.username,
         message: sanitizedMessage,
-        timestamp: new Date().toISOString(),
+        timestamp: timestamp,
         isAdmin: false,
         userTitle: msg.userTitle || null
-      });
+      };
       
-      // Non-blocking write to prevent UI freeze
-      setImmediate(async () => {
+      io.emit('chat_message', chatMsg);
+      
+      // Send callback immediately
+      if (callback) callback({ success: true });
+      
+      // Non-blocking async write (doesn't block message sending)
+      process.nextTick(async () => {
         try {
           const data = await readData();
           const user = data.users.find(u => u.username === msg.username);
           
-          const chatMsg = {
+          const savedMsg = {
             username: msg.username,
             message: sanitizedMessage,
-            timestamp: new Date().toISOString(),
+            timestamp: timestamp,
             isAdmin: user?.isAdmin || false,
             userTitle: msg.userTitle || null
           };
           
-          data.chatMessages.push(chatMsg);
-          // Keep last 200 for performance
-          if (data.chatMessages.length > 200) {
-            data.chatMessages = data.chatMessages.slice(-200);
+          data.chatMessages.push(savedMsg);
+          
+          // Keep only last 500 for better history
+          if (data.chatMessages.length > 500) {
+            data.chatMessages = data.chatMessages.slice(-500);
           }
           
           await writeData(data);
         } catch (err) {
-          console.error('❌ Chat write error:', err);
+          console.error('❌ Chat history save error:', err);
+          // Don't fail the message send if save fails
         }
       });
+      
     } catch (error) {
       console.error('❌ Chat error:', error);
+      if (callback) callback({ success: false, error: error.message });
     }
   });
 
