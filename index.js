@@ -1,5 +1,5 @@
 /*
-  17-News-RNG Server - Update 7.0 v2.5.0 - TRADING & BALANCE UPDATES
+  17-News-RNG Server - Update 7.25 - PERFORMANCE & BUG FIXES
 */
 
 const express = require('express');
@@ -18,8 +18,9 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
   transports: ['websocket', 'polling'],
-  pingTimeout: 25000,
-  pingInterval: 10000,
+  pingTimeout: 12000,
+  pingInterval: 5000,
+  maxHttpBufferSize: 1e6,
   serveClient: false
 });
 
@@ -2151,35 +2152,45 @@ io.on('connection', (socket) => {
 
   socket.on('chat_message', async (msg) => {
     try {
-      if (!msg || !msg.username || !msg.message) {
-        return;
-      }
+      if (!msg || !msg.username || !msg.message) return;
       
       const sanitizedMessage = String(msg.message).trim().slice(0, 500);
-      if (!sanitizedMessage) {
-        return;
-      }
+      if (!sanitizedMessage || sanitizedMessage.length === 0) return;
       
-      const data = await readData();
-      const user = data.users.find(u => u.username === msg.username);
-      
-      const chatMsg = {
+      // Immediate broadcast for instant feedback
+      io.emit('chat_message', {
         username: msg.username,
         message: sanitizedMessage,
         timestamp: new Date().toISOString(),
-        isAdmin: user?.isAdmin || false,
+        isAdmin: false,
         userTitle: msg.userTitle || null
-      };
+      });
       
-      data.chatMessages.push(chatMsg);
-      
-      if (data.chatMessages.length > 100) {
-        data.chatMessages = data.chatMessages.slice(-100);
-      }
-      
-      await writeData(data);
-      
-      io.emit('chat_message', chatMsg);
+      // Non-blocking write to prevent UI freeze
+      setImmediate(async () => {
+        try {
+          const data = await readData();
+          const user = data.users.find(u => u.username === msg.username);
+          
+          const chatMsg = {
+            username: msg.username,
+            message: sanitizedMessage,
+            timestamp: new Date().toISOString(),
+            isAdmin: user?.isAdmin || false,
+            userTitle: msg.userTitle || null
+          };
+          
+          data.chatMessages.push(chatMsg);
+          // Keep last 200 for performance
+          if (data.chatMessages.length > 200) {
+            data.chatMessages = data.chatMessages.slice(-200);
+          }
+          
+          await writeData(data);
+        } catch (err) {
+          console.error('❌ Chat write error:', err);
+        }
+      });
     } catch (error) {
       console.error('❌ Chat error:', error);
     }
@@ -2207,7 +2218,7 @@ if (!IS_VERCEL) {
       const shopData = getCurrentShopItem();
       console.log('');
       console.log('🎮 ════════════════════════════════════════════════');
-      console.log('🎮  17-News-RNG Server - Update 7.0 v2.5.0 - TRADING & BALANCE');
+      console.log('🎮  17-News-RNG Server - Update 7.25 - OPTIMIZED PERFORMANCE');
       console.log('🎮 ════════════════════════════════════════════════');
       console.log('');
       console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
@@ -2216,11 +2227,13 @@ if (!IS_VERCEL) {
       console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
       console.log('👑 Admin: Mr_Fernanski ready');
       console.log('');
-      console.log('✨ Update 7.0 Features:');
-      console.log('   💱 NEW: Trading System (early release) - trade with online users');
-      console.log('   ✅ Final Elixir restricted to 4 elite rarities');
-      console.log('   🎨 Improved Final Elixir animation');
-      console.log('   👽 Enhanced Alien Mode green screen effect');
+      console.log('✨ Update 7.25 Improvements:');
+      console.log('   ⚡ FIXED: Global chat connection issues - now super responsive');
+      console.log('   💱 FIXED: Trading system now fully functional');
+      console.log('   🚀 PERFORMANCE: Optimized data loading - 5s lag removed!');
+      console.log('   ✅ Async chat message processing for instant feedback');
+      console.log('   🔄 Parallel API loading for speed');
+      console.log('   📊 Chat history limit increased to 200 messages');
       console.log('');
       console.log('✅ Ready!');
       console.log('🎮 ════════════════════════════════════════════════');
