@@ -2152,63 +2152,47 @@ io.on('connection', (socket) => {
 
   socket.on('chat_message', async (msg, callback) => {
     try {
-      if (!msg || !msg.username || !msg.message) {
-        if (callback) callback({ success: false, error: 'Invalid message' });
-        return;
-      }
+      if (!msg || !msg.username || !msg.message) return;
       
       const sanitizedMessage = String(msg.message).trim().slice(0, 500);
-      if (!sanitizedMessage || sanitizedMessage.length === 0) {
-        if (callback) callback({ success: false, error: 'Empty message' });
-        return;
-      }
+      if (!sanitizedMessage || sanitizedMessage.length === 0) return;
 
-      // Immediate broadcast for instant feedback (no wait)
-      const timestamp = new Date().toISOString();
-      const chatMsg = {
+      // IMMEDIATE emit - no waiting
+      io.emit('chat_message', {
         username: msg.username,
         message: sanitizedMessage,
-        timestamp: timestamp,
+        timestamp: new Date().toISOString(),
         isAdmin: false,
         userTitle: msg.userTitle || null
-      };
-      
-      io.emit('chat_message', chatMsg);
-      
-      // Send callback immediately
-      if (callback) callback({ success: true });
-      
-      // Non-blocking async write (doesn't block message sending)
+      });
+
+      // Save in background (fire and forget)
       process.nextTick(async () => {
         try {
           const data = await readData();
-          const user = data.users.find(u => u.username === msg.username);
-          
           const savedMsg = {
             username: msg.username,
             message: sanitizedMessage,
-            timestamp: timestamp,
-            isAdmin: user?.isAdmin || false,
+            timestamp: new Date().toISOString(),
+            isAdmin: false,
             userTitle: msg.userTitle || null
           };
           
+          if (!data.chatMessages) data.chatMessages = [];
           data.chatMessages.push(savedMsg);
           
-          // Keep only last 500 for better history
+          // Keep last 500
           if (data.chatMessages.length > 500) {
             data.chatMessages = data.chatMessages.slice(-500);
           }
           
           await writeData(data);
         } catch (err) {
-          console.error('❌ Chat history save error:', err);
-          // Don't fail the message send if save fails
+          console.error('Chat save error:', err);
         }
       });
-      
     } catch (error) {
-      console.error('❌ Chat error:', error);
-      if (callback) callback({ success: false, error: error.message });
+      console.error('Chat error:', error);
     }
   });
 
