@@ -1954,7 +1954,6 @@
             .game-header { padding: 15px; }
             .spin-section { padding: 20px; }
             .trading-container { grid-template-columns: 1fr; }
-        }
             #spin-btn { font-size: 1.2em; padding: 15px 30px; }
         }
     </style>
@@ -2264,7 +2263,7 @@
             </div>
 
             <div class="admin-event-section">
-                <h2 style="color: #💜; margin-bottom: 15px;">💜 Coin Rush 2.0</h2>
+                <h2 style="color: #9B59B6; margin-bottom: 15px;">💜 Coin Rush 2.0</h2>
                 <p style="margin-bottom: 15px;">Ultimate coin rush! Coins rain down and players get 2x coins while active!</p>
                 <div class="coin-rush-controls">
                     <button id="start-coin-rush-2" class="btn">Start Coin Rush 2.0</button>
@@ -4073,6 +4072,8 @@
             selectedTargetUser: null
         };
 
+        let tradingRefreshInterval = null;
+
         async function loadTradingTab() {
             const tradeContent = document.getElementById('trade-content');
             if (!tradeContent) {
@@ -4094,6 +4095,28 @@
                 const onlineUsers = data.onlineUsers || [];
                 buildTradingUI(tradeContent, onlineUsers);
                 console.log('✅ Trading tab loaded, online users:', onlineUsers.length);
+                
+                // Auto-refresh online users every 3 seconds
+                if (tradingRefreshInterval) clearInterval(tradingRefreshInterval);
+                tradingRefreshInterval = setInterval(async () => {
+                    try {
+                        const freshData = await handleAPI('/api/trading/online-users', { method: 'GET' });
+                        if (freshData && freshData.success) {
+                            const select = document.getElementById('target-user-select');
+                            if (select) {
+                                const freshUsers = freshData.onlineUsers || [];
+                                const currentValue = select.value;
+                                select.innerHTML = '<option value="">Choose a user...</option>';
+                                freshUsers.forEach(user => {
+                                    select.innerHTML += `<option value="${escapeHtml(user)}">${escapeHtml(user)}</option>`;
+                                });
+                                select.value = currentValue;
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Trading refresh error:', err);
+                    }
+                }, 3000);
                 
             } catch (err) {
                 console.error('❌ Trading tab error:', err);
@@ -4416,8 +4439,18 @@
 
             socket.on('coin_rush_start', (data) => {
                 coinRushActive = true;
+                console.log('🚀 Coin Rush Started:', data.coinsPerSecond);
                 showCoinRushNotification(data.coinsPerSecond);
                 showPopup(`COIN RUSH STARTED! +${data.coinsPerSecond} coins/sec`, '#FFD700');
+            });
+
+            socket.on('shop_rotated', (data) => {
+                console.log('🛍️ Shop Rotated:', data.item.name);
+                loadShopItem();
+            });
+
+            socket.on('users_updated', (data) => {
+                console.log('👥 Online users updated:', data.onlineUsers);
             });
 
             socket.on('coin_rush_tick', (data) => {
@@ -4796,10 +4829,10 @@
                 }, (response) => {
                     if (response && response.success === false) {
                         console.error('❌ Server rejected message:', response.error);
-                        showPopup('Failed to send message: ' + (response.error || 'Unknown error'), '#e74c3c');
+                        showPopup('Failed to send message', '#e74c3c');
                         return;
                     }
-                    console.log('✅ Message sent successfully');
+                    console.log('✅ Message sent');
                     input.value = '';
                 });
                 
@@ -4898,16 +4931,13 @@
                 const remaining = Math.max(0, nextRotation - now);
                 
                 if (remaining === 0) {
-                    timerEl.textContent = 'Rotating now...';
-                    setTimeout(() => {
-                        loadShopItem();
-                    }, 2000);
+                    timerEl.textContent = '⏰ Rotating now...';
                     return;
                 }
                 
                 const minutes = Math.floor(remaining / 60000);
                 const seconds = Math.floor((remaining % 60000) / 1000);
-                timerEl.textContent = `Next rotation: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                timerEl.textContent = `⏰ Next: ${minutes}:${seconds.toString().padStart(2, '0')}`;
             }
             
             update();
