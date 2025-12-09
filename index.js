@@ -218,13 +218,22 @@ function broadcastShopRotation() {
   console.log('🔄 Shop rotated:', shopData.item.name);
 }
 
-setInterval(() => {
-  const shopData = getCurrentShopItem();
-  const timeUntilNext = shopData.nextRotation - Date.now();
-  if (timeUntilNext < 5000 && timeUntilNext > 0) {
-    setTimeout(() => broadcastShopRotation(), timeUntilNext);
-  }
-}, 5000);
+let shopCheckInterval = null;
+
+function startShopRotationCheck() {
+  if (shopCheckInterval) clearInterval(shopCheckInterval);
+  
+  shopCheckInterval = setInterval(() => {
+    const shopData = getCurrentShopItem();
+    const timeUntilNext = shopData.nextRotation - Date.now();
+    
+    if (timeUntilNext <= 0) {
+      broadcastShopRotation();
+    }
+  }, 1000);
+}
+
+startShopRotationCheck();
 
 function initializeData() {
   return {
@@ -418,6 +427,10 @@ async function startCoinRush(coinsPerSecond) {
     clearInterval(coinRushInterval);
   }
   
+  // Broadcast start immediately to all clients
+  io.emit('coin_rush_start', { coinsPerSecond });
+  console.log('✅ Coin Rush started:', coinsPerSecond, 'coins/sec');
+  
   coinRushInterval = setInterval(async () => {
     try {
       const data = await readData();
@@ -434,6 +447,7 @@ async function startCoinRush(coinsPerSecond) {
         await writeData(data);
       }
       
+      // Broadcast tick immediately
       io.emit('coin_rush_tick', { coins: coinsPerSecond });
     } catch (error) {
       console.error('Coin rush error:', error);
@@ -704,30 +718,45 @@ user.inventory.rarities[rarityKey].count += 1;
     user.coins = (user.coins || 0) + coinAward;
     user.lastSpin = now;
     user.totalSpins = (user.totalSpins || 0) + 1;
-    
-    await writeData(data);
 
-    // Broadcast special pulls to chat
-    if (picked.type === 'mythical') {
-      const chatMsg = {
-        username: 'SYSTEM',
-        message: `🎉 ${user.username} just got the mythical ${picked.name}! (${picked.chance}% chance)`,
-        timestamp: new Date().toISOString(),
-        isAdmin: false,
-        isSystem: true,
-        rarityType: 'mythical',
-        rarityName: picked.name
-      };
-      data.chatMessages.push(chatMsg);
-      await writeData(data);
-      io.emit('announcement_popup', chatMsg);
-      io.emit('chat_message', chatMsg);
-    } else if (picked.type === 'divine') {
-      const chatMsg = {
-        username: 'SYSTEM',
-        message: `✨ ${user.username} just got the divine ${picked.name}! (${picked.chance}% chance)`,
-        timestamp: new Date().toISOString(),
-        isAdmin: false,
+    // IMMEDIATE response - don't wait for DB writes
+    const spinResult = {
+      success: true,
+      item: picked.name,
+      rarity: picked,
+      coins: user.coins,
+      awarded: coinAward,
+      serialNumber: serialNumber,
+      finaleUsed: isFinaleElixir || false
+    };
+
+    res.json(spinResult);
+
+    // Save and broadcast in background (non-blocking)
+    setImmediate(async () => {
+      try {
+        await writeData(data);
+
+        // Broadcast special pulls to chat
+        if (picked.type === 'mythical') {
+          const chatMsg = {
+            username: 'SYSTEM',
+            message: `🎉 ${user.username} just got the mythical ${picked.name}! (${picked.chance}% chance)`,
+            timestamp: new Date().toISOString(),
+            isAdmin: false,
+            isSystem: true,
+            rarityType: 'mythical',
+            rarityName: picked.name
+          };
+          data.chatMessages.push(chatMsg);
+          io.emit('announcement_popup', chatMsg);
+          io.emit('chat_message', chatMsg);
+        } else if (picked.type === 'divine') {
+          const chatMsg = {
+            username: 'SYSTEM',
+            message: `✨ ${user.username} just got the divine ${picked.name}! (${picked.chance}% chance)`,
+            timestamp: new Date().toISOString(),
+            isAdmin: false,
         isSystem: true,
         rarityType: 'divine',
         rarityName: picked.name
@@ -785,16 +814,13 @@ user.inventory.rarities[rarityKey].count += 1;
         username: user.username,
         serialNumber: serialNumber
       });
-    }
+        }
 
-    res.json({
-      success: true,
-      item: picked.name,
-      rarity: picked,
-      coins: user.coins,
-      awarded: coinAward,
-      serialNumber: serialNumber,
-      finaleUsed: isFinaleElixir || false
+        // Write all data once at the end
+        await writeData(data);
+      } catch (err) {
+        console.error('Spin save error:', err);
+      }
     });
   } catch (error) {
     console.error('❌ Spin error:', error);
@@ -884,11 +910,19 @@ if (recipe.requires.coins) {
       user.inventory.items[recipe.result.key].count += 1;
     }
 
-    await writeData(data);
-
+    // IMMEDIATE response
     res.json({
       success: true,
       inventory: user.inventory
+    });
+
+    // Save in background
+    setImmediate(async () => {
+      try {
+        await writeData(data);
+      } catch (err) {
+        console.error('Craft save error:', err);
+      }
     });
   } catch (error) {
     console.error('❌ Craft error:', error);
@@ -950,13 +984,24 @@ app.post('/api/use-potion', requireAuth, async (req, res) => {
       
       // Set finale elixir ready for next spin
       user.finaleElixirReady = true;
-      await writeData(data);
-      return res.json({
+      
+      // IMMEDIATE response
+      res.json({
         success: true,
         message: 'Final Elixir prepared! Your next spin will have 100x luck!',
         finaleReady: true,
         activePotions: user.activePotions || []
       });
+      
+      // Save in background
+      setImmediate(async () => {
+        try {
+          await writeData(data);
+        } catch (err) {
+          console.error('Potion finale save error:', err);
+        }
+      });
+      return;
     }
 
     // For other potions, decrement inventory
@@ -989,12 +1034,20 @@ app.post('/api/use-potion', requireAuth, async (req, res) => {
       user.activePotions.push(activePotion);
     }
 
-    await writeData(data);
-
+    // IMMEDIATE response
     res.json({
       success: true,
       message: `${potion.name} activated!`,
       activePotions: user.activePotions
+    });
+
+    // Save in background
+    setImmediate(async () => {
+      try {
+        await writeData(data);
+      } catch (err) {
+        console.error('Potion save error:', err);
+      }
     });
   } catch (error) {
     console.error('❌ Potion error:', error);
@@ -1006,8 +1059,9 @@ app.post('/api/use-potion', requireAuth, async (req, res) => {
 app.get('/api/trading/online-users', requireAuth, (req, res) => {
   try {
     const currentUser = req.session.user.username;
-    const onlineUsers = Array.from(connectedSockets).filter(u => u !== currentUser);
-    res.json({ success: true, onlineUsers });
+    const validOnlineUsers = Array.from(connectedSockets)
+      .filter(u => u !== currentUser && userSessions.has(u) && userSessions.get(u).size > 0);
+    res.json({ success: true, onlineUsers: validOnlineUsers });
   } catch (error) {
     console.error('❌ Get online users error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1053,7 +1107,9 @@ app.post('/api/trading/initiate', requireAuth, async (req, res) => {
     };
 
     data.trades.push(tradeRequest);
-    await writeData(data);
+
+    // IMMEDIATE response - don't wait for DB
+    res.json({ success: true, tradeId });
 
     // Emit socket event to target user
     io.emit('trade_request', {
@@ -1064,7 +1120,14 @@ app.post('/api/trading/initiate', requireAuth, async (req, res) => {
       expiresAt: tradeRequest.expiresAt
     });
 
-    res.json({ success: true, tradeId });
+    // Save in background
+    setImmediate(async () => {
+      try {
+        await writeData(data);
+      } catch (err) {
+        console.error('Trade initiate save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Initiate trade error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1118,16 +1181,25 @@ app.post('/api/trading/accept', requireAuth, async (req, res) => {
     addTradeItems(target, trade.offeredItems);
 
     trade.status = 'completed';
-    await writeData(data);
 
-    // Emit trade completion
+    // Emit trade completion immediately
     io.emit('trade_completed', {
       tradeId,
       initiator: trade.initiator,
       target: targetUser
     });
 
+    // IMMEDIATE response
     res.json({ success: true, message: 'Trade completed!' });
+
+    // Save in background
+    setImmediate(async () => {
+      try {
+        await writeData(data);
+      } catch (err) {
+        console.error('Trade accept save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Accept trade error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1147,11 +1219,21 @@ app.post('/api/trading/decline', requireAuth, async (req, res) => {
     }
 
     trade.status = 'declined';
-    await writeData(data);
 
+    // Emit immediately
     io.emit('trade_declined', { tradeId, by: targetUser });
 
+    // IMMEDIATE response
     res.json({ success: true });
+
+    // Save in background
+    setImmediate(async () => {
+      try {
+        await writeData(data);
+      } catch (err) {
+        console.error('Trade decline save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Decline trade error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1175,11 +1257,21 @@ app.post('/api/trading/cancel', requireAuth, async (req, res) => {
     }
 
     trade.status = 'cancelled';
-    await writeData(data);
 
+    // Emit immediately
     io.emit('trade_cancelled', { tradeId });
 
+    // IMMEDIATE response
     res.json({ success: true });
+
+    // Save in background
+    setImmediate(async () => {
+      try {
+        await writeData(data);
+      } catch (err) {
+        console.error('Trade cancel save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Cancel trade error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1326,9 +1418,17 @@ app.post('/api/shop/buy', requireAuth, async (req, res) => {
     }
     user.inventory.items[itemKey].count += 1;
 
-    await writeData(data);
-
+    // IMMEDIATE response
     res.json({ success: true, coins: user.coins, inventory: user.inventory });
+
+    // Save in background
+    setImmediate(async () => {
+      try {
+        await writeData(data);
+      } catch (err) {
+        console.error('Shop buy save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Shop error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1368,9 +1468,17 @@ app.post('/api/shop/buy-potion', requireAuth, async (req, res) => {
     }
     user.inventory.potions[potionKey] += 1;
 
-    await writeData(data);
-
+    // IMMEDIATE response
     res.json({ success: true, coins: user.coins, inventory: user.inventory });
+
+    // Save in background
+    setImmediate(async () => {
+      try {
+        await writeData(data);
+      } catch (err) {
+        console.error('Potion shop save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Potion shop error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1418,9 +1526,17 @@ app.post('/api/use-code', requireAuth, async (req, res) => {
 
     codeData.usedBy.push(user.username);
     
-    await writeData(data);
-
+    // IMMEDIATE response
     res.json({ success: true, coins: user.coins, inventory: user.inventory });
+
+    // Save in background
+    setImmediate(async () => {
+      try {
+        await writeData(data);
+      } catch (err) {
+        console.error('Code save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Code error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1632,17 +1748,23 @@ app.post('/api/admin/coin-rush/start', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/coin-rush/stop', requireAdmin, async (req, res) => {
   try {
-    const data = await readData();
-    
-    if (!data.adminEvents) data.adminEvents = [];
-    data.adminEvents = data.adminEvents.filter(e => e.type !== 'coin_rush');
-    
-    await writeData(data);
-    
     stopCoinRush();
+    
+    // IMMEDIATE broadcast
     io.emit('coin_rush_stop');
-
     res.json({ success: true });
+    
+    // Save in background
+    setImmediate(async () => {
+      try {
+        const data = await readData();
+        if (!data.adminEvents) data.adminEvents = [];
+        data.adminEvents = data.adminEvents.filter(e => e.type !== 'coin_rush');
+        await writeData(data);
+      } catch (err) {
+        console.error('Coin rush stop save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Coin rush stop error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1651,28 +1773,29 @@ app.post('/api/admin/coin-rush/stop', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/meteor/start', requireAdmin, async (req, res) => {
   try {
-    const data = await readData();
+    // IMMEDIATE broadcast
+    io.emit('meteor_start');
+    res.json({ success: true });
     
-    // Give Meteor Piece only to connected users
-    data.users.forEach(user => {
-      if (connectedSockets.has(user.username)) {
-        if (!user.inventory.items) user.inventory.items = {};
-        const meteorKey = 'meteor-piece';
-        if (!user.inventory.items[meteorKey]) {
-          user.inventory.items[meteorKey] = {
-            name: 'Meteor Piece',
-            count: 0
-          };
-        }
-        user.inventory.items[meteorKey].count += 1;
+    // Give Meteor Piece in background
+    setImmediate(async () => {
+      try {
+        const data = await readData();
+        data.users.forEach(user => {
+          if (connectedSockets.has(user.username)) {
+            if (!user.inventory.items) user.inventory.items = {};
+            const meteorKey = 'meteor-piece';
+            if (!user.inventory.items[meteorKey]) {
+              user.inventory.items[meteorKey] = { name: 'Meteor Piece', count: 0 };
+            }
+            user.inventory.items[meteorKey].count += 1;
+          }
+        });
+        await writeData(data);
+      } catch (err) {
+        console.error('Meteor save error:', err);
       }
     });
-    
-    await writeData(data);
-    
-    io.emit('meteor_start');
-
-    res.json({ success: true });
   } catch (error) {
     console.error('❌ Meteor error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1691,20 +1814,25 @@ app.post('/api/admin/banana-rain/start', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/coin-rush-2/start', requireAdmin, async (req, res) => {
   try {
-    const data = await readData();
-    
-    // Give coins to all connected users
-    const coinsAmount = 500;
-    data.users.forEach(user => {
-      if (connectedSockets.has(user.username)) {
-        user.coins = (user.coins || 0) + coinsAmount;
-      }
-    });
-    
-    await writeData(data);
-    
+    // IMMEDIATE broadcast
     io.emit('coin_rush_2_start');
     res.json({ success: true });
+    
+    // Give coins in background
+    setImmediate(async () => {
+      try {
+        const data = await readData();
+        const coinsAmount = 500;
+        data.users.forEach(user => {
+          if (connectedSockets.has(user.username)) {
+            user.coins = (user.coins || 0) + coinsAmount;
+          }
+        });
+        await writeData(data);
+      } catch (err) {
+        console.error('Coin rush 2 save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Coin rush 2.0 error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1713,29 +1841,30 @@ app.post('/api/admin/coin-rush-2/start', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/return-to-zero/start', requireFullAdmin, async (req, res) => {
   try {
-    const data = await readData();
-
-    // Non-destructive 'Return to Zero' event.
-    // Create an admin event and broadcast it to clients so they can play the visual effect.
-    const adminEvent = {
-      id: Date.now(),
-      type: 'return_to_zero',
-      name: 'Return to Zero (visual event)',
-      active: true,
-      startedAt: new Date().toISOString(),
-      startedBy: req.session.user.username
-    };
-
-    if (!data.adminEvents) data.adminEvents = [];
-    // keep only one active return_to_zero event
-    data.adminEvents = data.adminEvents.filter(e => e.type !== 'return_to_zero');
-    data.adminEvents.push(adminEvent);
-
-    await writeData(data);
-
-    // Broadcast event to all connected clients — clients will display visuals but not reset data
+    // IMMEDIATE broadcast - don't wait for DB
     io.emit('return_to_zero_start', { startedBy: req.session.user.username });
-    res.json({ success: true, adminEvent });
+    res.json({ success: true });
+    
+    // Save in background
+    setImmediate(async () => {
+      try {
+        const data = await readData();
+        const adminEvent = {
+          id: Date.now(),
+          type: 'return_to_zero',
+          name: 'Return to Zero (visual event)',
+          active: true,
+          startedAt: new Date().toISOString(),
+          startedBy: req.session.user.username
+        };
+        if (!data.adminEvents) data.adminEvents = [];
+        data.adminEvents = data.adminEvents.filter(e => e.type !== 'return_to_zero');
+        data.adminEvents.push(adminEvent);
+        await writeData(data);
+      } catch (err) {
+        console.error('Return to zero save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Return to Zero error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1798,27 +1927,32 @@ app.post('/api/admin/remove-admin-role', requireFullAdmin, async (req, res) => {
 
 app.post('/api/admin/disco/start', requireAdmin, async (req, res) => {
   try {
-    const data = await readData();
-    
-    const adminEvent = {
-      id: Date.now(),
-      type: 'disco',
-      name: 'Disco Mode',
-      active: true,
-      startedAt: new Date().toISOString(),
-      startedBy: req.session.user.username
-    };
-
-    if (!data.adminEvents) data.adminEvents = [];
-    data.adminEvents = data.adminEvents.filter(e => e.type !== 'disco');
-    data.adminEvents.push(adminEvent);
-    
-    await writeData(data);
-    
     discoModeActive = true;
+    
+    // IMMEDIATE broadcast - don't wait for DB
     io.emit('disco_start');
-
-    res.json({ success: true, adminEvent });
+    res.json({ success: true });
+    
+    // Save in background
+    setImmediate(async () => {
+      try {
+        const data = await readData();
+        const adminEvent = {
+          id: Date.now(),
+          type: 'disco',
+          name: 'Disco Mode',
+          active: true,
+          startedAt: new Date().toISOString(),
+          startedBy: req.session.user.username
+        };
+        if (!data.adminEvents) data.adminEvents = [];
+        data.adminEvents = data.adminEvents.filter(e => e.type !== 'disco');
+        data.adminEvents.push(adminEvent);
+        await writeData(data);
+      } catch (err) {
+        console.error('Disco save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Disco start error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1827,17 +1961,23 @@ app.post('/api/admin/disco/start', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/disco/stop', requireAdmin, async (req, res) => {
   try {
-    const data = await readData();
-    
-    if (!data.adminEvents) data.adminEvents = [];
-    data.adminEvents = data.adminEvents.filter(e => e.type !== 'disco');
-    
-    await writeData(data);
-    
     discoModeActive = false;
+    
+    // IMMEDIATE broadcast
     io.emit('disco_stop');
-
     res.json({ success: true });
+    
+    // Save in background
+    setImmediate(async () => {
+      try {
+        const data = await readData();
+        if (!data.adminEvents) data.adminEvents = [];
+        data.adminEvents = data.adminEvents.filter(e => e.type !== 'disco');
+        await writeData(data);
+      } catch (err) {
+        console.error('Disco stop save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Disco stop error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1848,26 +1988,30 @@ app.post('/api/admin/alien-mode/start', requireAdmin, async (req, res) => {
   try {
     alienModeActive = true;
     
-    const data = await readData();
-    
-    const adminEvent = {
-      id: Date.now(),
-      type: 'alien_mode',
-      name: 'Alien Mode',
-      active: true,
-      startedAt: new Date().toISOString(),
-      startedBy: req.session.user.username
-    };
-
-    if (!data.adminEvents) data.adminEvents = [];
-    data.adminEvents = data.adminEvents.filter(e => e.type !== 'alien_mode');
-    data.adminEvents.push(adminEvent);
-    
-    await writeData(data);
-    
+    // IMMEDIATE broadcast
     io.emit('alien_mode_start');
-
     res.json({ success: true, message: 'Alien Mode activated! 10x Luck for all!' });
+    
+    // Save in background
+    setImmediate(async () => {
+      try {
+        const data = await readData();
+        const adminEvent = {
+          id: Date.now(),
+          type: 'alien_mode',
+          name: 'Alien Mode',
+          active: true,
+          startedAt: new Date().toISOString(),
+          startedBy: req.session.user.username
+        };
+        if (!data.adminEvents) data.adminEvents = [];
+        data.adminEvents = data.adminEvents.filter(e => e.type !== 'alien_mode');
+        data.adminEvents.push(adminEvent);
+        await writeData(data);
+      } catch (err) {
+        console.error('Alien mode save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Alien mode start error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1878,16 +2022,21 @@ app.post('/api/admin/alien-mode/stop', requireAdmin, async (req, res) => {
   try {
     alienModeActive = false;
     
-    const data = await readData();
-    
-    if (!data.adminEvents) data.adminEvents = [];
-    data.adminEvents = data.adminEvents.filter(e => e.type !== 'alien_mode');
-    
-    await writeData(data);
-    
+    // IMMEDIATE broadcast
     io.emit('alien_mode_stop');
-
-    res.json({ success: true, message: 'Alien Mode deactivated!' });
+    res.json({ success: true });
+    
+    // Save in background
+    setImmediate(async () => {
+      try {
+        const data = await readData();
+        if (!data.adminEvents) data.adminEvents = [];
+        data.adminEvents = data.adminEvents.filter(e => e.type !== 'alien_mode');
+        await writeData(data);
+      } catch (err) {
+        console.error('Alien mode stop save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Alien mode stop error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -1928,16 +2077,21 @@ app.post('/api/admin/coin-rush-2/stop', requireAdmin, async (req, res) => {
   try {
     coinRush2Active = false;
     
-    const data = await readData();
-    
-    if (!data.adminEvents) data.adminEvents = [];
-    data.adminEvents = data.adminEvents.filter(e => e.type !== 'coin_rush_2');
-    
-    await writeData(data);
-    
+    // IMMEDIATE broadcast
     io.emit('coin_rush_2_stop');
-
-    res.json({ success: true, message: 'Coin Rush 2.0 deactivated!' });
+    res.json({ success: true });
+    
+    // Save in background
+    setImmediate(async () => {
+      try {
+        const data = await readData();
+        if (!data.adminEvents) data.adminEvents = [];
+        data.adminEvents = data.adminEvents.filter(e => e.type !== 'coin_rush_2');
+        await writeData(data);
+      } catch (err) {
+        console.error('Coin rush 2 stop save error:', err);
+      }
+    });
   } catch (error) {
     console.error('❌ Coin Rush 2.0 stop error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
@@ -2143,49 +2297,55 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// Socket.IO
+// Socket.IO - Optimized for performance and reliability
+const userSessions = new Map();
+
 io.on('connection', (socket) => {
   const username = socket.request.session?.user?.username;
+  
   if (username) {
+    if (!userSessions.has(username)) {
+      userSessions.set(username, new Set());
+    }
+    userSessions.get(username).add(socket.id);
     connectedSockets.add(username);
+    io.emit('users_updated', {
+      onlineUsers: Array.from(connectedSockets).filter(u => userSessions.has(u) && userSessions.get(u).size > 0)
+    });
   }
 
   socket.on('chat_message', async (msg, callback) => {
     try {
-      if (!msg || !msg.username || !msg.message) return;
+      if (!msg || !msg.username || !msg.message) {
+        if (callback) callback({ success: false });
+        return;
+      }
       
       const sanitizedMessage = String(msg.message).trim().slice(0, 500);
-      if (!sanitizedMessage || sanitizedMessage.length === 0) return;
+      if (!sanitizedMessage || sanitizedMessage.length === 0) {
+        if (callback) callback({ success: false });
+        return;
+      }
 
-      // IMMEDIATE emit - no waiting
-      io.emit('chat_message', {
+      const chatObj = {
         username: msg.username,
         message: sanitizedMessage,
         timestamp: new Date().toISOString(),
         isAdmin: false,
         userTitle: msg.userTitle || null
-      });
+      };
 
-      // Save in background (fire and forget)
-      process.nextTick(async () => {
+      io.emit('chat_message', chatObj);
+      if (callback) callback({ success: true });
+
+      setImmediate(async () => {
         try {
           const data = await readData();
-          const savedMsg = {
-            username: msg.username,
-            message: sanitizedMessage,
-            timestamp: new Date().toISOString(),
-            isAdmin: false,
-            userTitle: msg.userTitle || null
-          };
-          
           if (!data.chatMessages) data.chatMessages = [];
-          data.chatMessages.push(savedMsg);
-          
-          // Keep last 500
+          data.chatMessages.push(chatObj);
           if (data.chatMessages.length > 500) {
             data.chatMessages = data.chatMessages.slice(-500);
           }
-          
           await writeData(data);
         } catch (err) {
           console.error('Chat save error:', err);
@@ -2193,12 +2353,20 @@ io.on('connection', (socket) => {
       });
     } catch (error) {
       console.error('Chat error:', error);
+      if (callback) callback({ success: false });
     }
   });
 
   socket.on('disconnect', () => {
-    if (username) {
-      connectedSockets.delete(username);
+    if (username && userSessions.has(username)) {
+      userSessions.get(username).delete(socket.id);
+      if (userSessions.get(username).size === 0) {
+        userSessions.delete(username);
+        connectedSockets.delete(username);
+      }
+      io.emit('users_updated', {
+        onlineUsers: Array.from(connectedSockets).filter(u => userSessions.has(u) && userSessions.get(u).size > 0)
+      });
     }
   });
 });
