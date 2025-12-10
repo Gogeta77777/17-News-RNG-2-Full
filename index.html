@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
-            <title>17 News RNG 2 - Update 8.0</title>    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <title>17 News RNG 2 - Update 7.25</title>    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
     <style>
@@ -173,23 +173,21 @@
     0%, 100% { 
         box-shadow: 0 0 30px #FFFFFF, 0 0 60px #FFFFFF, 0 0 90px #FFFFFF;
         filter: hue-rotate(0deg) brightness(1.5);
-        transform: scale(1);
     }
     50% { 
         box-shadow: 0 0 60px #FFFFFF, 0 0 90px #FFFFFF, 0 0 120px #FFFFFF;
         filter: hue-rotate(180deg) brightness(2);
-        transform: scale(1.02);
     }
 }
 
 @keyframes chromaText {
-    0% { color: #FF0000; text-shadow: 0 0 10px #FF0000, 0 0 20px #FF0000; }
-    16% { color: #FF7F00; text-shadow: 0 0 10px #FF7F00, 0 0 20px #FF7F00; }
-    33% { color: #FFFF00; text-shadow: 0 0 10px #FFFF00, 0 0 20px #FFFF00; }
-    50% { color: #00FF00; text-shadow: 0 0 10px #00FF00, 0 0 20px #00FF00; }
-    66% { color: #0000FF; text-shadow: 0 0 10px #0000FF, 0 0 20px #0000FF; }
-    83% { color: #8B00FF; text-shadow: 0 0 10px #8B00FF, 0 0 20px #8B00FF; }
-    100% { color: #FF0000; text-shadow: 0 0 10px #FF0000, 0 0 20px #FF0000; }
+    0% { color: #FF0000; text-shadow: 0 0 20px #FF0000; }
+    16% { color: #FF7F00; text-shadow: 0 0 20px #FF7F00; }
+    33% { color: #FFFF00; text-shadow: 0 0 20px #FFFF00; }
+    50% { color: #00FF00; text-shadow: 0 0 20px #00FF00; }
+    66% { color: #0000FF; text-shadow: 0 0 20px #0000FF; }
+    83% { color: #8B00FF; text-shadow: 0 0 20px #8B00FF; }
+    100% { color: #FF0000; text-shadow: 0 0 20px #FF0000; }
 }
 
 @keyframes chromaBorder {
@@ -274,8 +272,8 @@
         }
 
         @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
         }
 
         @keyframes blackholeRotate {
@@ -294,8 +292,8 @@
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale3d(1, 1, 1); }
-            50% { transform: scale3d(1.1, 1.1, 1); }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         @keyframes popupIn {
