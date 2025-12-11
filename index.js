@@ -5,7 +5,14 @@
   - Shop rotation stability
   - Trading verified
   - Frontend style tweaks and performance improvements
+  - Render.yaml deployment support
 */
+
+// Ensure logs are flushed immediately
+if (process.stdout._handle && process.stdout._handle.setBlocking) {
+  process.stdout._handle.setBlocking(true);
+  process.stderr._handle.setBlocking(true);
+}
 
 const express = require('express');
 const http = require('http');
@@ -110,6 +117,11 @@ app.use(express.static(__dirname, {
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // DATABASE INITIALIZATION
@@ -2438,11 +2450,25 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
+// Handle unhandled rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // Continue running instead of crashing
+});
+
 // Initialize
 const PORT = process.env.PORT || 3000;
 
+console.log('🚀 Starting 17-News-RNG Server on port', PORT);
+
 // Start server immediately (don't block on database)
 server.listen(PORT, async () => {
+  console.log('✅ Server listening on port', PORT);
   const shopData = getCurrentShopItem();
   console.log('');
   console.log('🎮 ════════════════════════════════════════════════');
@@ -2477,10 +2503,19 @@ server.listen(PORT, async () => {
         await initializeDatabase();
       }
       await readData();
+      console.log('✅ Database initialized in background');
     } catch (err) {
       console.error('❌ Background init error:', err);
     }
   });
+});
+
+server.on('error', (err) => {
+  console.error('❌ Server error:', err);
+  if (err.code === 'EADDRINUSE') {
+    console.error('❌ Port', PORT, 'is already in use');
+  }
+  process.exit(1);
 });
 
 // Graceful shutdown
