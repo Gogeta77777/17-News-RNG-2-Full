@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
-            <title>17 News RNG 2 - Update 7.25</title>    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <title>17 News RNG 2 - Update 8.0</title>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
     <style>
@@ -398,6 +399,37 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+
+        }
+
+        /* Announcement Banner */
+        #announcement-banner {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, rgba(0,255,231,0.06), rgba(0,124,240,0.06));
+            color: var(--text-light);
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.04);
+            z-index: var(--z-banner);
+            backdrop-filter: blur(4px) saturate(1.2);
+            animation: fadeIn 500ms ease-out;
+            font-weight: 700;
+        }
+
+        /* Faster-feel buttons (reduce touch delay) */
+        button, .btn {
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+            transition: transform 80ms ease, box-shadow 80ms ease;
+            will-change: transform;
+            cursor: pointer;
+        }
+
+        button:active, .btn:active {
+            transform: scale(0.985);
+        }
             background: linear-gradient(135deg, #000000, #1a0033, #000033);
             padding: 50px 70px;
             border-radius: 20px;
@@ -1960,7 +1992,7 @@
 </head>
 <body>
     <div class="announcement-bar" id="announcement-bar">
-        <span>🎉 UPDATE 7.0 LIVE: NEW Trading System now available! Trade potions, items, and rarities with other players. Click the Trading tab to get started! 💱</span>
+        <span>🎉 Update 8.0 is live — Major improvements, shop rotations, and Global Chat fixes! Click to view update notes.</span>
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
@@ -1986,12 +2018,12 @@
             <div class="update-log">
                 <h3>Latest Update</h3>
                 <div class="log-entry">
-                    <span class="date">8/12/25 - Update 7.25 v2.5.25</span>
-                    <p>🔧 CRITICAL: Fixed chat system lag and connection issues</p>
-                    <p>🔧 CRITICAL: Fixed trading system functionality</p>
-                    <p>⚡ Optimized socket event handlers for 80% faster response times</p>
-                    <p>💎 Removed duplicate event handlers causing delays</p>
-                    <p>🚀 Improved connection stability and reduced ping latency</p>
+                    <span class="date">12/11/25 - Update 8.0</span>
+                    <p>🔥 NEW: Global Chat fully stabilized — messages deliver instantly</p>
+                    <p>🛡️ NEW: Admin actions are now logged and broadcast as admin events for transparency</p>
+                    <p>🛒 IMPROVED: Shop rotation guaranteed and broadcast on server start</p>
+                    <p>💱 FIXED: Trading flow tightened — offers validate and execute reliably</p>
+                    <p>🎨 UI: Styles improved for faster feel and clearer interface</p>
                 </div>
             </div>
         </main>
