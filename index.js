@@ -2439,40 +2439,49 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize
-if (!IS_VERCEL) {
-  initializeDatabase().then(async () => {
-    await readData();
-    const PORT = process.env.PORT || 3000;
-    server.listen(PORT, () => {
-      const shopData = getCurrentShopItem();
-      console.log('');
-      console.log('🎮 ════════════════════════════════════════════════');
-      console.log('🎮  17-News-RNG Server - Update 8.0 - MAJOR IMPROVEMENTS');
-      console.log('🎮 ════════════════════════════════════════════════');
-      console.log('');
-      console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
-      console.log('🛒 Shop:', shopData.item.name);
-      console.log('⏰ Rotation:', new Date(shopData.nextRotation).toLocaleTimeString());
-      console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
-      console.log('👑 Admin: Mr_Fernanski ready');
-      console.log('');
-      console.log('✨ Update 8.0 Highlights:');
-      console.log('   🔊 Global Chat: reliable & near-instant delivery');
-      console.log('   🛡️ Admin Events: logged and broadcast for transparency');
-      console.log('   🛒 Shop: rotation guaranteed and broadcast on start');
-      console.log('   ⚖️ Trading: validated and efficient');
-      console.log('   🚀 Performance: reduced blocking I/O and faster responses');
-      console.log('   🎨 Frontend: refreshed styles and faster load path');
-      console.log('');
-      console.log('✅ Ready!');
-      console.log('🎮 ════════════════════════════════════════════════');
-      console.log('');
+const PORT = process.env.PORT || 3000;
 
-      // Broadcast current shop state on startup so clients sync immediately
-      try { broadcastShopRotation(); } catch (e) { /* noop */ }
-    });
+// Start server immediately (don't block on database)
+server.listen(PORT, async () => {
+  const shopData = getCurrentShopItem();
+  console.log('');
+  console.log('🎮 ════════════════════════════════════════════════');
+  console.log('🎮  17-News-RNG Server - Update 8.0 - MAJOR IMPROVEMENTS');
+  console.log('🎮 ════════════════════════════════════════════════');
+  console.log('');
+  console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
+  console.log('🛒 Shop:', shopData.item.name);
+  console.log('⏰ Rotation:', new Date(shopData.nextRotation).toLocaleTimeString());
+  console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
+  console.log('👑 Admin: Mr_Fernanski ready');
+  console.log('');
+  console.log('✨ Update 8.0 Highlights:');
+  console.log('   🔊 Global Chat: reliable & near-instant delivery');
+  console.log('   🛡️ Admin Events: logged and broadcast for transparency');
+  console.log('   🛒 Shop: rotation guaranteed and broadcast on start');
+  console.log('   ⚖️ Trading: validated and efficient');
+  console.log('   🚀 Performance: reduced blocking I/O and faster responses');
+  console.log('   🎨 Frontend: refreshed styles and faster load path');
+  console.log('');
+  console.log('✅ Ready!');
+  console.log('🎮 ════════════════════════════════════════════════');
+  console.log('');
+
+  // Broadcast current shop state on startup so clients sync immediately
+  try { broadcastShopRotation(); } catch (e) { /* noop */ }
+
+  // Initialize database in background (non-blocking)
+  setImmediate(async () => {
+    try {
+      if (!IS_VERCEL && pool) {
+        await initializeDatabase();
+      }
+      await readData();
+    } catch (err) {
+      console.error('❌ Background init error:', err);
+    }
   });
-}
+});
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
