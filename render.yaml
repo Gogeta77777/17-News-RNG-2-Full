@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: 17-news-rng-2
+    env: node
+    plan: free
+    
+    # Build command
+    buildCommand: npm install
+    
+    # Start command
+    startCommand: node index.js
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: RENDER
+        value: "true"
+    
+    # Auto-deploy from git
+    autoDeployOnPush: true
+    
+    # Health check
+    healthCheckPath: /
+    
+    # Build Filter (optional, prevents unnecessary rebuilds)
+    buildFilter:
+      paths:
+        - "index.js"
+        - "index.html"
+        - "package.json"
+        - "package-lock.json"
