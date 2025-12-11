@@ -7,7 +7,7 @@ services:
     # Build command
     buildCommand: npm install
     
-    # Start command
+    # Start command - explicit and clean
     startCommand: node index.js
     
     # Environment variables
@@ -20,13 +20,16 @@ services:
     # Auto-deploy from git
     autoDeployOnPush: true
     
-    # Health check
-    healthCheckPath: /
+    # Health check configuration
+    healthCheckPath: /health
+    healthCheckTimeout: 30
+    maxShutdownDelay: 30
     
-    # Build Filter (optional, prevents unnecessary rebuilds)
+    # Build Filter
     buildFilter:
       paths:
         - "index.js"
         - "index.html"
         - "package.json"
         - "package-lock.json"
+        - "multiplayer.js"
