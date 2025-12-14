@@ -29,11 +29,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
-  transports: ['websocket', 'polling'],
-  pingTimeout: 12000,
-  pingInterval: 5000,
+  transports: ['polling', 'websocket'],
+  pingTimeout: 20000,
+  pingInterval: 10000,
   maxHttpBufferSize: 1e6,
-  serveClient: false
+  serveClient: true,
+  allowEIO3: true
 });
 
 app.set('trust proxy', 1);
@@ -228,6 +229,7 @@ function getCurrentShopItem() {
 
 function broadcastShopRotation() {
   const shopData = getCurrentShopItem();
+  console.log('📤 Broadcasting shop rotation:', shopData.item.name);
   io.emit('shop_rotated', {
     item: shopData.item,
     nextRotation: shopData.nextRotation
@@ -2388,14 +2390,17 @@ io.on('connection', (socket) => {
   }
 
   socket.on('chat_message', async (msg, callback) => {
+    console.log('📨 Server received chat message:', msg);
     try {
       if (!msg || !msg.username || !msg.message) {
+        console.log('❌ Invalid message format');
         if (callback) callback({ success: false });
         return;
       }
       
       const sanitizedMessage = String(msg.message).trim().slice(0, 500);
       if (!sanitizedMessage || sanitizedMessage.length === 0) {
+        console.log('❌ Empty message');
         if (callback) callback({ success: false });
         return;
       }
@@ -2408,6 +2413,7 @@ io.on('connection', (socket) => {
         userTitle: msg.userTitle || null
       };
 
+      console.log('📤 Broadcasting chat message to all clients');
       io.emit('chat_message', chatObj);
       if (callback) callback({ success: true });
 
