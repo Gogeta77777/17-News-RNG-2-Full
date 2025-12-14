@@ -4418,13 +4418,14 @@
             console.log('🚀 Creating new socket connection...');
             socket = io({
                 reconnection: true,
-                reconnectionDelay: 50,
-                reconnectionDelayMax: 500,
-                reconnectionAttempts: 30,
-                transports: ['websocket', 'polling'],
-                upgrade: true,
-                pingInterval: 2000,
-                pingTimeout: 5000
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                reconnectionAttempts: 10,
+                transports: ['polling', 'websocket'],
+                upgrade: false,
+                pingInterval: 10000,
+                pingTimeout: 5000,
+                timeout: 5000
             });
 
             socket.on('connect', () => {
@@ -4440,6 +4441,7 @@
             });
             
             socket.on('chat_message', (data) => {
+                console.log('📨 Received chat message:', data);
                 try {
                     addChatMessage(data);
                     const chatMessages = document.getElementById('chat-messages');
@@ -4859,12 +4861,13 @@
                     message: message,
                     userTitle: currentUser.equippedTitle || null
                 }, (response) => {
+                    console.log('📤 Message response:', response);
                     if (response && response.success === false) {
                         console.error('❌ Server rejected message:', response.error);
                         showPopup('Failed to send message', '#e74c3c');
                         return;
                     }
-                    console.log('✅ Message sent');
+                    console.log('✅ Message sent successfully');
                     input.value = '';
                 });
                 
