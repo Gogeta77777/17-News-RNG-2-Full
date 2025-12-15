@@ -353,6 +353,53 @@
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(155, 89, 182, 0.25)) !important;
         }
 
+        @keyframes bigFiveGlow {
+            0%, 100% {
+                box-shadow: 0 0 30px #FF6B35, 0 0 60px #F7931E, 0 0 90px #FFD700, inset 0 0 25px rgba(255, 107, 53, 0.3);
+                border-color: #FF6B35;
+                transform: scale(1);
+            }
+            25% {
+                box-shadow: 0 0 45px #F7931E, 0 0 75px #FF6B35, 0 0 105px #FFD700, inset 0 0 35px rgba(247, 147, 30, 0.4);
+                border-color: #F7931E;
+                transform: scale(1.05);
+            }
+            50% {
+                box-shadow: 0 0 50px #FFD700, 0 0 80px #F7931E, 0 0 110px #FF6B35, inset 0 0 40px rgba(255, 215, 0, 0.35);
+                border-color: #FFD700;
+                transform: scale(1.1);
+            }
+            75% {
+                box-shadow: 0 0 45px #F7931E, 0 0 75px #FFD700, 0 0 105px #FF6B35, inset 0 0 35px rgba(247, 147, 30, 0.4);
+                border-color: #F7931E;
+                transform: scale(1.05);
+            }
+        }
+
+        .big-five-active {
+            animation: bigFiveGlow 2.5s infinite;
+            border: 4px solid #FF6B35;
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.3), rgba(247, 147, 30, 0.3), rgba(255, 215, 0, 0.2)) !important;
+            position: relative;
+        }
+
+        .big-five-active::before {
+            content: '⭐';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            color: #FFD700;
+            text-shadow: 0 0 10px #FF6B35;
+            animation: starTwinkle 1.5s infinite;
+        }
+
+        @keyframes starTwinkle {
+            0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.7; transform: translateX(-50%) scale(1.2); }
+        }
+
         .return-to-zero-overlay {
             position: fixed;
             top: 0;
@@ -399,7 +446,19 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-
+            background: linear-gradient(135deg, #000000, #1a0033, #000033);
+            padding: 50px 70px;
+            border-radius: 20px;
+            font-size: 5em;
+            font-weight: bold;
+            color: #FFD700;
+            z-index: var(--z-meteor);
+            box-shadow: 
+                0 0 100px rgba(255, 215, 0, 0.9),
+                inset 0 0 50px rgba(155, 89, 182, 0.3);
+            text-align: center;
+            border: 3px solid #FFD700;
+            text-shadow: 0 0 20px #FFD700, 0 0 40px #9B59B6;
         }
 
         /* Announcement Banner */
@@ -429,20 +488,6 @@
 
         button:active, .btn:active {
             transform: scale(0.985);
-        }
-            background: linear-gradient(135deg, #000000, #1a0033, #000033);
-            padding: 50px 70px;
-            border-radius: 20px;
-            font-size: 5em;
-            font-weight: bold;
-            color: #FFD700;
-            z-index: var(--z-meteor);
-            box-shadow: 
-                0 0 100px rgba(255, 215, 0, 0.9),
-                inset 0 0 50px rgba(155, 89, 182, 0.3);
-            text-align: center;
-            border: 3px solid #FFD700;
-            text-shadow: 0 0 20px #FFD700, 0 0 40px #9B59B6;
         }
 
         @keyframes spin { 
@@ -2509,21 +2554,18 @@
             { name: 'Hudson Walter', chance: 10, color: '#00BCD4' },
             { name: 'Baxter Walter', chance: 10, color: '#FF5722' },
             { name: 'Stanley Bowden', chance: 10, color: '#8B4513' },
+            { name: 'John Tan', chance: 10, color: '#00B8D4' },
             { name: 'Iyo Tenedor', chance: 6, color: '#4B0082' },
             { name: 'Atticus Lok', chance: 8, color: '#9C27B0' },
             { name: 'The Great Ace', chance: 1, color: '#FFB6C1' },
             { name: 'Delan Fernando', chance: 5, color: '#E91E63' },
             { name: 'Cooper Metson', chance: 5, color: '#FF9800' },
+            { name: 'Ellerslie School Cast', chance: 0.7, color: '#7B68EE' },
             { name: 'The Dark Knight', chance: 0.3, color: '#1a1a1a' },
             { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000' },
             { name: 'Mrs Joseph Mcglashan', chance: 0.1, color: '#00FF88' },
             { name: 'Lord Crinkle', chance: 0.01, color: '#FFD700' },
-            { name: 'Lord Finn', chance: 0.0001, color: '#FFFFFF', coin: 1000000, type: 'lord-finn' },
-            { name: 'Jonah Thomas', chance: 0, color: '#1e3a8a' },
-            { name: 'Delan Fernanski', chance: 0, color: '#3b82f6' },
-            { name: 'Stefan Talevski', chance: 0, color: '#60a5fa' },
-            { name: 'Mikaele Nabola', chance: 0, color: '#93c5fd' },
-            { name: 'Stanley Bowden', chance: 0, color: '#dbeafe' }
+            { name: 'Lord Finn', chance: 0.0001, color: '#FFFFFF', coin: 1000000, type: 'lord-finn' }
         ];
 
         function formatCoins(num) {
@@ -4869,6 +4911,9 @@
                     // Check if Finale Elixir was just used (backend provided flag)
                     const isFinaleElixir = !!data.finaleUsed;
                     
+                    // Check if Big Five roll was just used
+                    const isBigFiveRoll = !!data.bigFiveUsed;
+                    
                     // Add Finale Elixir glow effect if activated
                     if (isFinaleElixir) {
                         // Subtle Finale glow and a compact burst of particles
@@ -4893,6 +4938,28 @@
                         setTimeout(() => result.classList.remove('finale-elixir-active'), 2000);
                     }
                     
+                    // Add Big Five effect if activated
+                    if (isBigFiveRoll) {
+                        result.classList.add('big-five-active');
+                        for (let i = 0; i < 12; i++) {
+                            const particle = document.createElement('div');
+                            particle.textContent = '⭐';
+                            particle.style.position = 'fixed';
+                            particle.style.left = '50%';
+                            particle.style.top = '48%';
+                            particle.style.zIndex = '9999';
+                            particle.style.pointerEvents = 'none';
+                            particle.style.fontSize = (1.0 + Math.random() * 1.0) + 'em';
+                            particle.style.setProperty('--tx', (Math.random() - 0.5) * 300 + 'px');
+                            particle.style.setProperty('--ty', (Math.random() - 0.5) * 300 + 'px');
+                            particle.style.animation = 'starBurst 1.5s ease-out forwards';
+                            particle.style.animationDelay = (i * 0.05) + 's';
+                            document.body.appendChild(particle);
+                            setTimeout(() => particle.remove(), 1600);
+                        }
+                        setTimeout(() => result.classList.remove('big-five-active'), 2500);
+                    }
+                    
                     let coinAward = data.awarded;
                     if (coinRush2Active) {
                         coinAward *= 2;
@@ -4901,11 +4968,13 @@
                     const rarityColor = data.rarity.color || '#9c27b0';
                     const awardText = coinAward > 0 ? `<br><span style="color: #f1c40f;">+${formatCoins(coinAward)} coins${coinRush2Active ? ' (2x)' : ''}</span>` : '';
                     const finaleText = isFinaleElixir ? '<br><span style="color: #FFD700; font-weight: bold; font-size: 1.2em;">✨ FINAL ELIXIR USED ✨</span>' : '';
+                    const bigFiveText = isBigFiveRoll ? '<br><span style="color: #FFD700; font-weight: bold; font-size: 1.2em;">⭐ BIG FIVE ROLL ⭐</span>' : '';
                     
                     result.innerHTML = `
                         <div style="animation: fadeIn 0.5s;">
                             <strong style="color: ${rarityColor}; font-size: 2em;">${escapeHtml(data.item)}</strong>
                             ${finaleText}
+                            ${bigFiveText}
                             ${awardText}
                         </div>
                     `;
