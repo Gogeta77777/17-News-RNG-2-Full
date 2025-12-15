@@ -696,6 +696,14 @@ app.post('/api/spin', requireAuth, async (req, res) => {
       luckMultiplier *= 10;
     }
 
+    // Check for Finale Elixir - guarantees rare pulls
+    let isFinaleElixir = false;
+    if (user.finaleElixirReady) {
+      isFinaleElixir = true;
+      luckMultiplier *= 100;
+      user.finaleElixirReady = false; // Consume it
+    }
+
     // Check for big-five roll
     let isBigFiveRoll = false;
     if (user.bigFiveRollReady) {
@@ -703,9 +711,16 @@ app.post('/api/spin', requireAuth, async (req, res) => {
       user.bigFiveRollReady = false; // Consume it
     }
 
-    // If big-five roll, only allow available big-five rarities
+    // Determine rarity pool
     let rarityPool = RARITIES;
-    if (isBigFiveRoll) {
+    if (isFinaleElixir) {
+      rarityPool = RARITIES.filter(r => 
+        r.name === 'The Dark Knight' || 
+        r.name === 'Mrs Joseph Mcglashan' || 
+        r.name === 'Lord Crinkle' || 
+        r.name === 'Lord Finn'
+      );
+    } else if (isBigFiveRoll) {
       // Find available big-five rarities (not yet obtained by anyone)
       const obtainedBigFive = new Set();
       data.users.forEach(u => {
@@ -733,16 +748,22 @@ app.post('/api/spin', requireAuth, async (req, res) => {
         { ...r, chance: r.chance * luckMultiplier } : r
     );
     
-    const total = adjustedRarities.reduce((s, r) => s + r.chance, 0);
-    const roll = Math.random() * total;
-    let cursor = 0;
-    let picked = rarityPool[rarityPool.length - 1];
-    
-    for (const rarity of adjustedRarities) {
-      cursor += rarity.chance;
-      if (roll <= cursor) {
-        picked = rarityPool.find(r => r.name === rarity.name);
-        break;
+    let picked;
+    if (isBigFiveRoll || isFinaleElixir) {
+      // For special rolls, pick randomly from pool
+      picked = rarityPool[Math.floor(Math.random() * rarityPool.length)];
+    } else {
+      const total = adjustedRarities.reduce((s, r) => s + r.chance, 0);
+      const roll = Math.random() * total;
+      let cursor = 0;
+      picked = rarityPool[rarityPool.length - 1];
+      
+      for (const rarity of adjustedRarities) {
+        cursor += rarity.chance;
+        if (roll <= cursor) {
+          picked = rarityPool.find(r => r.name === rarity.name);
+          break;
+        }
       }
     }
 
@@ -791,7 +812,8 @@ user.inventory.rarities[rarityKey].count += 1;
       coins: user.coins,
       awarded: coinAward,
       serialNumber: serialNumber,
-      finaleUsed: isFinaleElixir || false
+      finaleUsed: isFinaleElixir || false,
+      bigFiveUsed: isBigFiveRoll || false
     };
 
     res.json(spinResult);
