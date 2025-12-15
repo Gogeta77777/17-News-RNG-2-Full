@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
-                <title>17 News RNG 2 - Update 8.0</title>
+                <title>17 News RNG 2 - Update 8.05</title>
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
@@ -2518,7 +2518,12 @@
             { name: 'Mr Fernanski', chance: 0.5, color: '#FF0000' },
             { name: 'Mrs Joseph Mcglashan', chance: 0.1, color: '#00FF88' },
             { name: 'Lord Crinkle', chance: 0.01, color: '#FFD700' },
-            { name: 'Lord Finn', chance: 0.0001, color: '#FFFFFF', coin: 1000000, type: 'lord-finn' }
+            { name: 'Lord Finn', chance: 0.0001, color: '#FFFFFF', coin: 1000000, type: 'lord-finn' },
+            { name: 'Jonah Thomas', chance: 0, color: '#1e3a8a' },
+            { name: 'Delan Fernanski', chance: 0, color: '#3b82f6' },
+            { name: 'Stefan Talevski', chance: 0, color: '#60a5fa' },
+            { name: 'Mikaele Nabola', chance: 0, color: '#93c5fd' },
+            { name: 'Stanley Bowden', chance: 0, color: '#dbeafe' }
         ];
 
         function formatCoins(num) {
@@ -4104,6 +4109,7 @@
             selectedTargetUser: null
         };
 
+        let pendingTrades = [];
         let tradingRefreshInterval = null;
 
         async function loadTradingTab() {
@@ -4206,7 +4212,15 @@
             // Pending Trades Section
             html += '<div class="trading-section">';
             html += '<h3>📨 Incoming Trade Requests</h3>';
-            html += '<div id="pending-trades-display" style="max-height: 400px; overflow-y: auto;"><p style="opacity: 0.6; padding: 20px; text-align: center;">No pending trade requests</p></div>';
+            html += '<div id="pending-trades-display" style="max-height: 400px; overflow-y: auto;">';
+            if (pendingTrades.length === 0) {
+                html += '<p style="opacity: 0.6; padding: 20px; text-align: center;">No pending trade requests</p>';
+            } else {
+                pendingTrades.forEach(trade => {
+                    html += buildTradeRequestCard(trade);
+                });
+            }
+            html += '</div>';
             html += '</div>';
             
             html += '</div>';
@@ -4387,6 +4401,102 @@
                 console.error('❌ Trade request exception:', err);
                 showPopup(`❌ Error: ${err.message}`, '#e74c3c');
             }
+        };
+
+        function buildTradeRequestCard(trade) {
+            let html = '<div class="trade-request-card">';
+            html += `<strong>From: ${escapeHtml(trade.from)}</strong><br>`;
+            
+            html += '<div class="trade-items-display">';
+            html += '<p><strong>Offering:</strong></p>';
+            html += formatTradeItems(trade.offeredItems);
+            html += '</div>';
+            
+            html += '<div class="trade-items-display">';
+            html += '<p><strong>Requesting:</strong></p>';
+            html += formatTradeItems(trade.requestedItems);
+            html += '</div>';
+            
+            html += '<div class="trade-request-actions">';
+            html += `<button class="btn" onclick="acceptTrade('${trade.id}')" style="background: #27ae60;">Accept</button>`;
+            html += `<button class="btn" onclick="declineTrade('${trade.id}')" style="background: #e74c3c;">Decline</button>`;
+            html += '</div>';
+            
+            html += '</div>';
+            return html;
+        }
+
+        function formatTradeItems(items) {
+            let html = '';
+            if (items.potions) {
+                for (const [key, count] of Object.entries(items.potions)) {
+                    const potion = POTIONS[key];
+                    html += `<span class="trade-item-chip">${potion ? potion.name : key} x${count}</span>`;
+                }
+            }
+            if (items.items) {
+                for (const [key, count] of Object.entries(items.items)) {
+                    html += `<span class="trade-item-chip">${key.replace(/-/g, ' ')} x${count}</span>`;
+                }
+            }
+            if (items.rarities) {
+                for (const [key, count] of Object.entries(items.rarities)) {
+                    const rarity = RARITIES.find(r => r.name.toLowerCase().replace(/\s+/g, '-') === key);
+                    html += `<span class="trade-item-chip">${rarity ? rarity.name : key} x${count}</span>`;
+                }
+            }
+            if (!html) html = '<em>Nothing</em>';
+            return html;
+        }
+
+        function updatePendingTradesDisplay() {
+            const display = document.getElementById('pending-trades-display');
+            if (!display) return;
+            
+            if (pendingTrades.length === 0) {
+                display.innerHTML = '<p style="opacity: 0.6; padding: 20px; text-align: center;">No pending trade requests</p>';
+            } else {
+                display.innerHTML = pendingTrades.map(trade => buildTradeRequestCard(trade)).join('');
+            }
+        }
+
+        function acceptTrade(tradeId) {
+            // Implement accept trade
+            handleAPI('/api/trading/accept', {
+                method: 'POST',
+                body: JSON.stringify({ tradeId })
+            }).then(response => {
+                if (response.success) {
+                    showPopup('Trade accepted!', '#27ae60');
+                    pendingTrades = pendingTrades.filter(t => t.id !== tradeId);
+                    updatePendingTradesDisplay();
+                    loadFullGameData();
+                } else {
+                    showPopup(response.error || 'Failed to accept trade', '#e74c3c');
+                }
+            }).catch(err => {
+                console.error('Accept trade error:', err);
+                showPopup('Error accepting trade', '#e74c3c');
+            });
+        }
+
+        function declineTrade(tradeId) {
+            // Implement decline trade
+            handleAPI('/api/trading/decline', {
+                method: 'POST',
+                body: JSON.stringify({ tradeId })
+            }).then(response => {
+                if (response.success) {
+                    showPopup('Trade declined', '#f39c12');
+                    pendingTrades = pendingTrades.filter(t => t.id !== tradeId);
+                    updatePendingTradesDisplay();
+                } else {
+                    showPopup(response.error || 'Failed to decline trade', '#e74c3c');
+                }
+            }).catch(err => {
+                console.error('Decline trade error:', err);
+                showPopup('Error declining trade', '#e74c3c');
+            });
         }
 
         const POTIONS = {
@@ -4580,7 +4690,19 @@
             });
 
             socket.on('trade_request', (data) => {
+                console.log('📨 Trade request received:', data);
                 showPopup(`Trade request from ${data.from}! Check trading tab.`, '#2980b9');
+                
+                // Add to pending trades
+                pendingTrades.push({
+                    id: data.tradeId,
+                    from: data.from,
+                    offeredItems: data.offeredItems,
+                    requestedItems: data.requestedItems,
+                    expiresAt: data.expiresAt
+                });
+                
+                updatePendingTradesDisplay();
             });
 
             socket.on('trade_completed', (data) => {
@@ -5346,6 +5468,13 @@
                 if (shopTimerInterval) {
                     clearInterval(shopTimerInterval);
                     shopTimerInterval = null;
+                }
+
+                // Clear trading data
+                pendingTrades = [];
+                if (tradingRefreshInterval) {
+                    clearInterval(tradingRefreshInterval);
+                    tradingRefreshInterval = null;
                 }
 
                 coinRushActive = false;
