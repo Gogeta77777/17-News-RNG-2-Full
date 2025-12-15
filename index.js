@@ -278,7 +278,8 @@ function initializeData() {
       { code: "LUCKPOTION", reward: { type: "potion", potion: "luck1" }, usedBy: [] },
       { code: "UPDATE5", reward: { type: "potion", potion: "finale" }, usedBy: [] },
       { code: "LORDFINNISHERE!", reward: { type: "potion", potion: "luck3", amount: 3 }, usedBy: [] },
-      { code: "JONAHDELANSTEFANMIKASTANLEY", reward: { type: "rarity", rarityKey: "the-big-5" }, usedBy: [] }
+      { code: "JONAHDELANSTEFANMIKASTANLEY", reward: { type: "rarity", rarityKey: "the-big-5" }, usedBy: [] },
+      { code: "LONGLIVETHEBIG5", reward: { type: "big-five-roll" }, usedBy: [], globalUses: 0, maxGlobalUses: 5 }
     ],
     announcements: [],
     events: [],
@@ -360,7 +361,12 @@ const RARITIES = [
   ,
   { name: 'Lord Finn', chance: 0.0001, color: '#FFFFFF', coin: 1000000, type: 'lord-finn' }
   ,
-  { name: 'The Big 5', chance: 0, color: '#FFD1DC', coin: 0, type: 'special-code' }
+  { name: 'The Big 5', chance: 0, color: '#FFD1DC', coin: 0, type: 'special-code' },
+  { name: 'Jonah Thomas', chance: 0, color: '#1e3a8a', coin: 500000, type: 'big-five' },
+  { name: 'Delan Fernanski', chance: 0, color: '#3b82f6', coin: 500000, type: 'big-five' },
+  { name: 'Stefan Talevski', chance: 0, color: '#60a5fa', coin: 500000, type: 'big-five' },
+  { name: 'Mikaele Nabola', chance: 0, color: '#93c5fd', coin: 500000, type: 'big-five' },
+  { name: 'Stanley Bowden', chance: 0, color: '#dbeafe', coin: 500000, type: 'big-five' }
 ];
 
 const POTIONS = {
@@ -690,23 +696,36 @@ app.post('/api/spin', requireAuth, async (req, res) => {
       luckMultiplier *= 10;
     }
 
-    // Check for Finale Elixir - guarantees rare pulls
-    let isFinaleElixir = false;
-    if (user.finaleElixirReady) {
-      isFinaleElixir = true;
-      luckMultiplier *= 100;
-      user.finaleElixirReady = false; // Consume it
+    // Check for big-five roll
+    let isBigFiveRoll = false;
+    if (user.bigFiveRollReady) {
+      isBigFiveRoll = true;
+      user.bigFiveRollReady = false; // Consume it
     }
 
-    // If Finale Elixir is active, only allow these 4 rarities: The Dark Knight, Mrs Joseph Mcglashan, Lord Crinkle, Lord Finn
+    // If big-five roll, only allow available big-five rarities
     let rarityPool = RARITIES;
-    if (isFinaleElixir) {
-      rarityPool = RARITIES.filter(r => 
-        r.name === 'The Dark Knight' || 
-        r.name === 'Mrs Joseph Mcglashan' || 
-        r.name === 'Lord Crinkle' || 
-        r.name === 'Lord Finn'
-      );
+    if (isBigFiveRoll) {
+      // Find available big-five rarities (not yet obtained by anyone)
+      const obtainedBigFive = new Set();
+      data.users.forEach(u => {
+        if (u.inventory.rarities) {
+          Object.keys(u.inventory.rarities).forEach(key => {
+            const rarity = RARITIES.find(r => r.name.toLowerCase().replace(/\s+/g, '-') === key);
+            if (rarity && rarity.type === 'big-five' && u.inventory.rarities[key].count > 0) {
+              obtainedBigFive.add(key);
+            }
+          });
+        }
+      });
+      
+      const availableBigFive = RARITIES.filter(r => r.type === 'big-five' && !obtainedBigFive.has(r.name.toLowerCase().replace(/\s+/g, '-')));
+      if (availableBigFive.length === 0) {
+        // All big-five obtained, give random big-five
+        rarityPool = RARITIES.filter(r => r.type === 'big-five');
+      } else {
+        rarityPool = availableBigFive;
+      }
     }
 
     const adjustedRarities = rarityPool.map((r) => 
@@ -2372,6 +2391,90 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
+app.post('/api/use-code', requireAuth, async (req, res) => {
+  try {
+    const { code } = req.body;
+    const username = req.session.user.username;
+
+    if (!code) {
+      return res.json({ success: false, error: 'Code required' });
+    }
+
+    const data = await readData();
+    const user = data.users.find(u => u.username === username);
+    const codeEntry = data.codes.find(c => c.code === code);
+
+    if (!codeEntry) {
+      return res.json({ success: false, error: 'Invalid code' });
+    }
+
+    if (codeEntry.usedBy.includes(username)) {
+      return res.json({ success: false, error: 'Code already used' });
+    }
+
+    // Check global uses for big-five code
+    if (codeEntry.code === 'LONGLIVETHEBIG5') {
+      if (codeEntry.globalUses >= codeEntry.maxGlobalUses) {
+        return res.json({ success: false, error: 'Code has reached maximum uses' });
+      }
+    }
+
+    // Apply reward
+    if (codeEntry.reward.type === 'coins') {
+      user.coins = (user.coins || 0) + codeEntry.reward.amount;
+    } else if (codeEntry.reward.type === 'potion') {
+      if (!user.inventory.potions) user.inventory.potions = {};
+      const potionKey = codeEntry.reward.potion;
+      if (!user.inventory.potions[potionKey]) user.inventory.potions[potionKey] = 0;
+      user.inventory.potions[potionKey] += codeEntry.reward.amount || 1;
+    } else if (codeEntry.reward.type === 'rarity') {
+      if (!user.inventory.rarities) user.inventory.rarities = {};
+      const rarityKey = codeEntry.reward.rarityKey;
+      const rarity = RARITIES.find(r => r.name.toLowerCase().replace(/\s+/g, '-') === rarityKey);
+      if (rarity) {
+        if (!user.inventory.rarities[rarityKey]) {
+          user.inventory.rarities[rarityKey] = {
+            name: rarity.name,
+            count: 0,
+            color: rarity.color,
+            serialNumbers: []
+          };
+        }
+        user.inventory.rarities[rarityKey].count += 1;
+      }
+    } else if (codeEntry.reward.type === 'big-five-roll') {
+      // Set flag for next spin
+      user.bigFiveRollReady = true;
+    }
+
+    // Mark as used
+    codeEntry.usedBy.push(username);
+    if (codeEntry.code === 'LONGLIVETHEBIG5') {
+      codeEntry.globalUses += 1;
+    }
+
+    // IMMEDIATE response
+    res.json({
+      success: true,
+      coins: user.coins,
+      inventory: user.inventory,
+      message: codeEntry.reward.type === 'big-five-roll' ? 'Your next roll will be BIG!' : 'Code redeemed!'
+    });
+
+    // Save in background
+    setImmediate(async () => {
+      try {
+        await writeData(data);
+      } catch (err) {
+        console.error('Code redeem save error:', err);
+      }
+    });
+  } catch (error) {
+    console.error('❌ Code redeem error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 // Socket.IO - Optimized for performance and reliability
 const userSessions = new Map();
 
@@ -2478,7 +2581,7 @@ server.listen(PORT, async () => {
   const shopData = getCurrentShopItem();
   console.log('');
   console.log('🎮 ════════════════════════════════════════════════');
-  console.log('🎮  17-News-RNG Server - Update 8.0 - MAJOR IMPROVEMENTS');
+  console.log('🎮  17-News-RNG Server - Update 8.05 - BIG FIVE UPDATE');
   console.log('🎮 ════════════════════════════════════════════════');
   console.log('');
   console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
@@ -2487,13 +2590,14 @@ server.listen(PORT, async () => {
   console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
   console.log('👑 Admin: Mr_Fernanski ready');
   console.log('');
-  console.log('✨ Update 8.0 Highlights:');
+  console.log('✨ Update 8.05 Highlights:');
   console.log('   🔊 Global Chat: reliable & near-instant delivery');
   console.log('   🛡️ Admin Events: logged and broadcast for transparency');
   console.log('   🛒 Shop: rotation guaranteed and broadcast on start');
   console.log('   ⚖️ Trading: validated and efficient');
   console.log('   🚀 Performance: reduced blocking I/O and faster responses');
   console.log('   🎨 Frontend: refreshed styles and faster load path');
+  console.log('   ⭐ Big Five: exclusive rarities with global uniqueness');
   console.log('');
   console.log('✅ Ready!');
   console.log('🎮 ════════════════════════════════════════════════');
