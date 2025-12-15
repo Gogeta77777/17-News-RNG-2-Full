@@ -900,7 +900,22 @@ user.inventory.rarities[rarityKey].count += 1;
         username: user.username,
         serialNumber: serialNumber
       });
-        }
+    } else if (picked.type === 'big-five') {
+      const chatMsg = {
+        username: 'SYSTEM',
+        message: `🎊 ${user.username} JUST OBTAINED THE BIG FIVE ${picked.name}! Serial #${serialNumber} (Global Exclusive!)`,
+        timestamp: new Date().toISOString(),
+        isAdmin: false,
+        isSystem: true,
+        rarityType: 'big-five',
+        rarityName: picked.name,
+        serialNumber: serialNumber
+      };
+      data.chatMessages.push(chatMsg);
+      await writeData(data);
+      io.emit('announcement_popup', chatMsg);
+      io.emit('chat_message', chatMsg);
+    }
 
         // Write all data once at the end
         await writeData(data);
@@ -1567,79 +1582,6 @@ app.post('/api/shop/buy-potion', requireAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Potion shop error:', error);
-    res.status(500).json({ success: false, error: 'Server error' });
-  }
-});
-
-app.post('/api/use-code', requireAuth, async (req, res) => {
-  try {
-    const { code } = req.body;
-    
-    if (!code) {
-      return res.json({ success: false, error: 'Code required' });
-    }
-
-    const data = await readData();
-    const user = data.users.find(u => u.username === req.session.user.username);
-    
-    if (!user) {
-      return res.json({ success: false, error: 'User not found' });
-    }
-
-    const codeData = data.codes.find(c => c.code === code);
-    
-    if (!codeData) {
-      return res.json({ success: false, error: 'Invalid code' });
-    }
-
-    if (!Array.isArray(codeData.usedBy)) codeData.usedBy = [];
-
-    if (codeData.usedBy.includes(user.username)) {
-      return res.json({ success: false, error: 'Code already used' });
-    }
-
-    if (codeData.reward.type === 'coins') {
-      user.coins = (user.coins || 0) + codeData.reward.amount;
-    } else if (codeData.reward.type === 'potion') {
-      const potionKey = codeData.reward.potion;
-      const amount = codeData.reward.amount || 1;
-      if (!user.inventory.potions) user.inventory.potions = {};
-      if (!user.inventory.potions[potionKey]) {
-        user.inventory.potions[potionKey] = 0;
-      }
-      user.inventory.potions[potionKey] += amount;
-    } else if (codeData.reward.type === 'rarity') {
-      // Add a specific rarity to the user's inventory (one-off code reward)
-      const rarityKey = (codeData.reward.rarityKey || '').toLowerCase().replace(/\s+/g, '-');
-      if (!user.inventory.rarities) user.inventory.rarities = {};
-      if (!user.inventory.rarities[rarityKey]) {
-        // find rarity metadata if present, otherwise create a basic record
-        const rarityMeta = RARITIES.find(r => (r.name || '').toLowerCase().replace(/\s+/g, '-') === rarityKey);
-        user.inventory.rarities[rarityKey] = {
-          name: (rarityMeta && rarityMeta.name) || (codeData.reward.rarityKey || 'Special Rarity'),
-          count: 0,
-          color: (rarityMeta && rarityMeta.color) || '#FFFFFF',
-          serialNumbers: []
-        };
-      }
-      user.inventory.rarities[rarityKey].count += 1;
-    }
-
-    codeData.usedBy.push(user.username);
-    
-    // IMMEDIATE response
-    res.json({ success: true, coins: user.coins, inventory: user.inventory });
-
-    // Save in background
-    setImmediate(async () => {
-      try {
-        await writeData(data);
-      } catch (err) {
-        console.error('Code save error:', err);
-      }
-    });
-  } catch (error) {
-    console.error('❌ Code error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
