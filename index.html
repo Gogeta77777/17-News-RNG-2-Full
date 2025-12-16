@@ -461,6 +461,107 @@
             text-shadow: 0 0 20px #FFD700, 0 0 40px #9B59B6;
         }
 
+        /* End Of An Era Event Styles */
+        .end-of-era-countdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #000000, #330000, #000033);
+            padding: 50px 70px;
+            border-radius: 20px;
+            font-size: 5em;
+            font-weight: bold;
+            color: #FF4500;
+            z-index: var(--z-meteor);
+            box-shadow: 
+                0 0 100px rgba(255, 69, 0, 0.9),
+                inset 0 0 50px rgba(255, 140, 0, 0.3);
+            text-align: center;
+            border: 3px solid #FF4500;
+            text-shadow: 0 0 20px #FF4500, 0 0 40px #FF8C00;
+        }
+
+        .fireworks-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: var(--z-meteor);
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .firework {
+            position: absolute;
+            border-radius: 50%;
+            animation: firework-explode 1s ease-out forwards;
+        }
+
+        .firework.small {
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #FFD700, #FF4500);
+        }
+
+        .firework.big {
+            width: 15px;
+            height: 15px;
+            background: radial-gradient(circle, #FFFFFF, #FFD700, #FF4500);
+            box-shadow: 0 0 20px #FFD700;
+        }
+
+        @keyframes firework-explode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        .finale-blackout {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .finale-blackout.active {
+            opacity: 1;
+        }
+
+        .magical-return {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4em;
+            color: #FFD700;
+            text-shadow: 0 0 30px #FFD700, 0 0 60px #FF4500;
+            z-index: 10000;
+            opacity: 0;
+            animation: magical-fade-in 2s ease-out forwards;
+        }
+
+        @keyframes magical-fade-in {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
         /* Announcement Banner */
         #announcement-banner {
             position: fixed;
@@ -2365,6 +2466,12 @@
                 <button id="start-return-to-zero" class="btn" style="background: linear-gradient(135deg, #FFD700, #9B59B6);">🌌 Activate Return to Zero</button>
             </div>
 
+            <div id="end-of-era-section" class="admin-event-section" style="background: linear-gradient(135deg, rgba(255, 69, 0, 0.2), rgba(255, 140, 0, 0.15)); border: 2px solid #FF4500;">
+                <h2 style="color: #FF4500; margin-bottom: 15px;">🎓 End Of An Era - Year 8 Graduation</h2>
+                <p style="margin-bottom: 15px;">Celebrate the end of Year 8! A spectacular 1-minute fireworks show with a magical finale. All players will experience the celebration together.</p>
+                <button id="start-end-of-era" class="btn" style="background: linear-gradient(135deg, #FF4500, #FF8C00);">🎆 Start End Of An Era</button>
+            </div>
+
             <div class="admin-event-section">
                 <h2 style="color: var(--error); margin-bottom: 15px;">🗑️ Chat Management</h2>
                 <p style="margin-bottom: 15px;">Manage chat messages. Delete individual messages by hovering over them in the chat tab, or clear all messages at once.</p>
@@ -3103,6 +3210,137 @@
 
             showPopup('✨ GALACTIC RETURN TO ZERO COMPLETE! ✨\nNo data was modified, just pure cosmic energy!', '#FFD700');
             await refreshGameData();
+        }
+
+        async function launchEndOfEra() {
+            showPopup('🎓 END OF AN ERA CELEBRATION BEGINS!', '#FF4500');
+            
+            // Create countdown overlay
+            const countdown = document.createElement('div');
+            countdown.className = 'end-of-era-countdown';
+            countdown.textContent = '10';
+            document.body.appendChild(countdown);
+
+            // 10-second countdown
+            for (let i = 10; i > 0; i--) {
+                countdown.textContent = i;
+                countdown.style.transform = `translate(-50%, -50%) scale(${1 + (10 - i) * 0.05})`;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            countdown.remove();
+
+            // Start 1-minute fireworks show
+            const fireworksContainer = document.createElement('div');
+            fireworksContainer.className = 'fireworks-container';
+            document.body.appendChild(fireworksContainer);
+
+            // Fireworks for 60 seconds
+            const fireworksInterval = setInterval(() => {
+                // Create random fireworks
+                const fireworkCount = Math.floor(Math.random() * 5) + 3; // 3-7 fireworks per burst
+                
+                for (let i = 0; i < fireworkCount; i++) {
+                    const firework = document.createElement('div');
+                    firework.className = `firework ${Math.random() > 0.7 ? 'big' : 'small'}`;
+                    
+                    // Random position across the screen
+                    firework.style.left = Math.random() * 100 + '%';
+                    firework.style.top = Math.random() * 100 + '%';
+                    
+                    // Random colors
+                    const colors = ['#FFD700', '#FF4500', '#FF8C00', '#FFFFFF', '#00FF00', '#0000FF', '#FF00FF'];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    firework.style.background = `radial-gradient(circle, ${color}, ${color}80)`;
+                    
+                    fireworksContainer.appendChild(firework);
+                    
+                    // Remove after animation
+                    setTimeout(() => {
+                        if (firework.parentElement) {
+                            firework.remove();
+                        }
+                    }, 1000);
+                }
+            }, 200); // Fireworks every 200ms
+
+            // After 55 seconds, prepare for finale
+            setTimeout(() => {
+                clearInterval(fireworksInterval);
+                
+                // Build up to finale with more intense fireworks
+                const finaleInterval = setInterval(() => {
+                    const fireworkCount = Math.floor(Math.random() * 8) + 5; // 5-12 fireworks
+                    
+                    for (let i = 0; i < fireworkCount; i++) {
+                        const firework = document.createElement('div');
+                        firework.className = 'firework big';
+                        firework.style.left = Math.random() * 100 + '%';
+                        firework.style.top = Math.random() * 100 + '%';
+                        firework.style.background = 'radial-gradient(circle, #FFFFFF, #FFD700, #FF4500)';
+                        firework.style.boxShadow = '0 0 30px #FFD700';
+                        fireworksContainer.appendChild(firework);
+                        
+                        setTimeout(() => {
+                            if (firework.parentElement) {
+                                firework.remove();
+                            }
+                        }, 1000);
+                    }
+                }, 100); // More frequent for finale
+
+                // Final massive firework after 5 more seconds
+                setTimeout(() => {
+                    clearInterval(finaleInterval);
+                    
+                    // Create the final spectacular firework
+                    for (let i = 0; i < 50; i++) {
+                        const firework = document.createElement('div');
+                        firework.className = 'firework big';
+                        firework.style.left = '50%';
+                        firework.style.top = '50%';
+                        firework.style.background = 'radial-gradient(circle, #FFFFFF, #FFD700, #FF4500)';
+                        firework.style.boxShadow = '0 0 50px #FFD700';
+                        firework.style.animationDelay = (i * 0.05) + 's';
+                        fireworksContainer.appendChild(firework);
+                        
+                        setTimeout(() => {
+                            if (firework.parentElement) {
+                                firework.remove();
+                            }
+                        }, 2000);
+                    }
+
+                    // Black screen effect
+                    setTimeout(() => {
+                        const blackout = document.createElement('div');
+                        blackout.className = 'finale-blackout';
+                        document.body.appendChild(blackout);
+                        
+                        setTimeout(() => {
+                            blackout.classList.add('active');
+                        }, 100);
+
+                        // Magical return after 5 seconds
+                        setTimeout(() => {
+                            const magicalText = document.createElement('div');
+                            magicalText.className = 'magical-return';
+                            magicalText.textContent = '🎓 END OF AN ERA 🎓';
+                            document.body.appendChild(magicalText);
+                            
+                            setTimeout(() => {
+                                blackout.classList.remove('active');
+                                setTimeout(() => {
+                                    blackout.remove();
+                                    magicalText.remove();
+                                    fireworksContainer.remove();
+                                    showPopup('🎆 END OF AN ERA CELEBRATION COMPLETE! 🎆\nCongratulations to all Year 8 graduates!', '#FF4500');
+                                }, 2000);
+                            }, 5000);
+                        }, 1000);
+                    }, 2000);
+                }, 3000);
+            }, 55000); // 55 seconds into the show
         }
 
         async function checkExistingSession() {
@@ -4704,6 +4942,10 @@
                 launchReturnToZero();
             });
 
+            socket.on('end_of_era_start', () => {
+                launchEndOfEra();
+            });
+
             socket.on('lord_finn_pulled', (data) => {
                 showLordFinnBanner(data.username, data.serialNumber);
             });
@@ -5410,6 +5652,26 @@
             }
         }
 
+        async function startEndOfEra() {
+            if (!confirm('🎓 Activate End Of An Era celebration for all players?\n\nThis will start a 1-minute fireworks show celebrating Year 8 graduation!') ) {
+                return;
+            }
+
+            try {
+                const data = await handleAPI('/api/admin/end-of-era/start', {
+                    method: 'POST'
+                });
+
+                if (data.success) {
+                    showPopup('🎆 END OF AN ERA CELEBRATION ACTIVATED!', '#FF4500');
+                } else {
+                    showPopup(data.error, '#e74c3c');
+                }
+            } catch (err) {
+                showPopup('Failed to start End Of An Era', '#e74c3c');
+            }
+        }
+
         async function startDisco() {
             try {
                 const data = await handleAPI('/api/admin/disco/start', {
@@ -5611,6 +5873,7 @@
             document.getElementById('start-alien-mode').onclick = startAlienMode;
             document.getElementById('stop-alien-mode').onclick = stopAlienMode;
             document.getElementById('start-return-to-zero').onclick = startReturnToZero;
+            document.getElementById('start-end-of-era').onclick = startEndOfEra;
             document.getElementById('start-disco').onclick = startDisco;
             document.getElementById('stop-disco').onclick = stopDisco;
             document.getElementById('clear-all-chat').onclick = clearAllChat;
