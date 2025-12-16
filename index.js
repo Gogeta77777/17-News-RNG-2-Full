@@ -1917,6 +1917,38 @@ app.post('/api/admin/return-to-zero/start', requireFullAdmin, async (req, res) =
   }
 });
 
+app.post('/api/admin/end-of-era/start', requireFullAdmin, async (req, res) => {
+  try {
+    // IMMEDIATE broadcast - don't wait for DB
+    io.emit('end_of_era_start', { startedBy: req.session.user.username });
+    res.json({ success: true });
+    
+    // Save in background
+    setImmediate(async () => {
+      try {
+        const data = await readData();
+        const adminEvent = {
+          id: Date.now(),
+          type: 'end_of_era',
+          name: 'End Of An Era - Year 8 Graduation Celebration',
+          active: true,
+          startedAt: new Date().toISOString(),
+          startedBy: req.session.user.username
+        };
+        if (!data.adminEvents) data.adminEvents = [];
+        data.adminEvents = data.adminEvents.filter(e => e.type !== 'end_of_era');
+        data.adminEvents.push(adminEvent);
+        await writeData(data);
+      } catch (err) {
+        console.error('End of era save error:', err);
+      }
+    });
+  } catch (error) {
+    console.error('❌ End Of An Era error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 app.post('/api/admin/give-admin-role', requireFullAdmin, async (req, res) => {
   try {
     const { username } = req.body;
