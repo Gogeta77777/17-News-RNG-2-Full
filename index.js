@@ -1,11 +1,9 @@
 /*
-  17-News-RNG Server - Update 8.0 - MAJOR IMPROVEMENTS
-  - Global Chat ensured
-  - Admin abuse events logging & broadcasting
-  - Shop rotation stability
-  - Trading verified
-  - Frontend style tweaks and performance improvements
-  - Render.yaml deployment support
+  17-News-RNG Server - Update 9.0 (Final Update)
+  - Inventory Value Checker API + UI feature
+  - Secret Vault / hidden code added
+  - Chat easter egg triggering on "RNG3"
+  - Updated login/register messaging for RNG 3 transition
 */
 
 // Ensure logs are flushed immediately
@@ -1639,6 +1637,73 @@ app.get('/api/data', requireAuth, async (req, res) => {
   }
 });
 
+// Inventory value endpoint (client feature: "Check Value")
+app.get('/api/inventory/value', requireAuth, async (req, res) => {
+  try {
+    const data = await readData();
+    const user = data.users.find(u => u.username === req.session.user.username);
+
+    if (!user) {
+      return res.json({ success: false, error: 'User not found' });
+    }
+
+    const inventory = user.inventory || { rarities: {}, potions: {}, items: {} };
+    let total = user.coins || 0;
+    let raritiesValue = 0;
+    let potionsValue = 0;
+    let itemsValue = 0;
+
+    // Helper maps for prices
+    const potionPrices = Object.entries(POTIONS).reduce((acc, [key, potion]) => {
+      acc[key] = potion.price || 0;
+      return acc;
+    }, {});
+
+    const itemPrices = SHOP_ITEMS.reduce((acc, item) => {
+      const key = item.name.toLowerCase().replace(/\s+/g, '-');
+      acc[key] = item.price || 0;
+      return acc;
+    }, {});
+
+    // Rare items (stored in rarities with their coin value)
+    for (const [key, info] of Object.entries(inventory.rarities || {})) {
+      const rarity = RARITIES.find(r => r.name.toLowerCase().replace(/\s+/g, '-') === key || r.name.toLowerCase() === key);
+      const coinValue = (rarity && rarity.coin) ? rarity.coin : 0;
+      const count = info.count || 0;
+      raritiesValue += coinValue * count;
+    }
+
+    // Potions value
+    for (const [key, count] of Object.entries(inventory.potions || {})) {
+      const value = potionPrices[key] || 0;
+      potionsValue += value * (count || 0);
+    }
+
+    // Items value
+    for (const [key, itemInfo] of Object.entries(inventory.items || {})) {
+      const value = itemPrices[key] || 0;
+      const count = itemInfo?.count || 0;
+      itemsValue += value * count;
+    }
+
+    total += raritiesValue + potionsValue + itemsValue;
+
+    res.json({
+      success: true,
+      breakdown: {
+        coins: user.coins || 0,
+        rarities: raritiesValue,
+        potions: potionsValue,
+        items: itemsValue,
+        total
+      }
+    });
+  } catch (error) {
+    console.error('❌ Inventory value error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 app.post('/api/admin/announcement', requireAdmin, async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -2577,7 +2642,7 @@ server.listen(PORT, async () => {
   const shopData = getCurrentShopItem();
   console.log('');
   console.log('🎮 ════════════════════════════════════════════════');
-  console.log('🎮  17-News-RNG Server - Update 8.05 - BIG FIVE UPDATE');
+  console.log('🎮  17-News-RNG Server - Update 9.0 (Final)');
   console.log('🎮 ════════════════════════════════════════════════');
   console.log('');
   console.log('🌐 Server:', process.env.RENDER ? 'Render' : `http://localhost:${PORT}`);
@@ -2586,14 +2651,11 @@ server.listen(PORT, async () => {
   console.log('💾 Storage:', pool ? 'PostgreSQL ✅' : (IS_VERCEL ? 'Vercel KV' : 'File System'));
   console.log('👑 Admin: Mr_Fernanski ready');
   console.log('');
-  console.log('✨ Update 8.05 Highlights:');
-  console.log('   🔊 Global Chat: reliable & near-instant delivery');
-  console.log('   🛡️ Admin Events: logged and broadcast for transparency');
-  console.log('   🛒 Shop: rotation guaranteed and broadcast on start');
-  console.log('   ⚖️ Trading: validated and efficient');
-  console.log('   🚀 Performance: reduced blocking I/O and faster responses');
-  console.log('   🎨 Frontend: refreshed styles and faster load path');
-  console.log('   ⭐ Big Five: exclusive rarities with global uniqueness');
+  console.log('✨ Update 9.0 Highlights:');
+  console.log('   🔍 Inventory Value Checker API + UI');
+  console.log('   🎁 Secret Vault code unveiled (check the lobby)');
+  console.log('   🕵️ Chat easter egg: type "RNG3" for a surprise');
+  console.log('   🚨 This version is discontinued ahead of RNG 3');
   console.log('');
   console.log('✅ Ready!');
   console.log('🎮 ════════════════════════════════════════════════');
