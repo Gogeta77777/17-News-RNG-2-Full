@@ -1,6 +1,6 @@
 {
   "name": "17-news-rng",
-  "version": "8.0.5",
+  "version": "9.0.0",
   "description": "A fun RNG-based multiplayer game with persistent storage",
   "main": "index.js",
   "scripts": {
