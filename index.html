@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <meta name="theme-color" content="#0a1219">
-                <title>17 News RNG 2 - Update 8.05</title>
+                <title>17 News RNG 2 - Update 9.0 (Final Update)</title>
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
@@ -2138,7 +2138,7 @@
 </head>
 <body>
     <div class="announcement-bar" id="announcement-bar">
-        <span>🎉 Update 8.0 is live — Major improvements, shop rotations, and Global Chat fixes! Click to view update notes.</span>
+        <span>🎉 Update 9.0 (Final) is live — Inventory Value Checker added and a secret vault has been hidden in the lobby. This version is discontinued ahead of RNG 3. Click to view update notes.</span>
         <button class="dismiss-btn" aria-label="Dismiss">×</button>
     </div>
 
@@ -2156,6 +2156,7 @@
             <div class="welcome-card">
                 <h2>17 News RNG 2</h2>
                 <p>The Official Return</p>
+                <p style="color: #f39c12; margin: 12px 0 0; font-size: 0.9rem;">⚠️ Discontinued due to the upcoming release of <strong>RNG 3</strong>. Enjoy the final update!</p>
                 <div class="button-group">
                     <button id="login-btn" class="btn">Login</button>
                     <button id="register-btn" class="btn">Register</button>
@@ -2164,12 +2165,12 @@
             <div class="update-log">
                 <h3>Latest Update</h3>
                 <div class="log-entry">
-                    <span class="date">12/11/25 - Update 8.0</span>
-                    <p>🔥 NEW: Global Chat fully stabilized — messages deliver instantly</p>
-                    <p>🛡️ NEW: Admin actions are now logged and broadcast as admin events for transparency</p>
-                    <p>🛒 IMPROVED: Shop rotation guaranteed and broadcast on server start</p>
-                    <p>💱 FIXED: Trading flow tightened — offers validate and execute reliably</p>
-                    <p>🎨 UI: Styles improved for faster feel and clearer interface</p>
+                    <span class="date">03/17/26 - Update 9.0 (Final)</span>
+                    <p>🔍 NEW: Inventory Value Checker added! Click "Check Value" in your inventory to see what you've collected.</p>
+                    <p>🎁 NEW: A secret vault has been hidden in the lobby — find the hidden code and redeem it in the Codes tab.</p>
+                    <p>🕵️ SURPRISE: Type <code>RNG3</code> in chat for a special easter egg message.</p>
+                    <p>🚨 NOTE: This version is discontinued ahead of the upcoming release of <strong>RNG 3</strong>.</p>
+                    <p>✨ THANK YOU for playing — the adventure continues soon.</p>
                 </div>
             </div>
         </main>
@@ -2179,6 +2180,7 @@
     <div id="login-page" class="auth-container hidden">
         <div class="auth-card">
             <h1>Login</h1>
+            <p style="color: #f39c12; margin: 0 0 10px; font-size: 0.9rem;">⚠️ This version is discontinued ahead of RNG 3. Enjoy the final update!</p>
             <div id="login-error" class="error-message hidden"></div>
             <form id="login-form">
                 <div class="form-group">
@@ -2206,6 +2208,7 @@
                 <p style="color: #FFB74D; margin: 3px 0; font-size: 0.75em;">Contact Mr_Fernanski or IRL staff for help</p>
             </div>
             <h1>Register</h1>
+            <p style="color: #f39c12; margin: 0 0 10px; font-size: 0.9rem;">⚠️ This version is discontinued ahead of RNG 3. Enjoy the final update!</p>
             <div id="register-error" class="error-message hidden"></div>
             <form id="register-form">
                 <div class="form-group">
@@ -2263,6 +2266,11 @@
 
                     <div class="tab-pane active" id="inventory-tab">
                         <h2>Your Inventory</h2>
+                        <div class="inventory-actions" style="display:flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px;">
+                            <button id="check-value-btn" class="btn">Check Value</button>
+                            <button id="secret-vault-btn" class="btn">Open Secret Vault</button>
+                            <div id="inventory-value" style="color: #f1c40f; font-size: 0.9rem; flex: 1 1 100%;"></div>
+                        </div>
                         <div class="inventory-categories">
                             <button class="category-btn active" data-category="rarities">Rarities</button>
                             <button class="category-btn" data-category="potions">Potions</button>
@@ -2716,6 +2724,34 @@
             popup.textContent = message;
             document.body.appendChild(popup);
             setTimeout(() => popup.remove(), 3000);
+        }
+
+        async function checkInventoryValue() {
+            try {
+                const data = await handleAPI('/api/inventory/value');
+                if (!data.success) {
+                    showPopup(data.error || 'Failed to calculate inventory value', '#e74c3c');
+                    return;
+                }
+
+                const { breakdown } = data;
+                const message = `📊 Inventory Value\nCoins: ${formatCoins(breakdown.coins)}\nRarities: ${formatCoins(breakdown.rarities)}\nPotions: ${formatCoins(breakdown.potions)}\nItems: ${formatCoins(breakdown.items)}\n——————\nTotal: ${formatCoins(breakdown.total)}`;
+
+                const display = document.getElementById('inventory-value');
+                if (display) {
+                    display.innerHTML = `<strong>Total value:</strong> ${formatCoins(breakdown.total)} coins<br><small style="opacity:0.8;">(coins + rarities + potions + items)</small>`;
+                }
+
+                showPopup(message, '#27ae60');
+            } catch (err) {
+                console.error('Inventory value error:', err);
+                showPopup('Failed to calculate inventory value', '#e74c3c');
+            }
+        }
+
+        function showSecretVault() {
+            const secretCode = 'RNG3TEASER';
+            showPopup(`🎁 Secret Vault opened! Use code: ${secretCode} in the Codes tab for a reward.`, '#9b59b6');
         }
 
         function setLoading(button, isLoading, text = 'Loading...') {
@@ -5251,6 +5287,13 @@
                 return;
             }
 
+            // Easter egg: reveal the RNG 3 countdown message
+            if (message.trim().toUpperCase() === 'RNG3') {
+                showPopup('🎉 RNG 3 is coming! Stay tuned for the next generation of RNG adventures.', '#9b59b6');
+                input.value = '';
+                return;
+            }
+
             if (!currentUser) {
                 showPopup('Please log in first', '#e74c3c');
                 return;
@@ -5858,6 +5901,8 @@
                 }
             });
             document.getElementById('redeem-btn').onclick = redeemCode;
+            document.getElementById('check-value-btn').onclick = checkInventoryValue;
+            document.getElementById('secret-vault-btn').onclick = showSecretVault;
 
             document.getElementById('admin-btn').onclick = () => showPage('admin-panel');
             document.getElementById('back-to-game').onclick = () => showPage('game');
